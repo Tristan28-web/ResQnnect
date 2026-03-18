@@ -10,12 +10,23 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
+      case TargetPlatform.iOS:
+        return ios;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
         );
     }
   }
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDcvrDsJDImdoGixaaHMmgHS3fyp3vjdL4',
+    appId: '1:1018814514644:ios:d052d86a8ca7e0614f68241', // Placeholder: Update this with your actual iOS App ID from Firebase Console
+    messagingSenderId: '1018814514644',
+    projectId: 'resqnnect-3b59e',
+    storageBucket: 'resqnnect-3b59e.firebasestorage.app',
+    iosBundleId: 'com.example.resqnnect',
+  );
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDcvrDsJDImdoGixaaHMmgHS3fyp3vjdL4',
