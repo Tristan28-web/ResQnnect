@@ -20,12 +20,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDcvrDsJDImdoGixaaHMmgHS3fyp3vjdL4',
-    appId: '1:1018814514644:ios:d052d86a8ca7e0614f68241', // Placeholder: Update this with your actual iOS App ID from Firebase Console
+    apiKey: 'AIzaSyDXpwF7WCqAtI5YsiSFOJ3N1ekQ0UNTsTw',
+    appId: '1:1018814514644:ios:0b2c0d21c6ad3d96f68241',
     messagingSenderId: '1018814514644',
     projectId: 'resqnnect-3b59e',
     storageBucket: 'resqnnect-3b59e.firebasestorage.app',
-    iosBundleId: 'com.example.resqnnect',
+    iosBundleId: 'com.yummyjoy.resqnnect',
   );
 
   static const FirebaseOptions web = FirebaseOptions(

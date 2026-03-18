@@ -66,6 +66,18 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1018814514644-7haul536cgvar1n9lmplm44i0ipng0su</string>
+			</array>
+		</dict>
+	</array>
     
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>ResQnnect needs your location to show your position on the emergency map and calculate routes to safe zones.</string>
