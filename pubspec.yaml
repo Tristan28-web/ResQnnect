@@ -1,0 +1,51 @@
+name: resqnnect
+description: "Smart Disaster Preparedness and Response App Blueprint"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  firebase_core: ^4.5.0
+  firebase_auth: ^6.2.0
+  cloud_firestore: ^6.1.3
+  firebase_messaging: ^16.1.2
+
+  google_fonts: ^8.0.2
+  geolocator: ^14.0.2
+  url_launcher: ^6.3.2
+  http: ^1.6.0
+  image_picker: ^1.2.1
+  intl: ^0.20.2
+  provider: ^6.1.5+1
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  shared_preferences: ^2.2.2
+  google_sign_in: ^6.2.1
+  rxdart: ^0.28.0
+  google_maps_flutter: ^2.15.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21 # android min sdk value
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+

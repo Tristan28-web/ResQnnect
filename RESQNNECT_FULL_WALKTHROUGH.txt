@@ -1,0 +1,102 @@
+================================================================================
+🚀 RESQNNECT: THE ULTIMATE DEMO & WALKTHROUGH GUIDE
+================================================================================
+"Connecting the City, Saving Lives — Even when the grid goes down."
+
+ResQnnect is a triple-role ecosystem designed for high-stress disaster
+scenarios. Use this guide to simulate a full disaster response cycle.
+
+--------------------------------------------------------------------------------
+1. GETTING STARTED (LOGIN & ROLES)
+--------------------------------------------------------------------------------
+ResQnnect uses Role-Based Access Control (RBAC). Your experience is defined
+by your login credentials:
+
+🔹 ADMIN: Email: admin@cadiz.gov.ph
+Password: password123
+🔹 RESPONDER: Email: respondent@cadiz.gov.ph
+Password: password123
+🔹 CITIZEN: User signup (Community safety access)
+
+--------------------------------------------------------------------------------
+2. THE COMMANDER'S MANUAL (ADMIN DEMO)
+--------------------------------------------------------------------------------
+Objective: Orchestrate a city-wide response and verify community safety.
+
+✅ STEP 1: MONITOR THE STAT STREAMS
+   - Look at the top cards. They pulse with live data.
+   - See "Active Responders" (green) and "SOS Calls" (red) update in real-time.
+
+✅ STEP 2: BROADCAST AN EMERGENCY
+   - TAP the "Radar Alert" button.
+   - Title: "Flood Warning - Zone 4"
+   - Description: "All citizens near the river, please move to Safe Zones immediately."
+   - Result: Every citizen and responder gets this alert instantly.
+
+✅ STEP 3: LAUNCH THE CITY-WIDE CHECK-IN (High-Value Demo)
+   - LONG-PRESS the "Radar Alert" button.
+   - Protocol name: "Typhoon Protocol Alpha"
+   - Result: This triggers a high-priority popup for EVERY citizen app city-wide.
+
+✅ STEP 4: VISUALIZE THE HEATMAP
+   - Navigate to "Safety Map" (Action Card).
+   - Watch the map populate with Green Circles (Safe) and Red Icons (Needs Help).
+   - Use this to tell your team where to prioritize search and rescue.
+
+--------------------------------------------------------------------------------
+3. THE FIELD OPS GUIDE (RESPONDER DEMO)
+--------------------------------------------------------------------------------
+Objective: High-speed mission execution and status tracking.
+
+✅ STEP 1: GOING ON DUTY
+   - Look at the "Tactical Dial". Tap to go "ON DUTY".
+   - Your status turns glowing GREEN, and your location is now live for the Admin.
+
+✅ STEP 2: THE ADVISORY FEED
+   - Check the "System Advisories" section to see the Admin's latest broadcasts.
+   - Stay informed without leaving your mission dashboard.
+
+✅ STEP 3: MISSION NAVIGATION (Simulation)
+   - When an Admin assigns a mission, the "Active Mission" card appears.
+   - Tap "START NAVIGATION" to get the exact route to the distressed citizen.
+
+--------------------------------------------------------------------------------
+4. THE CITIZEN SURVIVAL GUIDE (USER DEMO)
+--------------------------------------------------------------------------------
+Objective: Staying alive and contributing to community safety.
+
+✅ STEP 1: THE SOS SIGNAL (The "Anti-Accident" Logic)
+   - Tap and HOLD the SOS button for 3 seconds.
+   - Watch the circular progress bar. 
+   - Result: This prevents pocket-dialing while ensuring a rock-solid data 
+     transmission to the Command Center with your exact location.
+
+✅ STEP 2: REPORT A COMMUNITY HAZARD
+   - Open the Map and tap the Orange "Hazard" Icon.
+   - Report a "Deep Flood" or "Blocked Road" at your current position.
+   - Result: You just helped your neighbors avoid a dangerous path.
+
+✅ STEP 3: THE PROXIMITY ALERT (The "Automatic Shield")
+   - While walking with the map open, if you approach a hazard reported by 
+     someone else (~500m), an Orange Warning Banner will automatically 
+     slide down: "HAZARD AHEAD: DEEP FLOOD". 
+
+✅ STEP 4: THE RESCUE VAULT (Offline Survival Mode)
+   - Tap "OFFLINE VAULT" on your dashboard.
+   - EVEN WITHOUT INTERNET: Access First Aid guides and coordinates of 
+     your nearest Evacuation Centers.
+   - Background Sync: The app silently updates this "Vault" whenever 
+     you have signal, so you're always ready for a blackout.
+
+--------------------------------------------------------------------------------
+5. TECHNICAL SPECS FOR PRESENTATION
+--------------------------------------------------------------------------------
+- CORE: Flutter 3.x
+- REAL-TIME: Firebase Cloud Firestore (No-SQL)
+- MAP ENGINE: Flutter Map + OpenStreetMap (Tactical Dark Layer)
+- LOCAL SYNC: SharedPreferences Encrypted JSON Caching
+- TACTICAL UI: Custom Glassmorphism Theme (Performance Optimized)
+
+================================================================================
+ResQnnect: Smart Disaster Preparedness & Response System
+================================================================================

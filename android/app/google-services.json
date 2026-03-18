@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1018814514644",
+    "project_id": "resqnnect-3b59e",
+    "storage_bucket": "resqnnect-3b59e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018814514644:android:484ed47fc2e5f732f68241",
+        "android_client_info": {
+          "package_name": "com.yummyjoy.resqnnect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018814514644-enru1r3f8tdgbfctg780t5nipcr4ujvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yummyjoy.resqnnect",
+            "certificate_hash": "09911d75655ccbf9860260b12e4e10921260dea2"
+          }
+        },
+        {
+          "client_id": "1018814514644-madsabhu95m07rpcqrgttnle90t0qr7i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqYjZCMczNP0FNwQK5Bmsxva_RASNIZCg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018814514644-325uuvmqveq2f5o646h4d8in9kbqa2lh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
