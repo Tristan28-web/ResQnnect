@@ -1,25 +1,43 @@
 # Podfile for ResQnnect
 platform :ios, '15.0'
 
-# CocoaPods analytics sends network stats and build statistics for CocoaPods.
-# If you use Google APIs or Firebase, you'll need the CocoaPods repository.
-install! 'cocoapods', :deterministic_uuids => false
+# Find the Flutter SDK path from environment or command line
+flutter_root = ENV['FLUTTER_ROOT'] || `flutter doctor -v | grep "Flutter SDK at" | cut -d " " -f 4`.strip
 
-# Location of podhelper.rb
-podhelper_path = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
-# Pull in the podhelper logic provided by Flutter
-load podhelper_path
+if flutter_root.empty? || !File.exist?(flutter_root)
+  # Try to find it relative to the executable if not in ENV
+  flutter_root = File.expand_path('..', `which flutter`)
+end
 
-# The Runner target contains all the settings to correctly build a Flutter app.
+# Load podhelper.rb from the Flutter SDK instead of the local project
+# this ensures the build works even if initialized on Windows
+podhelper_path = File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podhelper.rb')
+
+if File.exist?(podhelper_path)
+  load podhelper_path
+else
+  # Last resort fallback to local (though we know it's missing)
+  podhelper_path = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
+  load podhelper_path if File.exist?(podhelper_path)
+end
+
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  if defined?(flutter_install_all_ios_pods)
+    flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  end
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
+    
+    if defined?(flutter_additional_ios_build_settings)
+      flutter_additional_ios_build_settings(target)
+    end
   end
 end
