@@ -1,0 +1,25 @@
+# Podfile for ResQnnect
+platform :ios, '15.0'
+
+# CocoaPods analytics sends network stats and build statistics for CocoaPods.
+# If you use Google APIs or Firebase, you'll need the CocoaPods repository.
+install! 'cocoapods', :deterministic_uuids => false
+
+# Location of podhelper.rb
+podhelper_path = File.join(File.dirname(File.realpath(__FILE__)), 'Flutter', 'podhelper.rb')
+# Pull in the podhelper logic provided by Flutter
+load podhelper_path
+
+# The Runner target contains all the settings to correctly build a Flutter app.
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+end
