@@ -17,73 +17,222 @@ import '../services/weather_service.dart';
 import '../models/weather_model.dart';
 import '../services/location_service.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 import '../widgets/sos_hold_button.dart';
 import '../models/safety_check_model.dart';
+import '../models/hazard_model.dart';
 import 'offline_vault_screen.dart';
-import 'global_map_screen.dart';
+import 'hazard_gallery_screen.dart';
+import 'report_hazard_screen.dart';
+import '../services/alert_notification_service.dart';
 
-class CitizenDashboard extends StatelessWidget {
+class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
+
+  @override
+  State<CitizenDashboard> createState() => _CitizenDashboardState();
+}
+
+class _CitizenDashboardState extends State<CitizenDashboard> {
+  String? _lastSafetyEventId;
+  int _lastSOSCount = 0;
+  int _lastAlertCount = 0;
+  final Set<String> _notifiedIncidentIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize seen counts to current state to avoid flashing on first load
+    final firestore = Provider.of<FirestoreService>(context, listen: false);
+    
+    firestore.getActiveSafetyCheck().first.then((event) {
+      if (mounted) _lastSafetyEventId = event?.eventId;
+    });
+    
+    firestore.getAlertCount().first.then((count) {
+      if (mounted) _lastAlertCount = count;
+    });
+
+    firestore.getSOSRequests().first.then((sos) {
+      if (mounted) _lastSOSCount = sos.length;
+    });
+  }
+
+  void _triggerEmergencyFlash() {
+    AlertNotificationService.instance.flashAlert();
+  }
 
   @override
   Widget build(BuildContext context) {
     final firestoreService = Provider.of<FirestoreService>(context, listen: false);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-    // Sync Offline Vault in background
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      firestoreService.syncOfflineVault();
-    });
+    return MultiProvider(
+      providers: [
+        StreamProvider<SafetyCheckEvent?>(
+          create: (_) => firestoreService.getActiveSafetyCheck(),
+          initialData: null,
+          catchError: (_, __) => null,
+        ),
+        StreamProvider<List<SOSRequestModel>>(
+          create: (_) => firestoreService.getSOSRequests(),
+          initialData: const [],
+        ),
+        StreamProvider<int>(
+          create: (_) => firestoreService.getAlertCount(),
+          initialData: 0,
+        ),
+      ],
+      builder: (context, child) {
+        final currentEvent = Provider.of<SafetyCheckEvent?>(context);
+        final sosList = Provider.of<List<SOSRequestModel>>(context);
+        final alertCount = Provider.of<int>(context);
 
-    return Stack(
-      children: [
-        // Listen for active safety check-ins
-        StreamBuilder<SafetyCheckEvent?>(
-          stream: firestoreService.getActiveSafetyCheck(),
-          builder: (context, eventSnapshot) {
-            if (eventSnapshot.hasData && eventSnapshot.data != null) {
-              final event = eventSnapshot.data!;
-              return StreamBuilder<bool>(
-                stream: firestoreService.hasUserResponded(event.eventId, userId),
+        // CHECK FOR NEW SAFETY CHECK
+        if (currentEvent != null && currentEvent.eventId != _lastSafetyEventId) {
+          _lastSafetyEventId = currentEvent.eventId;
+           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+        }
+
+        // CHECK FOR NEW SOS
+        if (sosList.length > _lastSOSCount) {
+          _lastSOSCount = sosList.length;
+           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+        }
+
+        // CHECK FOR NEW ALERTS
+        if (alertCount > _lastAlertCount) {
+          _lastAlertCount = alertCount;
+           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+        }
+
+        // CHECK FOR ACCEPTED REPORTS
+        _checkForAcceptedReports(context, firestoreService, userId);
+
+        // Sync Offline Vault in background
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          firestoreService.syncOfflineVault();
+        });
+
+        return GestureDetector(
+          onDoubleTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SOSScreen())),
+          child: Stack(
+            children: [
+             // Listen for active safety check-ins (DIALOG RENDERER)
+             if (currentEvent != null) ...[
+               StreamBuilder<bool>(
+                stream: firestoreService.hasUserResponded(currentEvent.eventId, userId),
                 builder: (context, responseSnapshot) {
                   final hasResponded = responseSnapshot.data ?? true;
                   if (!hasResponded) {
-                    // Show dialog on the next frame to avoid build conflicts
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _showSafetyCheckInDialog(context, event, firestoreService, userId);
+                      _showSafetyCheckInDialog(context, currentEvent, firestoreService, userId);
                     });
                   }
                   return const SizedBox.shrink();
                 },
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+              ),
+             ],
         
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildWeatherCard(context),
-              const SizedBox(height: 20),
-              _buildActiveSOSStatus(context),
-              const SizedBox(height: 40),
-              _buildSOSSection(context),
-              const SizedBox(height: 40),
-              _buildActionGrid(context),
-              const SizedBox(height: 32),
-              _buildMyReports(context),
-              const SizedBox(height: 32),
-              _buildLiveUpdates(context),
-              const SizedBox(height: 100),
-            ],
-          ),
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildWeatherCard(context),
+                  const SizedBox(height: 20),
+                  _buildActiveSOSStatus(context),
+                  const SizedBox(height: 40),
+                  _buildSOSSection(context),
+                  const SizedBox(height: 40),
+                  _buildActionGrid(context),
+                  const SizedBox(height: 32),
+                  _buildMyReports(context),
+                  const SizedBox(height: 32),
+                  _buildHazardFeed(context),
+                  const SizedBox(height: 32),
+                  _buildLiveUpdates(context),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      );
+    },
+  );
+}
+
+  void _checkForAcceptedReports(BuildContext context, FirestoreService firestore, String userId) {
+    firestore.getIncidents().listen((incidents) {
+      if (!mounted) return;
+      for (var inc in incidents) {
+        if (inc.userId == userId && inc.status == 'dispatched' && !_notifiedIncidentIds.contains(inc.incidentId)) {
+          _notifiedIncidentIds.add(inc.incidentId);
+          _showReportAcceptedDialog(context, inc);
+        }
+      }
+    });
+  }
+
+  void _showReportAcceptedDialog(BuildContext context, IncidentModel inc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 12),
+            Text('Report Accepted', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Your emergency report has been accepted and help is being dispatched to your location.', 
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.timer_outlined, color: Colors.green),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('EST. RESPONSE TIME', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green)),
+                      Text('5 - 12 Minutes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.green)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+             style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('UNDERSTOOD'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -364,9 +513,9 @@ class CitizenDashboard extends StatelessWidget {
           ],
         ),
       );
-    });
-  }
-
+    },
+  );
+}
   Widget _buildSOSSection(BuildContext context) {
     return Center(
       child: Column(
@@ -399,8 +548,113 @@ class CitizenDashboard extends StatelessWidget {
       children: [
         _buildActionCard(context, 'MAP', 'Real-time locations', Icons.map_rounded, const Color(0xFF6366F1), const GlobalMapScreen()),
         _buildActionCard(context, 'REPORT', 'Incident evidence', Icons.add_a_photo_rounded, const Color(0xFFEC4899), const ReportScreen()),
+        _buildActionCard(context, 'HAZARDS', 'Recent danger pics', Icons.warning_amber_rounded, Colors.orange, const HazardGalleryScreen()),
         _buildActionCard(context, 'OFFLINE VAULT', 'First Aid & Safety', Icons.book_rounded, const Color(0xFFF59E0B), const OfflineVaultScreen()),
         _buildActionCard(context, 'CONTACTS', 'Emergency services', Icons.contact_phone_rounded, const Color(0xFF10B981), const ContactsScreen()),
+        _buildActionCard(context, 'WEATHER', 'Cadiz City Forecast', Icons.cloud_queue_rounded, Colors.lightBlue, const WeatherScreen()),
+      ],
+    );
+  }
+
+  Widget _buildHazardFeed(BuildContext context) {
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Community Hazards Feed',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HazardGalleryScreen())),
+              child: const Text('View All', style: TextStyle(color: AppConstants.primaryRed)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: StreamBuilder<List<HazardModel>>(
+            stream: firestoreService.getHazards(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Center(
+                    child: Text('No hazard reports yet.', style: TextStyle(color: isDark ? Colors.white24 : Colors.black26)),
+                  ),
+                );
+              }
+
+              final hazards = snapshot.data!.take(5).toList();
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: hazards.length,
+                itemBuilder: (context, index) {
+                  final hazard = hazards[index];
+                  return Container(
+                    width: 150,
+                    margin: const EdgeInsets.only(right: 16),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E2841) : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                            child: hazard.imageBase64 != null
+                                ? Image.memory(base64Decode(hazard.imageBase64!), fit: BoxFit.cover, width: double.infinity)
+                                : Container(color: Colors.grey, child: const Icon(Icons.broken_image)),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Text(
+                            hazard.description,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportHazardScreen())),
+            icon: const Icon(Icons.add_a_photo_rounded, color: AppConstants.primaryRed),
+            label: const Text('REPORT NEW HAZARD', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppConstants.primaryRed.withOpacity(0.5)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -4,13 +4,12 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../core/constants.dart';
-import '../services/seed_service.dart';
-import 'admin_logs_screen.dart';
 import 'dart:convert';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import '../widgets/profile_image.dart';
 import '../services/firestore_service.dart';
+import 'sos_gesture_settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -59,10 +58,48 @@ class ProfileScreen extends StatelessWidget {
           children: [
             _buildProfileHeader(context, user, role),
             const SizedBox(height: 32),
+            if (role == AppConstants.roleCitizen) ...[
+              _buildSettingsSection(context, isDark),
+              const SizedBox(height: 20),
+            ],
             _buildSignOutButton(context, authService),
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: isDark ? const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E2841), Color(0xFF161E31)],
+        ) : null,
+        color: isDark ? null : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+        boxShadow: isDark ? [const BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4))] : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.gesture, color: AppConstants.primaryRed),
+            title: const Text('SOS Gesture Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Configure volume/power button triggers'),
+            trailing: Icon(Icons.chevron_right, color: isDark ? Colors.white24 : Colors.black26),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SOSGestureSettingsScreen())),
+          ),
+        ],
       ),
     );
   }
@@ -250,7 +287,6 @@ class ProfileScreen extends StatelessWidget {
           if (confirm == true) {
             await authService.logout();
             if (context.mounted) {
-              // Force immediate redirection and clear navigation stack
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => LoginScreen()),

@@ -112,16 +112,36 @@ class AuthService {
     }
   }
 
+  // Guest/Anonymous Login
+  Future<UserCredential?> signInAnonymously() async {
+    try {
+      final UserCredential userCredential = await _auth.signInAnonymously();
+      
+      // Fire-and-forget profile sync so it doesn't block login completion
+      _syncUserProfile(userCredential.user).catchError((e) {
+        print('Background Profile Sync Error (Guest): $e');
+      });
+      
+      return userCredential;
+    } catch (e) {
+      print('Anonymous Sign-In error: $e');
+      rethrow; // Rethrow so UI can show message
+    }
+  }
+
   // Helper to sync user profile to Firestore
   Future<void> _syncUserProfile(User? user) async {
     if (user != null) {
       final userDoc = await _db.collection(AppConstants.usersCollection).doc(user.uid).get();
       
-      // Determine what the role SHOULD be based on email
       String targetRole = AppConstants.roleCitizen;
       bool targetVerified = false;
-      
-      if (user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
+
+      // Determine what the role SHOULD be based on email
+      if (user.isAnonymous) {
+        targetRole = AppConstants.roleCitizen;
+        targetVerified = true; // Guests can use basic features immediately
+      } else if (user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
         targetRole = AppConstants.roleAdmin;
         targetVerified = true;
       } else if (user.email?.contains('responder') == true || 
@@ -134,8 +154,10 @@ class AuthService {
       if (!userDoc.exists) {
         UserModel userModel = UserModel(
           userId: user.uid,
-          name: user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'City Admin' : 'New User'),
-          email: user.email ?? '',
+          name: user.isAnonymous 
+              ? 'Guest Account' 
+              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'City Admin' : 'New User')),
+          email: user.email ?? 'guest@resqnnect.local',
           phone: '',
           profileImage: user.photoURL ?? '',
           role: targetRole,

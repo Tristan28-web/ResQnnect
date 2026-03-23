@@ -260,6 +260,13 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
                   ),
                 ),
 
+              // Map Help Button
+              Positioned(
+                top: 20,
+                right: _polylines.isNotEmpty ? 70 : 20,
+                child: _buildMapHelpButton(context),
+              ),
+
               // Bottom Sheet for Nearest Safe Zone
               if (safeZones.isNotEmpty)
                 Positioned(
@@ -519,6 +526,79 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
     }
 
     return markers;
+  }
+
+  Widget _buildMapHelpButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showLegendDialog(context),
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          color: AppConstants.surfaceDark.withOpacity(0.9),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10)],
+        ),
+        child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
+      ),
+    );
+  }
+
+  void _showLegendDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Row(
+          children: [
+            Icon(Icons.shield_outlined, color: Colors.greenAccent),
+            SizedBox(width: 12),
+            Text('Safety Guide', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Identification markers for safe zones:',
+              style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            _legendItem(Icons.local_hospital, Colors.greenAccent, 'Medical Facility', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.home_work, Colors.orangeAccent, 'Evacuation Center', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.person_pin_circle, Colors.blueAccent, 'Your Location', isDark),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('DISMISS'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendItem(IconData icon, Color color, String label, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(label, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14)),
+      ],
+    );
   }
 
   @override

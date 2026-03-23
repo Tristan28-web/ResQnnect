@@ -7,6 +7,7 @@ import '../services/firestore_service.dart';
 import '../services/location_service.dart';
 import '../models/sos_model.dart';
 import '../core/constants.dart';
+import '../services/sms_service.dart';
 
 class SOSScreen extends StatefulWidget {
   const SOSScreen({super.key});
@@ -143,13 +144,23 @@ class _SOSScreenState extends State<SOSScreen> {
       );
       
       await firestoreService.sendSOS(sos);
+      
+      // AUTO-SEND SMS TO PERSONAL CONTACTS 🌩️🚨✅
+      final smsSent = await SMSService.sendEmergencyAlert(
+        position.latitude, 
+        position.longitude, 
+        description.isEmpty ? 'SOS EMERGENCY SIGNALED' : description
+      );
+
       _detailsController.clear();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS Alert Sent! Responders are notified.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(smsSent 
+                ? 'SOS Alert Sent! Responders and emergency contacts notified.' 
+                : 'SOS Sent to Responders. (Check SMS Permissions for contacts)'),
+            backgroundColor: smsSent ? Colors.green : Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
         );

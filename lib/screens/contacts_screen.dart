@@ -1,9 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/constants.dart';
+import '../services/sms_service.dart';
 
-class ContactsScreen extends StatelessWidget {
+class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
+
+  @override
+  State<ContactsScreen> createState() => _ContactsScreenState();
+}
+
+class _ContactsScreenState extends State<ContactsScreen> {
+  List<Map<String, String>> _personalContacts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    final contacts = await SMSService.getEmergencyContacts();
+    setState(() {
+      _personalContacts = contacts;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _saveContacts() async {
+    await SMSService.saveEmergencyContacts(_personalContacts);
+  }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(
@@ -11,6 +38,63 @@ class ContactsScreen extends StatelessWidget {
       path: phoneNumber,
     );
     await launchUrl(launchUri);
+  }
+
+  void _addContact() {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Add Emergency Contact', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Name', hintText: 'e.g. Mom, Brother...'),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: 'Phone Number', hintText: '09XX XXX XXXX'),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryRed, foregroundColor: Colors.white),
+            onPressed: () {
+              if (nameController.text.isNotEmpty && phoneController.text.isNotEmpty) {
+                setState(() {
+                  _personalContacts.add({
+                    'name': nameController.text,
+                    'number': phoneController.text,
+                  });
+                });
+                _saveContacts();
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('ADD CONTACT'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteContact(int index) {
+     setState(() {
+      _personalContacts.removeAt(index);
+    });
+    _saveContacts();
   }
 
   @override
@@ -22,20 +106,74 @@ class ContactsScreen extends StatelessWidget {
         title: Text('EMERGENCY CONTACTS', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            children: [
+              _buildInfoNote(context),
+              const SizedBox(height: 32),
+              
+              // PERSONAL CONTACTS Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   _buildContactCategory(context, 'Primary Inner Circle'),
+                   TextButton.icon(
+                     onPressed: _addContact, 
+                     icon: const Icon(Icons.add, size: 16, color: AppConstants.primaryRed),
+                     label: const Text('ADD NEW', style: TextStyle(color: AppConstants.primaryRed, fontSize: 11, fontWeight: FontWeight.bold))
+                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_personalContacts.isEmpty)
+                _buildEmptyState(isDark)
+              else
+                ...List.generate(_personalContacts.length, (index) {
+                   final contact = _personalContacts[index];
+                   return _buildContactTile(
+                     context, 
+                     contact['name'] ?? 'Contact', 
+                     contact['number'] ?? '', 
+                     Icons.person_pin_rounded,
+                     canDelete: true,
+                     onDelete: () => _deleteContact(index),
+                   );
+                }),
+
+              const SizedBox(height: 32),
+              _buildContactCategory(context, 'City Responders (Direct Line)'),
+              _buildContactTile(context, 'Cadiz City Disaster Office', '911', Icons.emergency_rounded),
+              _buildContactTile(context, 'BFP Cadiz City', '034-493-0111', Icons.fire_truck_rounded),
+              _buildContactTile(context, 'Cadiz City Police Station', '0998-598-6325', Icons.local_police_rounded),
+              const SizedBox(height: 32),
+              _buildContactCategory(context, 'Public Hospitals'),
+              _buildContactTile(context, 'Cadiz District Hospital', '034-493-0101', Icons.local_hospital_rounded),
+              _buildContactTile(context, 'Red Cross Cadiz', '034-712-1234', Icons.medical_services_rounded),
+              const SizedBox(height: 40),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.01) : Colors.black.withOpacity(0.01),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
+      ),
+      child: Column(
         children: [
-          _buildInfoNote(context),
-          const SizedBox(height: 24),
-          _buildContactCategory(context, 'City Contacts'),
-          _buildContactTile(context, 'Cadiz City Disaster Office', '911', Icons.emergency_rounded),
-          _buildContactTile(context, 'BFP Cadiz City', '034-493-0111', Icons.fire_truck_rounded),
-          _buildContactTile(context, 'Cadiz City Police Station', '0998-598-6325', Icons.local_police_rounded),
-          const SizedBox(height: 32),
-          _buildContactCategory(context, 'Medical Facilities'),
-          _buildContactTile(context, 'Cadiz District Hospital', '034-493-0101', Icons.local_hospital_rounded),
-          _buildContactTile(context, 'Red Cross Cadiz', '034-712-1234', Icons.medical_services_rounded),
-          const SizedBox(height: 40),
+          Icon(Icons.people_outline_rounded, color: isDark ? Colors.white12 : Colors.black12, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            'Keep your family close. Add contacts to your inner circle to auto-notify them during SOS.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -52,12 +190,12 @@ class ContactsScreen extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(Icons.info_outline, color: AppConstants.primaryRed, size: 20),
+          Icon(Icons.verified_user_rounded, color: AppConstants.primaryRed, size: 20),
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'All calls made through this screen are high-priority emergency requests.',
-              style: TextStyle(color: AppConstants.primaryRed, fontSize: 12, fontWeight: FontWeight.bold),
+              'Your inner circle will receive a direct location-link via SMS if you pull the SOS trigger.',
+              style: TextStyle(color: AppConstants.primaryRed, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -72,7 +210,7 @@ class ContactsScreen extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w900,
           color: isDark ? Colors.white38 : Colors.black38,
           letterSpacing: 1.5,
@@ -81,7 +219,7 @@ class ContactsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactTile(BuildContext context, String name, String number, IconData icon) {
+  Widget _buildContactTile(BuildContext context, String name, String number, IconData icon, {bool canDelete = false, VoidCallback? onDelete}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -110,15 +248,22 @@ class ContactsScreen extends StatelessWidget {
         ),
         title: Text(name, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
         subtitle: Text(number, style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 14)),
-        trailing: Container(
-          decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.call, color: Colors.green, size: 20),
-            onPressed: () => _makePhoneCall(number),
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (canDelete)
+              IconButton(onPressed: onDelete, icon: Icon(Icons.delete_outline_rounded, color: Colors.grey.withOpacity(0.5))),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.call, color: Colors.green, size: 20),
+                onPressed: () => _makePhoneCall(number),
+              ),
+            ),
+          ],
         ),
       ),
     );

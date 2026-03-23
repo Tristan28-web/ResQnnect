@@ -11,6 +11,8 @@ class HazardModel {
   final String hazardId;
   final HazardType type;
   final String description;
+  final String? imageUrl;
+  final String? imageBase64;
   final double latitude;
   final double longitude;
   final DateTime timestamp;
@@ -21,6 +23,8 @@ class HazardModel {
     required this.hazardId,
     required this.type,
     required this.description,
+    this.imageUrl,
+    this.imageBase64,
     required this.latitude,
     required this.longitude,
     required this.timestamp,
@@ -33,6 +37,8 @@ class HazardModel {
       hazardId: data['hazard_id'] ?? '',
       type: _parseType(data['type']),
       description: data['description'] ?? '',
+      imageUrl: data['image_url'],
+      imageBase64: data['image_base64'],
       latitude: (data['latitude'] as num).toDouble(),
       longitude: (data['longitude'] as num).toDouble(),
       timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -46,6 +52,8 @@ class HazardModel {
       'hazard_id': hazardId,
       'type': type.name,
       'description': description,
+      'image_url': imageUrl,
+      'image_base64': imageBase64,
       'latitude': latitude,
       'longitude': longitude,
       'timestamp': Timestamp.fromDate(timestamp),

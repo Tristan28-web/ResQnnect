@@ -37,9 +37,16 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      // Navigation is now handled natively by the AuthWrapper in main.dart
-      // When login returns, the Firebase auth stream emits, triggering AuthWrapper.
-      // Firestore sync happens inside authService.login, ensuring profile exists.
+      // ✅ Explicit navigation: clear entire stack and go directly to DashboardScreen.
+      // This is required because LoginScreen may be sitting on top of AuthWrapper
+      // in the Navigator stack (e.g. after a logout), which would block AuthWrapper
+      // from becoming visible even after it rebuilds to show the dashboard.
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          (route) => false,
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Login Failed.';
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
@@ -53,21 +60,18 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (e.code == 'user-disabled') {
         message = 'This user account has been disabled.';
       }
-      
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An unexpected error occurred.')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }
@@ -83,9 +87,97 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Google Sign-In Cancelled or Failed.')),
         );
-        // Navigation handled natively by AuthWrapper.
+      } else {
+        // ✅ Explicit navigation after Google login
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          (route) => false,
+        );
       }
     }
+  }
+
+  void _guestLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final result = await authService.signInAnonymously();
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (result == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Guest login is currently unavailable. Please try registering or using Google Sign-In.')),
+          );
+        } else {
+          // ✅ Explicit navigation after guest login - clears stack
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final errorStr = e.toString();
+        // Detect when Anonymous Auth is disabled in Firebase Console
+        if (errorStr.contains('admin-restricted-operation') || 
+            errorStr.contains('operation-not-allowed')) {
+          _showGuestLoginDisabledDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Guest Login Failed: $errorStr'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showGuestLoginDisabledDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.lock_outline, color: AppConstants.primaryRed),
+            const SizedBox(width: 10),
+            Text('Guest Login Unavailable',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Anonymous sign-in is not yet enabled for this app.\n\n'
+          'To fix this:\n'
+          '1. Go to Firebase Console\n'
+          '2. Navigate to Authentication → Sign-in method\n'
+          '3. Enable "Anonymous" provider\n\n'
+          'Alternatively, you can register as a Citizen or use Google Sign-In.',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black87,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CLOSE', style: TextStyle(color: AppConstants.primaryRed)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -188,7 +280,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   letterSpacing: 1,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              Text(
+                'Don\'t want to use Google? Continue as Guest.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _isLoading ? null : _guestLogin,
+                 style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text('LOGIN AS GUEST', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _isLoading ? null : _googleLogin,
                 style: OutlinedButton.styleFrom(

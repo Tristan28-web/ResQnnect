@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../core/constants.dart';
 import '../models/map_location_model.dart';
 import '../models/hazard_model.dart';
@@ -35,15 +36,20 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
   static const LatLng _cadizCenter = LatLng(10.9574, 123.2978);
 
   MapType _selectedMapType = MapType.normal;
-  MapLocationModel? _selectedLocation;
   bool _isAddingPin = false; // admin pin placement mode
   LatLng? _pendingPinLatLng;   // tap position waiting for confirmation
+  MapLocationModel? _selectedLocation;
+  IncidentModel? _selectedIncident;
+  HazardModel? _selectedHazard;
   Stream<List<MapLocationModel>>? _locationsStream;
   Stream<List<IncidentModel>>? _incidentsStream;
   Stream<List<HazardModel>>? _hazardsStream;
   Stream<List<SOSRequestModel>>? _sosStream;
   StreamSubscription<Position>? _positionSubscription;
   Position? _currentPos;
+  Map<String, dynamic>? _activeRouteInfo;
+  List<dynamic> _routeSteps = [];
+  int _currentStepIndex = 0;
   HazardModel? _proximityHazard;
   final Set<String> _notifiedHazards = {};
   Set<Polyline> _polylines = {};
@@ -178,30 +184,35 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'OK') {
-          List<LatLng> decodedPoints = [];
-          // Instead of decoding the polyline which relies on JS bitwise operations that
-          // can silently overflow on Flutter Web, we extract the step start and end locations.
-          // This creates a solid connect-the-dots route without integer corruption.
-          final steps = data['routes'][0]['legs'][0]['steps'];
-          for (var step in steps) {
-            decodedPoints.add(LatLng(step['start_location']['lat'], step['start_location']['lng']));
-            decodedPoints.add(LatLng(step['end_location']['lat'], step['end_location']['lng']));
-          }
-          
-          setState(() {
-            _polylines = {
-              Polyline(
-                polylineId: const PolylineId('active_route'),
-                points: decodedPoints,
-                color: AppConstants.primaryRed,
-                width: 5,
-                // Removed jointType and caps as they cause severe rendering glitches on Web (CanvasKit)
-              ),
-            };
-            _activeRouteDestination = destination;
-          });
+          final routes = data['routes'] as List;
+          if (routes.isNotEmpty) {
+            final route = routes[0];
+            final overviewPolyline = route['overview_polyline']['points'];
+            final decodedPoints = _decodePolyline(overviewPolyline);
+            
+            setState(() {
+              _polylines = {
+                Polyline(
+                  polylineId: const PolylineId('active_route'),
+                  points: decodedPoints,
+                  color: AppConstants.primaryRed,
+                  width: 6,
+                  jointType: JointType.round,
+                  startCap: Cap.roundCap,
+                  endCap: Cap.roundCap,
+                ),
+              };
+              _activeRouteDestination = destination;
+              _activeRouteInfo = route['legs'][0];
+              _routeSteps = _activeRouteInfo!['steps'];
+              _currentStepIndex = 0;
+              _selectedLocation = null;
+              _selectedIncident = null;
+              _selectedHazard = null;
+            });
 
-          _fitRoute(decodedPoints);
+            _fitRoute(decodedPoints);
+          }
         } else {
           throw 'Directions API error: ${data['status']} - ${data['error_message'] ?? 'No detail'}';
         }
@@ -351,13 +362,23 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                               if (_isAddingPin) {
                                 setState(() => _pendingPinLatLng = latLng);
                               } else {
-                                setState(() => _selectedLocation = null);
+                                setState(() {
+                                  _selectedLocation = null;
+                                  _selectedIncident = null;
+                                  _selectedHazard = null;
+                                });
                               }
                             },
                           ),
 
+                          // ═══════════════════════ REAL-TIME NAVIGATION GUIDE ═════════════════════════
+                          if (_polylines.isNotEmpty && _activeRouteInfo != null) ...[
+                            _buildTopNavigationBanner(context),
+                            _buildBottomNavigationSummary(context),
+                          ],
+
                         // ⚠️ PROXIMITY WARNING BANNER ⚠️
-                        if (_proximityHazard != null)
+                        if (_proximityHazard != null && _polylines.isEmpty) // Hide when navigating for clarity
                           Positioned(
                             top: _isAddingPin ? 60 : 20,
                             left: 20,
@@ -444,70 +465,37 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                             Positioned(
                               top: _isAddingPin ? 52 : 12,
                               left: 12,
-                              right: 12,
+                              right: 68, // Leaves 56px for the right-side control column
                               child: _buildInfoCard(_selectedLocation!, isAdmin, context),
                             ),
 
-                          // ═══════════════════════ MAP LEGEND (Top-Left) ════════════════════════
-                          Positioned(
-                            top: (_isAddingPin || _selectedLocation != null) ? 80 : 12,
-                            left: 12,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildMapLegend(visibleSOSCount, hazards.length),
-                                const SizedBox(height: 6),
-                                if (incidents.isNotEmpty || visibleSOSCount > 0 || hazards.isNotEmpty)
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 4),
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: AppConstants.primaryRed,
-                                      borderRadius: BorderRadius.circular(6),
-                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 8)],
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 11),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${incidents.length + visibleSOSCount + hazards.length} TOTAL ALERTS',
-                                          style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? AppConstants.backgroundBlack.withOpacity(0.88) : Colors.white.withOpacity(0.88),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08)),
-                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.1), blurRadius: 8)],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.push_pin, color: AppConstants.primaryRed, size: 11),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${locations.length} pinned',
-                                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 10, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                          if (_selectedIncident != null)
+                            Positioned(
+                              top: _isAddingPin ? 52 : 12,
+                              left: 12,
+                              right: 68,
+                              child: _buildIncidentCard(_selectedIncident!, context),
                             ),
-                          ),
+
+                          if (_selectedHazard != null)
+                            Positioned(
+                              top: _isAddingPin ? 52 : 12,
+                              left: 12,
+                              right: 68,
+                              child: _buildHazardCard(_selectedHazard!, context),
+                            ),
+
                           // ═══════════════════════ ACTION BUTTONS (Right Side) ═══════════════════
-                          Positioned(
-                            bottom: 24,
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            bottom: (_polylines.isNotEmpty && _activeRouteInfo != null) ? 160 : 24,
                             right: 12,
                             child: Column(
                               children: [
+                                // MAP HELP BUTTON
+                                _buildMapHelpButton(context, visibleSOSCount, hazards.length, locations.length, incidents.length),
+                                const SizedBox(height: 12),
                                 // ZOOM IN
                                 _mapFab(Icons.add, () => _mapController?.animateCamera(CameraUpdate.zoomIn())),
                                 const SizedBox(height: 12),
@@ -520,18 +508,6 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                                   child: _mapFab(Icons.home_outlined, () => _mapController?.animateCamera(
                                     CameraUpdate.newLatLngZoom(_cadizCenter, 13.0))),
                                 ),
-                                if (_polylines.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  Tooltip(
-                                    message: 'Clear current route',
-                                    child: _mapFab(Icons.close_rounded, () {
-                                      setState(() {
-                                        _polylines.clear();
-                                        _activeRouteDestination = null;
-                                      });
-                                    }),
-                                  ),
-                                ],
                                 const SizedBox(height: 24),
                                 // REPORT HAZARD
                                 FloatingActionButton(
@@ -685,6 +661,8 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     final descriptionController = TextEditingController();
     HazardType selectedType = HazardType.roadHazard;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    String? base64Image;
+    final ImagePicker picker = ImagePicker();
 
     // Show the dialog IMMEDIATELY so the user gets instant feedback
     showDialog(
@@ -769,6 +747,44 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           )).toList(),
                           onChanged: (val) => setLocal(() => selectedType = val!),
                         ),
+                        const SizedBox(height: 16),
+                        // Photo Picker Section
+                        InkWell(
+                          onTap: () async {
+                            final image = await picker.pickImage(
+                              source: ImageSource.camera,
+                              imageQuality: 50,
+                            );
+                            if (image != null) {
+                              final bytes = await image.readAsBytes();
+                              setLocal(() {
+                                base64Image = base64Encode(bytes);
+                              });
+                            }
+                          },
+                          child: Container(
+                            height: 100,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                            ),
+                            child: base64Image != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: Image.memory(base64Decode(base64Image!), fit: BoxFit.cover),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_a_photo_outlined, color: AppConstants.primaryRed.withOpacity(0.7), size: 28),
+                                      const SizedBox(height: 8),
+                                      Text('Add Hazard Photo', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11)),
+                                    ],
+                                  ),
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -802,6 +818,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                                   hazardId: DateTime.now().millisecondsSinceEpoch.toString(),
                                   type: selectedType,
                                   description: descriptionController.text.trim(),
+                                  imageBase64: base64Image,
                                   latitude: loc.latitude,
                                   longitude: loc.longitude,
                                   reportedBy: user.uid,
@@ -939,7 +956,11 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
           markerId: MarkerId('inc_${inc.incidentId}'),
           position: latLng,
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(title: 'INCIDENT', snippet: inc.description),
+          onTap: () => setState(() {
+            _selectedIncident = inc;
+            _selectedLocation = null;
+            _selectedHazard = null;
+          }),
         ));
       }
     }
@@ -954,7 +975,6 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
             position: latLng,
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             onTap: () => _showSOSDetails(sos),
-            infoWindow: const InfoWindow(title: 'SOS ALERT', snippet: 'Citizen needs assistance'),
           ));
         }
       }
@@ -966,7 +986,11 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
         markerId: MarkerId('haz_${hazard.hazardId}'),
         position: LatLng(hazard.latitude, hazard.longitude),
         icon: BitmapDescriptor.defaultMarkerWithHue(_hazardHue(hazard.type)),
-        infoWindow: InfoWindow(title: 'HAZARD', snippet: hazard.description),
+        onTap: () => setState(() {
+          _selectedHazard = hazard;
+          _selectedLocation = null;
+          _selectedIncident = null;
+        }),
       ));
     }
 
@@ -1174,46 +1198,78 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? AppConstants.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _typeColor(loc.type).withOpacity(0.35)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20)],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _typeColor(loc.type).withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(_typeIcon(loc.type), color: _typeColor(loc.type), size: 22),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _typeColor(loc.type).withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_typeIcon(loc.type), color: _typeColor(loc.type), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(loc.label, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text(_typeName(loc.type).toUpperCase(),
+                        style: TextStyle(color: _typeColor(loc.type), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+                  ],
+                ),
+              ),
+              if (isAdmin)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                  tooltip: 'Remove pin',
+                  onPressed: () => _confirmDelete(context, loc),
+                ),
+              IconButton(
+                icon: Icon(Icons.close, color: isDark ? Colors.white38 : Colors.black38, size: 18),
+                onPressed: () => setState(() => _selectedLocation = null),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(loc.label, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(_typeName(loc.type).toUpperCase(),
-                    style: TextStyle(color: _typeColor(loc.type), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
-                if (loc.description.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(loc.description, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
-                ],
-              ],
+          if (loc.description.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                loc.description,
+                style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
+              ),
             ),
-          ),
-          if (isAdmin)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-              tooltip: 'Remove pin',
-              onPressed: () => _confirmDelete(context, loc),
-            ),
-          IconButton(
-            icon: Icon(Icons.close, color: isDark ? Colors.white38 : Colors.black38, size: 18),
-            onPressed: () => setState(() => _selectedLocation = null),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _fetchDirections(LatLng(loc.latitude, loc.longitude)),
+                  icon: _isFetchingRoute 
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70))
+                      : const Icon(Icons.directions_outlined, size: 18),
+                  label: const Text('NAVIGATE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _typeColor(loc.type),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1221,94 +1277,425 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
   }
 
 
-  Widget _buildMapLegend(int sosCount, int hazardCount) {
+  Widget _buildMapHelpButton(BuildContext context, int sosCount, int hazardCount, int pinCount, int incidentCount) {
+    return GestureDetector(
+      onTap: () => _showLegendDialog(context, sosCount, hazardCount, pinCount, incidentCount),
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          color: AppConstants.surfaceDark.withOpacity(0.9),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10)],
+        ),
+        child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
+      ),
+    );
+  }
+
+  void _showLegendDialog(BuildContext context, int sosCount, int hazardCount, int pinCount, int incidentCount) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? AppConstants.surfaceDark.withOpacity(0.9) : Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 3),
-          )
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: Row(
+          children: [
+            Icon(Icons.map_outlined, color: isDark ? Colors.white70 : Colors.black54),
+            const SizedBox(width: 12),
+            const Text('Map Guide', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Identification markers for this map:',
+              style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13),
+            ),
+            const SizedBox(height: 20),
+            _legendItem(Icons.shield_rounded, AppConstants.primaryRed, 'Command Center', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.local_hospital, Colors.greenAccent, 'Medical Facility', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.emergency_share, Colors.blueAccent, 'Responder Unit', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.home_work, Colors.orangeAccent, 'Evacuation Center', isDark),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+             _legendItem(Icons.warning_amber_rounded, Colors.yellow, 'Road Hazard', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.cyclone_rounded, Colors.deepOrangeAccent, 'Natural Disaster', isDark),
+            const SizedBox(height: 12),
+            _legendItem(Icons.report_problem_rounded, Colors.purpleAccent, 'Other Hazard', isDark),
+             const SizedBox(height: 24),
+              Text(
+                'LIVE STATUS',
+                style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: [
+                  _statusBadge(Icons.push_pin, AppConstants.primaryRed, '$pinCount pinned', isDark),
+                   if (incidentCount > 0)
+                     _statusBadge(Icons.emergency, AppConstants.primaryRed, '$incidentCount incidents', isDark),
+                   if (sosCount > 0)
+                     _statusBadge(Icons.warning, AppConstants.primaryRed, '$sosCount emergencies', isDark),
+                   if (hazardCount > 0)
+                     _statusBadge(Icons.warning_amber_rounded, Colors.orange, '$hazardCount hazards', isDark),
+                ],
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('DISMISS'),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Widget _statusBadge(IconData icon, Color color, String label, bool isDark) {
+     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'LEGEND',
-            style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-          ),
-          const SizedBox(height: 6),
-          _legendItem(Icons.shield_rounded, AppConstants.primaryRed, 'Command Center', isDark),
-          _legendItem(Icons.local_hospital, Colors.greenAccent, 'Medical Facility', isDark),
-          _legendItem(Icons.emergency_share, Colors.blueAccent, 'Responder Unit', isDark),
-          _legendItem(Icons.home_work, Colors.orangeAccent, 'Evacuation Center', isDark),
-          _legendItem(Icons.warning_amber_rounded, Colors.yellow, 'Road Hazard', isDark),
-          _legendItem(Icons.cyclone_rounded, Colors.deepOrangeAccent, 'Natural Disaster', isDark),
-          _legendItem(Icons.report_problem_rounded, Colors.purpleAccent, 'Other Hazard', isDark),
-          if (sosCount > 0) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: AppConstants.primaryRed,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.white, size: 10),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$sosCount EMERGENCIES',
-                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (hazardCount > 0) ...[
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.5)),
-              ),
-              child: Row(
-                children: [
-                   const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 10),
-                   const SizedBox(width: 4),
-                   Text(
-                     '$hazardCount Hazards',
-                     style: TextStyle(color: isDark ? Colors.orangeAccent : Colors.orange.shade800, fontSize: 9, fontWeight: FontWeight.bold),
-                   ),
-                ],
-              ),
-            ),
-          ],
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
   Widget _legendItem(IconData icon, Color color, String label, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(label, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildIncidentCard(IncidentModel inc, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final latLng = _parseLocation(inc.location);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppConstants.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppConstants.primaryRed.withOpacity(0.35)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 11),
-          const SizedBox(width: 5),
-          Expanded(child: Text(label, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 10))),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppConstants.primaryRed.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.emergency_rounded, color: AppConstants.primaryRed, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('INCIDENT REPORT', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text(inc.status.toUpperCase(),
+                        style: const TextStyle(color: AppConstants.primaryRed, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, color: isDark ? Colors.white38 : Colors.black38, size: 18),
+                onPressed: () => setState(() => _selectedIncident = null),
+              ),
+            ],
+          ),
+          if (inc.imageBase64 != null) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.memory(base64Decode(inc.imageBase64!), height: 120, width: double.infinity, fit: BoxFit.cover),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              inc.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (latLng != null)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _fetchDirections(latLng),
+                    icon: _isFetchingRoute 
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70))
+                        : const Icon(Icons.directions_outlined, size: 18),
+                    label: const Text('NAVIGATE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryRed,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHazardCard(HazardModel hazard, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = _hazardColor(hazard.type);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppConstants.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.35)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_hazardIcon(hazard.type), color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_hazardName(hazard.type).toUpperCase(), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text('REPORTED HAZARD',
+                        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, color: isDark ? Colors.white38 : Colors.black38, size: 18),
+                onPressed: () => setState(() => _selectedHazard = null),
+              ),
+            ],
+          ),
+          if (hazard.imageBase64 != null) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.memory(base64Decode(hazard.imageBase64!), height: 120, width: double.infinity, fit: BoxFit.cover),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              hazard.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _fetchDirections(LatLng(hazard.latitude, hazard.longitude)),
+                  icon: _isFetchingRoute 
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70))
+                      : const Icon(Icons.directions_outlined, size: 18),
+                  label: const Text('NAVIGATE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.black, // Dark text for yellow/orange
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopNavigationBanner(BuildContext context) {
+    if (_routeSteps.isEmpty) return const SizedBox.shrink();
+    final step = _routeSteps[_currentStepIndex];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Simple HTML cleaning for instructions
+    String instruction = (step['html_instructions'] as String)
+        .replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    return Positioned(
+      top: 0, left: 0, right: 0,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF006B3F), // Dark green navigation style
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20)],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.navigation_rounded, color: Colors.white, size: 36),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text(
+                    instruction,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Text('Dist:', style: TextStyle(color: Colors.white60, fontSize: 12)),
+                      const SizedBox(width: 4),
+                      Text(step['distance']['text'], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white, size: 26),
+              onPressed: () => setState(() {
+                _polylines.clear();
+                _activeRouteInfo = null;
+                _routeSteps = [];
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationSummary(BuildContext context) {
+    if (_activeRouteInfo == null) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Positioned(
+      bottom: 0, left: 0, right: 0,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+        decoration: BoxDecoration(
+          color: isDark ? AppConstants.surfaceDark : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 40, offset: const Offset(0, -10))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _activeRouteInfo!['duration']['text'],
+                      style: const TextStyle(color: Colors.green, fontSize: 32, fontWeight: FontWeight.w900),
+                    ),
+                    Row(
+                      children: [
+                        Text(_activeRouteInfo!['distance']['text'], style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 13, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        Text('• ETA: ${DateFormat('h:mm a').format(DateTime.now().add(Duration(seconds: _activeRouteInfo!['duration']['value'])))}', 
+                             style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13)),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  height: 60, width: 60,
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryRed.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: IconButton(
+                      icon: const Icon(Icons.close_rounded, color: AppConstants.primaryRed, size: 30),
+                      onPressed: () => setState(() {
+                        _polylines.clear();
+                        _activeRouteInfo = null;
+                        _activeRouteDestination = null;
+                      }),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Step simulator if we had movement, but for now just show we are on step X
+            if (_routeSteps.length > 1)
+              LinearProgressIndicator(
+                value: (_currentStepIndex + 1) / _routeSteps.length,
+                backgroundColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                borderRadius: BorderRadius.circular(10),
+                minHeight: 4,
+              ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

@@ -12,11 +12,14 @@ import 'global_map_screen.dart';
 import '../models/incident_model.dart';
 import '../models/sos_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'hazard_gallery_screen.dart';
 
 import 'package:intl/intl.dart';
 import 'responder_tasks_screen.dart';
 import 'dart:async';
 import 'dart:convert';
+import '../services/alert_notification_service.dart';
+import '../models/sos_model.dart';
 
 class ResponderDashboard extends StatefulWidget {
   const ResponderDashboard({super.key});
@@ -34,6 +37,12 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
   Stream<Map<String, dynamic>?>? _missionStream;
   Stream<int>? _incidentCountStream;
   Stream<int>? _alertCountStream;
+
+  int _lastIncidentCount = -1;
+  int _lastAlertCount = -1;
+  int _lastSOSCount = -1;
+  String? _lastMissionId;
+  final Set<String> _notifiedSOSIds = {};
 
   @override
   void initState() {
@@ -76,6 +85,84 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
     return '${diff.inMinutes}m';
   }
 
+  void _showSOSAlertPopup(BuildContext context, SOSRequestModel sos) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppConstants.primaryRed,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        contentPadding: EdgeInsets.zero,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Icon(Icons.warning_rounded, color: Colors.white, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'INCOMING SOS!',
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 2),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'A citizen requires immediate assistance.',
+                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.white70, size: 16),
+                        const SizedBox(height: 4),
+                        Text(
+                          sos.location,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const GlobalMapScreen()));
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+                ),
+                child: const Center(
+                  child: Text(
+                    'OPEN MAP & RESPOND',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   LatLng? _parseLocation(String location) {
     try {
       if (location.contains(',')) {
@@ -95,38 +182,84 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
     final firestoreService = Provider.of<FirestoreService>(context, listen: false);
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-    return StreamBuilder<UserModel?>(
-      stream: _userStream,
-      builder: (context, userSnapshot) {
-        return StreamBuilder<Map<String, dynamic>?>(
-          stream: _missionStream,
-          builder: (context, missionSnapshot) {
-            final user = userSnapshot.data;
-            final isActive = user?.isActive ?? false;
-            final activeMission = missionSnapshot.data;
-            _shiftDuration = _calculateShift(user?.lastClockIn);
+    return MultiProvider(
+      providers: [
+        StreamProvider<UserModel?>(create: (_) => _userStream!, initialData: null),
+        StreamProvider<Map<String, dynamic>?>(create: (_) => _missionStream!, initialData: null),
+        StreamProvider<int>(create: (_) => _incidentCountStream!, initialData: 0),
+        StreamProvider<int>(create: (_) => _alertCountStream!, initialData: 0),
+        StreamProvider<List<SOSRequestModel>>(create: (_) => firestoreService.getSOSRequests(), initialData: const []),
+      ],
+      builder: (context, child) {
+        final user = Provider.of<UserModel?>(context);
+        final mission = Provider.of<Map<String, dynamic>?>(context);
+        final incidentCount = Provider.of<int>(context);
+        final alertCount = Provider.of<int>(context);
+        final sosList = Provider.of<List<SOSRequestModel>>(context);
 
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildMissionCard(context, firestoreService, userId, _shiftDuration, activeMission),
-                  const SizedBox(height: 40),
-                  _buildStatusControl(context, firestoreService, userId, isActive, activeMission),
-                  const SizedBox(height: 40),
-                  _buildActionGrid(context),
-                  const SizedBox(height: 32),
-                  _buildActiveDispatches(context),
-                  const SizedBox(height: 32),
-                  _buildMissionLog(context),
-                  const SizedBox(height: 100),
-                ],
-              ),
-            );
-          },
+        // INITIALIZE ON FIRST LOAD (to avoid flashing when app opens)
+        if (_lastAlertCount == -1) {
+          _lastAlertCount = alertCount;
+          _lastIncidentCount = incidentCount;
+          _lastSOSCount = sosList.length;
+          _lastMissionId = mission?['missionId'];
+        }
+
+        // CHECK FOR NEW MISSION
+        if (mission != null && mission['missionId'] != _lastMissionId) {
+          _lastMissionId = mission['missionId'];
+          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
+        }
+
+        // CHECK FOR NEW INCIDENTS
+        if (incidentCount > _lastIncidentCount) {
+          _lastIncidentCount = incidentCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
+        }
+
+        // CHECK FOR NEW SOS (Responder should be VERY alert)
+        if (sosList.length > _lastSOSCount) {
+          final newSOS = sosList.firstWhere((s) => !_notifiedSOSIds.contains(s.sosId), orElse: () => sosList.first);
+          _lastSOSCount = sosList.length;
+          _notifiedSOSIds.add(newSOS.sosId);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            AlertNotificationService.instance.flashAlert();
+            _showSOSAlertPopup(context, newSOS);
+          });
+        }
+
+        // CHECK FOR NEW COMMUNITY ALERTS
+        if (alertCount > _lastAlertCount) {
+          _lastAlertCount = alertCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
+        }
+
+        if (user == null) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+
+        final isActive = user.isActive;
+        _shiftDuration = _calculateShift(user.lastClockIn);
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              _buildMissionCard(context, firestoreService, userId, _shiftDuration, mission),
+              const SizedBox(height: 40),
+              _buildStatusControl(context, firestoreService, userId, isActive, mission),
+              const SizedBox(height: 40),
+              _buildActionGrid(context),
+              const SizedBox(height: 32),
+              _buildActiveDispatches(context),
+              const SizedBox(height: 32),
+              _buildMissionLog(context),
+              const SizedBox(height: 100),
+            ],
+          ),
         );
       },
     );
@@ -299,17 +432,15 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () async {
+                          onPressed: () {
                             final latLng = _parseLocation(mission['location'] ?? '');
                             if (latLng != null) {
-                              final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${latLng.latitude},${latLng.longitude}');
-                              if (await canLaunchUrl(url)) {
-                                await launchUrl(url, mode: LaunchMode.externalApplication);
-                              } else if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Could not open map navigation.')),
-                                );
-                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GlobalMapScreen(initialLocation: latLng),
+                                ),
+                              );
                             }
                           },
                           icon: const Icon(Icons.navigation_rounded, size: 18),
@@ -488,8 +619,10 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
       children: [
         _buildActionCard(context, 'Alerts', 'Priority dispatches', Icons.notifications_active, AppConstants.primaryRed, const AlertsScreen()),
         _buildActionCard(context, 'Report', 'Incident log', Icons.add_task, const Color(0xFF3949AB), const ReportScreen()),
+        _buildActionCard(context, 'Hazards', 'Community dangers', Icons.warning_amber_rounded, Colors.orange, const HazardGalleryScreen()),
         _buildActionCard(context, 'Map', 'Navigation & zones', Icons.navigation, const Color(0xFF43A047), const GlobalMapScreen()),
         _buildActionCard(context, 'Contacts', 'Emergency ops', Icons.contact_phone, const Color(0xFF8E24AA), const ContactsScreen()),
+        _buildActionCard(context, 'Status', 'Update task state', Icons.checklist_rounded, Colors.blueGrey, const ResponderTasksScreen()),
       ],
     );
   }

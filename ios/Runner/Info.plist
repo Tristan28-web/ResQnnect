@@ -85,6 +85,15 @@
     <string>ResQnnect needs your location to provide real-time updates during emergency dispatches.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>ResQnnect needs your location for critical safety tracking.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>ResQnnect needs camera access to flash the light during emergency alerts.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>ResQnnect needs access to the microphone for emergency video reporting.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>remote-notification</string>
+    </array>
     
     <key>LSApplicationQueriesSchemes</key>
     <array>
