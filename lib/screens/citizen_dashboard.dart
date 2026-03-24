@@ -42,12 +42,8 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
   @override
   void initState() {
     super.initState();
-    // Initialize seen counts to current state to avoid flashing on first load
+    // Initialize counts
     final firestore = Provider.of<FirestoreService>(context, listen: false);
-    
-    firestore.getActiveSafetyCheck().first.then((event) {
-      if (mounted) _lastSafetyEventId = event?.eventId;
-    });
     
     firestore.getAlertCount().first.then((count) {
       if (mounted) _lastAlertCount = count;
@@ -89,9 +85,23 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
         final alertCount = Provider.of<int>(context);
 
         // CHECK FOR NEW SAFETY CHECK
-        if (currentEvent != null && currentEvent.eventId != _lastSafetyEventId) {
-          _lastSafetyEventId = currentEvent.eventId;
-           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+        if (currentEvent != null) {
+          if (_lastSafetyEventId == null) {
+            _lastSafetyEventId = currentEvent.eventId;
+            // First load: only flash if the event was triggered in the last 60 seconds
+            if (DateTime.now().difference(currentEvent.createdAt).inSeconds < 60) {
+              WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+            }
+          } else if (currentEvent.eventId != _lastSafetyEventId) {
+            // App is active and a new event came in
+            _lastSafetyEventId = currentEvent.eventId;
+            WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
+          }
+        } else {
+          // No active event
+          if (_lastSafetyEventId != null && _lastSafetyEventId != 'startup') {
+             _lastSafetyEventId = null;
+          }
         }
 
         // CHECK FOR NEW SOS

@@ -489,7 +489,9 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
-                            bottom: (_polylines.isNotEmpty && _activeRouteInfo != null) ? 160 : 24,
+                            bottom: (_polylines.isNotEmpty && _activeRouteInfo != null) 
+                                ? 160 + MediaQuery.of(context).padding.bottom 
+                                : 24 + MediaQuery.of(context).padding.bottom,
                             right: 12,
                             child: Column(
                               children: [
@@ -1484,9 +1486,41 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     );
   }
 
+  void _confirmResolveHazard(BuildContext context, HazardModel hazard) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Remove Hazard?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('This hazard report will be permanently deleted from the system. This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryRed),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Provider.of<FirestoreService>(context, listen: false).deleteHazard(hazard.hazardId);
+              setState(() => _selectedHazard = null);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hazard removed successfully!'), backgroundColor: Colors.green),
+                );
+              }
+            },
+            child: const Text('REMOVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHazardCard(HazardModel hazard, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = _hazardColor(hazard.type);
+    final isResponder = _isResponder(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1563,6 +1597,22 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                   ),
                 ),
               ),
+              if (isResponder) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _confirmResolveHazard(context, hazard),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    label: const Text('REMOVE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryRed,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ],
@@ -1635,7 +1685,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     return Positioned(
       bottom: 0, left: 0, right: 0,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+        padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + MediaQuery.of(context).padding.bottom),
         decoration: BoxDecoration(
           color: isDark ? AppConstants.surfaceDark : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),

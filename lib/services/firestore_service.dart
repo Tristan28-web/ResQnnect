@@ -338,7 +338,11 @@ class FirestoreService {
   Future<void> reportHazard(HazardModel hazard) async => addHazard(hazard);
 
   Future<void> resolveHazard(String hazardId) async {
-    await _db.collection('hazards').doc(hazardId).update({'status': 'resolved'});
+    await _db.collection('hazards').doc(hazardId).delete();
+  }
+
+  Future<void> deleteHazard(String hazardId) async {
+    await _db.collection('hazards').doc(hazardId).delete();
   }
 
   Stream<List<HazardModel>> getHazards() {

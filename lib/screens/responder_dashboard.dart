@@ -186,51 +186,58 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
       providers: [
         StreamProvider<UserModel?>(create: (_) => _userStream!, initialData: null),
         StreamProvider<Map<String, dynamic>?>(create: (_) => _missionStream!, initialData: null),
-        StreamProvider<int>(create: (_) => _incidentCountStream!, initialData: 0),
-        StreamProvider<int>(create: (_) => _alertCountStream!, initialData: 0),
-        StreamProvider<List<SOSRequestModel>>(create: (_) => firestoreService.getSOSRequests(), initialData: const []),
+        StreamProvider<int>(create: (_) => _incidentCountStream!, initialData: -1),
+        StreamProvider<int>(create: (_) => _alertCountStream!, initialData: -1),
+        StreamProvider<List<SOSRequestModel>?>(create: (_) => firestoreService.getSOSRequests(), initialData: null),
       ],
       builder: (context, child) {
         final user = Provider.of<UserModel?>(context);
         final mission = Provider.of<Map<String, dynamic>?>(context);
         final incidentCount = Provider.of<int>(context);
         final alertCount = Provider.of<int>(context);
-        final sosList = Provider.of<List<SOSRequestModel>>(context);
+        final sosList = Provider.of<List<SOSRequestModel>?>(context);
 
         // INITIALIZE ON FIRST LOAD (to avoid flashing when app opens)
-        if (_lastAlertCount == -1) {
+        if (_lastAlertCount == -1 && alertCount != -1) {
           _lastAlertCount = alertCount;
+        } else if (_lastAlertCount != -1 && alertCount > _lastAlertCount) {
+          _lastAlertCount = alertCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
+        }
+
+        if (_lastIncidentCount == -1 && incidentCount != -1) {
           _lastIncidentCount = incidentCount;
+        } else if (_lastIncidentCount != -1 && incidentCount > _lastIncidentCount) {
+          _lastIncidentCount = incidentCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
+        }
+
+        if (_lastSOSCount == -1 && sosList != null) {
           _lastSOSCount = sosList.length;
-          _lastMissionId = mission?['missionId'];
-        }
-
-        // CHECK FOR NEW MISSION
-        if (mission != null && mission['missionId'] != _lastMissionId) {
-          _lastMissionId = mission['missionId'];
-          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
-        }
-
-        // CHECK FOR NEW INCIDENTS
-        if (incidentCount > _lastIncidentCount) {
-          _lastIncidentCount = incidentCount;
-          WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
-        }
-
-        // CHECK FOR NEW SOS (Responder should be VERY alert)
-        if (sosList.length > _lastSOSCount) {
+          for (var s in sosList) {
+            _notifiedSOSIds.add(s.sosId);
+          }
+        } else if (_lastSOSCount != -1 && sosList != null && sosList.length > _lastSOSCount) {
           final newSOS = sosList.firstWhere((s) => !_notifiedSOSIds.contains(s.sosId), orElse: () => sosList.first);
           _lastSOSCount = sosList.length;
           _notifiedSOSIds.add(newSOS.sosId);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            AlertNotificationService.instance.flashAlert();
-            _showSOSAlertPopup(context, newSOS);
-          });
+          
+          if (newSOS.status != 'resolved') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              AlertNotificationService.instance.flashAlert();
+              _showSOSAlertPopup(context, newSOS);
+            });
+          }
+        } else if (sosList != null && sosList.length < _lastSOSCount) {
+          // If an SOS was deleted/resolved from DB, just update the count so it doesn't break future alerts
+          _lastSOSCount = sosList.length;
         }
 
-        // CHECK FOR NEW COMMUNITY ALERTS
-        if (alertCount > _lastAlertCount) {
-          _lastAlertCount = alertCount;
+        // We use 'uninitialized' check for string
+        if (_lastMissionId == null && mission != null) {
+          _lastMissionId = mission['missionId'];
+        } else if (mission != null && mission['missionId'] != _lastMissionId) {
+          _lastMissionId = mission['missionId'];
           WidgetsBinding.instance.addPostFrameCallback((_) => AlertNotificationService.instance.flashAlert());
         }
 

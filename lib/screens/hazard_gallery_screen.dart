@@ -6,6 +6,7 @@ import '../models/hazard_model.dart';
 import '../services/firestore_service.dart';
 import '../core/constants.dart';
 import 'report_hazard_screen.dart';
+import '../models/user_model.dart';
 
 class HazardGalleryScreen extends StatelessWidget {
   const HazardGalleryScreen({super.key});
@@ -147,6 +148,9 @@ class HazardGalleryScreen extends StatelessWidget {
 
   void _showHazardDetail(BuildContext context, HazardModel hazard) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = Provider.of<UserModel?>(context, listen: false);
+    final isResponder = user?.role == 'responder' || user?.role == 'admin';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -187,7 +191,7 @@ class HazardGalleryScreen extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +215,20 @@ class HazardGalleryScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                       _buildDetailRow(Icons.location_on_outlined, 'Location', '${hazard.latitude.toStringAsFixed(4)}, ${hazard.longitude.toStringAsFixed(4)}', isDark),
                       _buildDetailRow(Icons.calendar_today_outlined, 'Reported At', DateFormat('MMMM d, yyyy - h:mm a').format(hazard.timestamp), isDark),
-                      _buildDetailRow(Icons.info_outline_rounded, 'Status', hazard.status.toUpperCase(), isDark, color: Colors.orangeAccent),
+                      if (isResponder) ...[
+                        const SizedBox(height: 32),
+                        ElevatedButton.icon(
+                          onPressed: () => _confirmDeleteHazard(context, hazard),
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          label: const Text('REMOVE HAZARD', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.primaryRed,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 54),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -238,6 +255,37 @@ class HazardGalleryScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(value, style: TextStyle(color: color ?? (isDark ? Colors.white70 : Colors.black87), fontSize: 14, fontWeight: FontWeight.w500)),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteHazard(BuildContext context, HazardModel hazard) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Remove Hazard?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('This hazard report will be permanently deleted from the system. This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryRed),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              Navigator.pop(context); // Close the bottom sheet
+              await Provider.of<FirestoreService>(context, listen: false).deleteHazard(hazard.hazardId);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Hazard removed successfully!'), backgroundColor: Colors.green),
+                );
+              }
+            },
+            child: const Text('REMOVE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
