@@ -47,6 +47,14 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateIncidentStatusWithNotes(String incidentId, String status, {String? notes}) async {
+    final Map<String, dynamic> data = {'status': status};
+    if (notes != null && notes.isNotEmpty) {
+      data['resolution_notes'] = notes;
+    }
+    await _db.collection(AppConstants.incidentsCollection).doc(incidentId).update(data);
+  }
+
   Future<void> assignIncident(String incidentId, String responderId) async {
     await _db.collection(AppConstants.incidentsCollection).doc(incidentId).update({
       'assigned_to': responderId,
@@ -162,6 +170,27 @@ class FirestoreService {
 
   Future<void> updateResponderProfile(UserModel user) async {
     await _db.collection(AppConstants.usersCollection).doc(user.userId).update(user.toMap());
+  }
+
+  // --- LGU User Management (Module 10) ---
+  Stream<List<UserModel>> getAllUsers() {
+    return _db
+        .collection(AppConstants.usersCollection)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList());
+  }
+
+  Future<void> updateUserRole(String userId, String role) async {
+    await _db.collection(AppConstants.usersCollection).doc(userId).update({
+      'role': role,
+    });
+  }
+
+  Future<void> toggleUserStatus(String userId, bool currentStatus) async {
+    await _db.collection(AppConstants.usersCollection).doc(userId).update({
+      'is_active': !currentStatus,
+    });
   }
 
   // Get SOS Requests (Stream)

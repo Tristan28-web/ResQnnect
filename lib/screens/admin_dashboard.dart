@@ -15,6 +15,13 @@ import 'admin_incidents_screen.dart';
 import 'admin_sos_screen.dart';
 import 'safety_heatmap_screen.dart';
 import '../models/safety_check_model.dart';
+import 'incident_mapping_screen.dart';
+import 'incident_monitoring_screen.dart';
+import 'hotspot_identification_screen.dart';
+import 'predictive_analysis_screen.dart';
+import 'report_generation_screen.dart';
+import 'lgu_user_management_screen.dart';
+import 'report_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -28,9 +35,11 @@ class AdminDashboard extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
           _buildSystemStatusCard(context),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          _buildIncidentKpiSummary(context),
+          const SizedBox(height: 36),
           _buildEmergencyControl(context),
-          const SizedBox(height: 40),
+          const SizedBox(height: 36),
           _buildActionGrid(context),
           const SizedBox(height: 32),
           _buildRecentActivity(context),
@@ -225,21 +234,146 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  Widget _buildIncidentKpiSummary(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firestore = Provider.of<FirestoreService>(context, listen: false);
+
+    return StreamBuilder<List<IncidentModel>>(
+      stream: firestore.getIncidents(),
+      builder: (context, snapshot) {
+        final incidents = snapshot.data ?? [];
+        final total = incidents.length;
+        final ongoing = incidents.where((i) => i.status != 'resolved' && i.status != 'closed').length;
+        final resolved = incidents.where((i) => i.status == 'resolved').length;
+        final closed = incidents.where((i) => i.status == 'closed').length;
+
+        return Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E2841) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.dashboard_rounded, color: AppConstants.primaryRed, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'LGU INCIDENT SUMMARY',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text('GIS ACTIVE', style: TextStyle(color: Colors.greenAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // KPI Counters (Total, Ongoing, Resolved, Closed from Blueprint Module 7)
+              Row(
+                children: [
+                  Expanded(child: _buildKpiBox('TOTAL', '$total', isDark ? Colors.white : Colors.black87, isDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildKpiBox('ONGOING', '$ongoing', Colors.orangeAccent, isDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildKpiBox('RESOLVED', '$resolved', Colors.greenAccent, isDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildKpiBox('CLOSED', '$closed', Colors.blueGrey, isDark)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildKpiBox(String label, String val, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: BoxDecoration(
+        color: (isDark ? const Color(0xFF161E31) : const Color(0xFFF5F7FB)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            val,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: isDark ? Colors.white38 : Colors.black45, letterSpacing: 0.5),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionGrid(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildActionCard(context, 'Incidents', 'Active reports', Icons.assignment_rounded, const Color(0xFF3949AB), const AdminIncidentsScreen()),
-        _buildActionCard(context, 'SOS Requests', 'Citizen SOS', Icons.emergency_share_rounded, AppConstants.primaryRed, const AdminSOSScreen()),
-        _buildActionCard(context, 'Responders', 'Manage team', Icons.people_alt_rounded, const Color(0xFF43A047), const ManageRespondersScreen()),
-        _buildVerifyCard(context),
-        _buildActionCard(context, 'Safety Map', 'Check-in Heatmap', Icons.query_stats_rounded, Colors.greenAccent, const SafetyHeatmapScreen()),
-        _buildActionCard(context, 'Config', 'System settings', Icons.settings_suggest_rounded, const Color(0xFF8E24AA), const ConfigScreen()),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Text(
+            'LGU GIS & PREDICTIVE LOGIC MODULES',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54,
+            ),
+          ),
+        ),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.15,
+          children: [
+            _buildActionCard(context, 'Report Incident', 'GIS Pinning (1 & 3)', Icons.add_location_alt_rounded, AppConstants.primaryRed, const ReportScreen()),
+            _buildActionCard(context, 'Incident Mapping', 'GIS Pins (2)', Icons.map_rounded, const Color(0xFF1E88E5), const IncidentMappingScreen()),
+            _buildActionCard(context, 'Incident Monitor', 'LGU Feed (4)', Icons.dvr_rounded, const Color(0xFF3949AB), const IncidentMonitoringScreen()),
+            _buildActionCard(context, 'Hotspot Heatmap', 'GIS Density (5)', Icons.whatshot_rounded, const Color(0xFFE65100), const HotspotIdentificationScreen()),
+            _buildActionCard(context, 'Predictive AI', 'Trends & Risk (6)', Icons.auto_awesome_rounded, const Color(0xFF7B1FA2), const PredictiveAnalysisScreen()),
+            _buildActionCard(context, 'Report Gen', 'Audit & KPIs (9)', Icons.assessment_rounded, const Color(0xFF00897B), const ReportGenerationScreen()),
+            _buildActionCard(context, 'User Accounts', 'LGU RBAC (10)', Icons.admin_panel_settings_rounded, const Color(0xFF5E35B1), const LGUUserManagementScreen()),
+            _buildActionCard(context, 'SOS Requests', 'Citizen SOS', Icons.emergency_share_rounded, AppConstants.primaryRed, const AdminSOSScreen()),
+            _buildActionCard(context, 'Responders', 'Manage fleet', Icons.people_alt_rounded, const Color(0xFF43A047), const ManageRespondersScreen()),
+            _buildVerifyCard(context),
+            _buildActionCard(context, 'Safety Map', 'Check-in Heatmap', Icons.query_stats_rounded, Colors.greenAccent, const SafetyHeatmapScreen()),
+            _buildActionCard(context, 'Config', 'System settings', Icons.settings_suggest_rounded, const Color(0xFF8E24AA), const ConfigScreen()),
+          ],
+        ),
       ],
     );
   }

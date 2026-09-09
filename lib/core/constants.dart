@@ -29,4 +29,48 @@ class AppConstants {
   static const String roleAdmin = 'admin';
   static const String roleResponder = 'responder';
   static const String roleCitizen = 'citizen';
+  static const String rolePNP = 'pnp'; // Philippine National Police (Crimes & Accidents)
+  static const String roleBFP = 'bfp'; // Bureau of Fire Protection (Fire)
+  static const String roleRescue = 'rescue'; // CDRRMO / Emergency Rescue (Floods, Disasters)
+
+  // Blueprint Incident Types
+  static const String incidentTypeFire = 'Fire';
+  static const String incidentTypeFlood = 'Flood';
+  static const String incidentTypeCrime = 'Crime';
+  static const String incidentTypeAccident = 'Accident';
+  static const String incidentTypeOther = 'Other';
+
+  static const List<String> incidentTypes = [
+    incidentTypeFire,
+    incidentTypeFlood,
+    incidentTypeCrime,
+    incidentTypeAccident,
+    incidentTypeOther,
+  ];
+
+  // Standard LGU Barangays (Cadiz City / LGU jurisdiction)
+  static const List<String> lguBarangays = [
+    'Brgy. Zone 1 (Poblacion)',
+    'Brgy. Zone 2 (Poblacion)',
+    'Brgy. Zone 3 (Poblacion)',
+    'Brgy. Zone 4 (Poblacion)',
+    'Brgy. Zone 5 (Poblacion)',
+    'Brgy. Zone 6 (Poblacion)',
+    'Brgy. Daga',
+    'Brgy. Luna',
+    'Brgy. Mabini',
+    'Brgy. San Juan',
+    'Brgy. Tinampaan',
+    'Brgy. Sicaba',
+    'Brgy. Burgos',
+    'Brgy. Cabahug',
+    'Brgy. Cadiz Viejo',
+    'Brgy. Caduha-an',
+    'Brgy. Celestino Villacin',
+    'Brgy. Jerusalem',
+    'Brgy. VF Gustilo',
+    'Brgy. Magsaysay',
+    'Brgy. Tiglawigan',
+    'Brgy. Andres Bonifacio',
+  ];
 }
