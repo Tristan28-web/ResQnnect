@@ -206,7 +206,7 @@ REQUIRED JSON OUTPUT FORMAT:
       "name": "Local Sector / Barangay Name in $currentLocation",
       "risk_score_percentage": 75.0,
       "hazard_type": "Flooding / Landslide / Storm Wind / Accident",
-      "recommended_action": "Targeted actionable directive for responders and citizens in this zone."
+      "recommended_action": "Targeted actionable directive for LGU command and citizens in this zone."
     }
   ],
   "forecast_trend": [
@@ -228,7 +228,7 @@ REQUIRED JSON OUTPUT FORMAT:
   ],
   "actionable_recommendations": [
     "Clear actionable directive 1 for LGU command.",
-    "Actionable directive 2 for responders.",
+    "Actionable directive 2 for emergency units.",
     "Actionable directive 3 for citizens and households."
   ]
 }
@@ -284,7 +284,7 @@ Return ONLY valid raw JSON.
 
     return GeminiDisasterAnalysis(
       executiveSummary:
-          '$areaName disaster surveillance indicates stable regional indicators. Soil saturation and meteorological telemetry remain within baseline thresholds, with responder units standing by.',
+          '$areaName disaster surveillance indicates stable regional indicators. Soil saturation and meteorological telemetry remain within baseline thresholds, with emergency units standing by.',
       overallThreatLevel: threat,
       highRiskZones: [
         GeminiRiskZone(
@@ -317,7 +317,7 @@ Return ONLY valid raw JSON.
       ],
       actionableRecommendations: [
         'LGU Operations Centers: Maintain 24/7 telemetry monitoring across all operational zones.',
-        'Emergency Responders: Inspect portable power generators, radios, and first response medical equipment.',
+        'Emergency Response Units: Inspect portable power generators, radios, and first response medical equipment.',
         'Citizens: Keep emergency go-bags stocked and check real-time evacuation routes on the GIS map.',
       ],
       analyzedAt: DateTime.now(),

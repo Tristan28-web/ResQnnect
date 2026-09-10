@@ -143,14 +143,6 @@ class AuthService {
       } else if (user.email == 'admin@catanduanes.gov.ph' || user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
         targetRole = AppConstants.roleAdmin;
         targetVerified = true;
-      } else if (user.email?.contains('responder') == true || 
-                 user.email?.contains('respondent') == true ||
-                 user.email?.contains('rescue') == true ||
-                 user.email?.contains('pnp') == true ||
-                 user.email?.contains('bfp') == true ||
-                 user.email == 'john@resqnnect.com') {
-        targetRole = AppConstants.roleResponder;
-        targetVerified = true;
       }
 
       if (!userDoc.exists) {
@@ -161,7 +153,7 @@ class AuthService {
               : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GIS Admin' : 'GIS User')),
           email: user.email ?? 'guest@gis.local',
           phone: '',
-          profileImage: (targetRole == AppConstants.roleAdmin || targetRole == AppConstants.roleResponder) ? '' : (user.photoURL ?? ''),
+          profileImage: targetRole == AppConstants.roleAdmin ? '' : (user.photoURL ?? ''),
           role: targetRole,
           isActive: true,
           isVerified: targetVerified, 
@@ -169,7 +161,7 @@ class AuthService {
         );
         await _db.collection(AppConstants.usersCollection).doc(user.uid).set(userModel.toMap());
       } else {
-        // If user already exists but role should be upgraded (e.g. they became admin/responder)
+        // If user already exists but role should be upgraded (e.g. they became admin)
         final currentData = userDoc.data()!;
         final currentRole = currentData['role'] ?? AppConstants.roleCitizen;
         
@@ -185,8 +177,8 @@ class AuthService {
           }
         }
 
-        // Auto-clear admin & responder profile image if present to enforce empty profile
-        final isPrivileged = targetRole == AppConstants.roleAdmin || targetRole == AppConstants.roleResponder;
+        // Auto-clear admin profile image if present to enforce empty profile
+        final isPrivileged = targetRole == AppConstants.roleAdmin;
         if (isPrivileged && (currentData['profile_image'] ?? '').toString().isNotEmpty) {
           try {
             await _db.collection(AppConstants.usersCollection).doc(user.uid).update({

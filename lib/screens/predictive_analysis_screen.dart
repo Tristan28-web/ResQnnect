@@ -160,7 +160,7 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
             // Section 3: Actionable Directives
             _buildSectionHeader(
               title: 'ACTIONABLE PDRRMO DIRECTIVES',
-              subtitle: 'Tailored guidelines for command, responders, and citizens',
+              subtitle: 'Tailored guidelines for command and citizens',
               icon: Icons.fact_check_rounded,
               isDark: isDark,
             ),

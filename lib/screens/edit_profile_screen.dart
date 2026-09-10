@@ -137,8 +137,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       roleLabel = 'SYSTEM ADMINISTRATOR';
       roleBg = AppColors.retroLilac;
       roleText = const Color(0xFF6D28D9);
-    } else if (role == AppConstants.roleResponder || role == AppConstants.rolePNP || role == AppConstants.roleBFP || role == AppConstants.roleRescue) {
-      roleLabel = 'ACTIVE RESPONDER';
+    } else if (role == AppConstants.rolePNP || role == AppConstants.roleBFP || role == AppConstants.roleRescue) {
+      roleLabel = 'LGU PERSONNEL';
       roleBg = AppColors.retroPeach;
       roleText = const Color(0xFFEA580C);
     }

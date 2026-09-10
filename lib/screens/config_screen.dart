@@ -130,7 +130,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
               context,
               icon: Icons.history_rounded,
               title: 'Auto-Log Sessions'.tr(context),
-              subtitle: 'Automatically log responder activities'.tr(context),
+              subtitle: 'Automatically log system activities'.tr(context),
               value: _autoLogSessions,
               onChanged: (val) {
                 setState(() => _autoLogSessions = val);

@@ -319,7 +319,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       {
         'num': '2',
         'title': 'Geolocation & Map Pinning',
-        'desc': 'The system pins your coordinate locations to route emergency responders efficiently.',
+        'desc': 'The system pins your coordinate locations to route emergency response units efficiently.',
         'color': AppColors.retroLilac,
       },
       {
@@ -500,7 +500,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _buildRetroPermissionCard(
             icon: Icons.notifications_active_rounded,
             title: 'Push Notifications',
-            subtitle: 'Receive real-time disaster alerts & responder dispatch updates.',
+            subtitle: 'Receive real-time disaster alerts & emergency response updates.',
             isGranted: _notificationsAllowed,
             accentColor: AppColors.retroLilac,
             iconColor: const Color(0xFF7C3AED),

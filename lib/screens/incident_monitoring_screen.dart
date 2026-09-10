@@ -297,7 +297,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
           Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
           const SizedBox(height: 10),
 
-          // Bottom Bar: Timestamp, Responder info & Actions
+          // Bottom Bar: Timestamp & Actions
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -322,17 +322,6 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppConstants.primaryRed),
                     label: const Text('STATUS', style: TextStyle(color: AppConstants.primaryRed, fontSize: 11, fontWeight: FontWeight.bold)),
                     onPressed: () => _showStatusUpdateDialog(context, item, firestore),
-                  ),
-                  const SizedBox(width: 4),
-                  // Dispatch / assign responder
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: const Icon(Icons.person_add_alt_rounded, size: 16, color: Colors.blueAccent),
-                    label: const Text('DISPATCH', style: TextStyle(color: Colors.blueAccent, fontSize: 11, fontWeight: FontWeight.bold)),
-                    onPressed: () => _showAssignResponderDialog(context, item, firestore),
                   ),
                 ],
               ),
@@ -403,70 +392,6 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showAssignResponderDialog(BuildContext context, IncidentModel incident, FirestoreService firestore) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('DISPATCH RESPONDER (${incident.referenceId})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: StreamBuilder<List<UserModel>>(
-            stream: firestore.getResponders(),
-            builder: (context, snapshot) {
-              final responders = snapshot.data ?? [];
-              if (responders.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No active responders available to dispatch.'),
-                );
-              }
-
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: responders.length,
-                itemBuilder: (context, i) {
-                  final responder = responders[i];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: AppConstants.primaryRed.withOpacity(0.15),
-                      child: const Icon(Icons.person_rounded, color: AppConstants.primaryRed),
-                    ),
-                    title: Text(responder.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: Text(responder.phone.isNotEmpty ? responder.phone : 'Field Unit', style: const TextStyle(fontSize: 11)),
-                    trailing: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConstants.primaryRed,
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                      ),
-                      onPressed: () async {
-                        await firestore.assignIncident(incident.incidentId, responder.userId);
-                        if (context.mounted) {
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Dispatched to ${responder.name}')),
-                          );
-                        }
-                      },
-                      child: const Text('ASSIGN', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-        ],
       ),
     );
   }

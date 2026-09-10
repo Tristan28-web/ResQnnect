@@ -6,7 +6,7 @@ class UserModel {
   final String email;
   final String phone;
   final String profileImage;
-  final String role; // 'admin', 'responder', 'citizen'
+  final String role; // 'admin', 'citizen'
   final bool isActive;
   final String bloodType;
   final String weight;

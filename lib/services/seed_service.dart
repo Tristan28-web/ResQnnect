@@ -33,13 +33,6 @@ class SeedService {
         'phone': '09123456789',
         'role': 'admin',
       },
-      {
-        'email': 'respondent@catanduanes.gov.ph',
-        'password': 'password123',
-        'name': 'Field Responder',
-        'phone': '09987654321',
-        'role': 'responder',
-      },
     ];
 
     // Save the currently signed-in user so we can restore them
@@ -160,7 +153,7 @@ class SeedService {
     final sosRequests = [
       SOSRequestModel(
         sosId: 'sos_01',
-        userId: 'responder_01',
+        userId: 'citizen_seed_01',
         location: '10.9576, 123.3090',
         timestamp: DateTime.now(),
         status: 'active',

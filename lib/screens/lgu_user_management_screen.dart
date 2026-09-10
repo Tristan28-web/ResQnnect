@@ -26,8 +26,6 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
         return 'BFP Personnel';
       case 'rescue':
         return 'Rescue Team';
-      case 'responder':
-        return 'Field Responder';
       default:
         return 'Citizen';
     }
@@ -42,7 +40,6 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
       case 'bfp':
         return AppColors.retroPeach;
       case 'rescue':
-      case 'responder':
         return const Color(0xFFFEF3C7);
       default:
         return const Color(0xFFDCFCE7);
@@ -58,7 +55,6 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
       case 'bfp':
         return const Color(0xFFDC2626);
       case 'rescue':
-      case 'responder':
         return const Color(0xFFD97706);
       default:
         return const Color(0xFF16A34A);
@@ -458,7 +454,7 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: ['admin', 'pnp', 'bfp', 'rescue', 'responder', 'citizen'].contains(selectedRole)
+                value: ['admin', 'pnp', 'bfp', 'rescue', 'citizen'].contains(selectedRole)
                     ? selectedRole
                     : 'citizen',
                 dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
@@ -467,7 +463,6 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                   DropdownMenuItem(value: 'pnp', child: Text('PNP Personnel (Police)')),
                   DropdownMenuItem(value: 'bfp', child: Text('BFP Personnel (Fire)')),
                   DropdownMenuItem(value: 'rescue', child: Text('Rescue Team (CDRRMO)')),
-                  DropdownMenuItem(value: 'responder', child: Text('General Field Responder')),
                   DropdownMenuItem(value: 'citizen', child: Text('Citizen Account')),
                 ],
                 onChanged: (val) {

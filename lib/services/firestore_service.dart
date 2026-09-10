@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:rxdart/rxdart.dart';
 import '../core/constants.dart';
 import '../models/user_model.dart';
 import '../models/incident_model.dart';
@@ -55,13 +54,6 @@ class FirestoreService {
     await _db.collection(AppConstants.incidentsCollection).doc(incidentId).update(data);
   }
 
-  Future<void> assignIncident(String incidentId, String responderId) async {
-    await _db.collection(AppConstants.incidentsCollection).doc(incidentId).update({
-      'assigned_to': responderId,
-      'status': 'dispatched',
-    });
-  }
-
   Stream<int> getIncidentCountByUser(String userId) {
     return _db
         .collection(AppConstants.incidentsCollection)
@@ -90,23 +82,6 @@ class FirestoreService {
   // Send SOS alert
   Future<void> sendSOS(SOSRequestModel sos) async {
     await _db.collection(AppConstants.sosCollection).doc(sos.sosId).set(sos.toMap());
-  }
-
-  // Manage Responders (Admin)
-  Stream<List<UserModel>> getResponders() {
-    return _db
-        .collection(AppConstants.usersCollection)
-        .where('role', isEqualTo: AppConstants.roleResponder)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList());
-  }
-
-  Stream<int> getResponderCount() {
-    return _db
-        .collection(AppConstants.usersCollection)
-        .where('role', isEqualTo: AppConstants.roleResponder)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
   }
 
   Stream<int> getVerifiedCitizenCount() {
@@ -165,23 +140,7 @@ class FirestoreService {
     await _db.collection(AppConstants.usersCollection).doc(userId).delete();
   }
 
-  Future<void> toggleResponderActive(String userId, bool currentStatus) async {
-    final newStatus = !currentStatus;
-    final Map<String, dynamic> updates = {'is_active': newStatus};
-    
-    // If going active, update clock in time
-    if (newStatus) {
-      updates['last_clock_in'] = FieldValue.serverTimestamp();
-    }
-    
-    await _db.collection(AppConstants.usersCollection).doc(userId).update(updates);
-  }
-
   Future<void> updateUserData(UserModel user) async {
-    await _db.collection(AppConstants.usersCollection).doc(user.userId).update(user.toMap());
-  }
-
-  Future<void> updateResponderProfile(UserModel user) async {
     await _db.collection(AppConstants.usersCollection).doc(user.userId).update(user.toMap());
   }
 
@@ -220,62 +179,6 @@ class FirestoreService {
     await _db.collection(AppConstants.sosCollection).doc(sosId).update({
       'status': status,
     });
-  }
-
-  Future<void> assignSOS(String sosId, String responderId) async {
-    await _db.collection(AppConstants.sosCollection).doc(sosId).update({
-      'assigned_to': responderId,
-      'status': 'dispatched',
-    });
-  }
-
-  Stream<Map<String, dynamic>?> getAssignedMission(String responderId) {
-    if (responderId.isEmpty) return Stream.value(null);
-
-    final incidentStream = _db
-        .collection(AppConstants.incidentsCollection)
-        .where('assigned_to', isEqualTo: responderId)
-        .snapshots();
-
-    final sosStream = _db
-        .collection(AppConstants.sosCollection)
-        .where('assigned_to', isEqualTo: responderId)
-        .snapshots();
-
-    return CombineLatestStream.combine2<QuerySnapshot, QuerySnapshot, Map<String, dynamic>?>(
-      incidentStream,
-      sosStream,
-      (incidentSnap, sosSnap) {
-        // Find first unresolved incident
-        final activeIncident = incidentSnap.docs.where((doc) {
-          final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          return data['status'] != 'resolved';
-        }).toList();
-
-        if (activeIncident.isNotEmpty) {
-          final data = activeIncident.first.data() as Map<String, dynamic>;
-          data['id'] = activeIncident.first.id;
-          data['mission_type'] = 'INCIDENT';
-          return data;
-        }
-        
-        // Find first unresolved SOS
-        final activeSOS = sosSnap.docs.where((doc) {
-          final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          return data['status'] != 'resolved';
-        }).toList();
-
-        if (activeSOS.isNotEmpty) {
-          final data = activeSOS.first.data() as Map<String, dynamic>;
-          data['id'] = activeSOS.first.id;
-          data['mission_type'] = 'SOS';
-          data['description'] = data['description'] ?? 'Emergency SOS Alert';
-          return data;
-        }
-        
-        return null;
-      },
-    ).asBroadcastStream();
   }
 
   // Send System Alert

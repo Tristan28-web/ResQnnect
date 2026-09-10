@@ -269,7 +269,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'LGU dispatch and responders have received this incident. Please keep safe.',
+              'LGU Emergency Command has received this incident. Please keep safe.',
               textAlign: TextAlign.center,
               style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 13),
             ),

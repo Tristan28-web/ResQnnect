@@ -182,7 +182,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatItemStream(context, 'RESPONDERS', firestore.getResponderCount(), Icons.shield_rounded),
+                _buildStatItemStream(context, 'CITIZENS', firestore.getVerifiedCitizenCount(), Icons.people_alt_rounded),
                 _buildStatItemStream(context, 'VERIFY QUEUE', firestore.getUnverifiedCitizenCount(), Icons.verified_user_rounded, isAlert: true),
                 _buildStatItemStream(context, 'LGU ALERTS', firestore.getAlertCount(), Icons.campaign_rounded),
                 _buildStatItemStream(context, 'HOTSPOTS', firestore.getMapLocationCount(), Icons.whatshot_rounded),

@@ -1154,7 +1154,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your incident report has been verified by LGU Emergency Command and emergency responders are dispatched to your pinned location.',
+              'Your incident report has been verified by LGU Emergency Command and emergency response units are dispatched to your pinned location.',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: 20),

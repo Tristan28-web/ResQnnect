@@ -263,11 +263,6 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
            auth.currentUserEmail?.contains('admin') == true;
   }
 
-  bool _isResponder(BuildContext context) {
-    final user = Provider.of<UserModel?>(context, listen: false);
-    return user?.role == 'responder' || user?.role == 'admin'; // Admin also acts as responder
-  }
-
   @override
   Widget build(BuildContext context) {
     final isAdmin = _isAdmin(context);
@@ -327,7 +322,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                   return StreamBuilder<List<SOSRequestModel>>(
                     stream: _sosStream,
                     builder: (context, sosSnapshot) {
-                      final authorized = _isResponder(context);
+                      final authorized = _isAdmin(context);
                       final sosCalls = (sosSnapshot.data ?? [])
                           .where((s) => s.status.trim().toLowerCase() != 'resolved')
                           .toList();
@@ -971,7 +966,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     }
 
     // 🚨 Emergency: SOS Calls 🚨
-    if (_isResponder(context)) {
+    if (_isAdmin(context)) {
       for (var sos in sosCalls) {
         final latLng = _parseLocation(sos.location);
         if (latLng != null) {
@@ -1015,7 +1010,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     switch (type) {
       case MapLocationType.command: return BitmapDescriptor.hueRed;
       case MapLocationType.medical: return BitmapDescriptor.hueGreen;
-      case MapLocationType.responder: return BitmapDescriptor.hueAzure;
+      case MapLocationType.emergencyPost: return BitmapDescriptor.hueAzure;
       case MapLocationType.safeZone: return BitmapDescriptor.hueOrange;
     }
   }
@@ -1325,7 +1320,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
             const SizedBox(height: 12),
             _legendItem(Icons.local_hospital, Colors.greenAccent, 'Medical Facility', isDark),
             const SizedBox(height: 12),
-            _legendItem(Icons.emergency_share, Colors.blueAccent, 'Responder Unit', isDark),
+            _legendItem(Icons.emergency_share, Colors.blueAccent, 'Emergency Post', isDark),
             const SizedBox(height: 12),
             _legendItem(Icons.home_work, Colors.orangeAccent, 'Evacuation Center', isDark),
             const SizedBox(height: 16),
@@ -1523,7 +1518,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
   Widget _buildHazardCard(HazardModel hazard, BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = _hazardColor(hazard.type);
-    final isResponder = _isResponder(context);
+    final isAdmin = _isAdmin(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1600,7 +1595,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                   ),
                 ),
               ),
-              if (isResponder) ...[
+              if (isAdmin) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
@@ -1808,7 +1803,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     switch (type) {
       case MapLocationType.command: return AppConstants.primaryRed;
       case MapLocationType.medical: return Colors.greenAccent;
-      case MapLocationType.responder: return Colors.blueAccent;
+      case MapLocationType.emergencyPost: return Colors.blueAccent;
       case MapLocationType.safeZone: return Colors.orangeAccent;
     }
   }
@@ -1817,7 +1812,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     switch (type) {
       case MapLocationType.command: return Icons.shield_rounded;
       case MapLocationType.medical: return Icons.local_hospital;
-      case MapLocationType.responder: return Icons.emergency_share;
+      case MapLocationType.emergencyPost: return Icons.emergency_share;
       case MapLocationType.safeZone: return Icons.home_work;
     }
   }
@@ -1826,7 +1821,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
     switch (type) {
       case MapLocationType.command: return 'Command Center';
       case MapLocationType.medical: return 'Medical Facility';
-      case MapLocationType.responder: return 'Responder Unit';
+      case MapLocationType.emergencyPost: return 'Emergency Post';
       case MapLocationType.safeZone: return 'Evacuation Center';
     }
   }

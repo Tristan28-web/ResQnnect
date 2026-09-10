@@ -40,7 +40,6 @@ class AppConstants {
 
   // Roles
   static const String roleAdmin = 'admin';
-  static const String roleResponder = 'responder';
   static const String roleCitizen = 'citizen';
   static const String rolePNP = 'pnp'; // Philippine National Police (Crimes & Accidents)
   static const String roleBFP = 'bfp'; // Bureau of Fire Protection (Fire)

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum MapLocationType { command, medical, responder, safeZone }
+enum MapLocationType { command, medical, emergencyPost, safeZone }
 
 class MapLocationModel {
   final String locationId;
@@ -30,16 +30,19 @@ class MapLocationModel {
       return DateTime.now();
     }
 
+    final rawType = data['type'] ?? 'safeZone';
     return MapLocationModel(
       locationId: data['location_id'] ?? '',
       label: data['label'] ?? '',
       description: data['description'] ?? '',
       latitude: (data['latitude'] as num).toDouble(),
       longitude: (data['longitude'] as num).toDouble(),
-      type: MapLocationType.values.firstWhere(
-        (e) => e.name == (data['type'] ?? 'safeZone'),
-        orElse: () => MapLocationType.safeZone,
-      ),
+      type: (rawType == 'responder' || rawType == 'emergencyPost')
+          ? MapLocationType.emergencyPost
+          : MapLocationType.values.firstWhere(
+              (e) => e.name == rawType,
+              orElse: () => MapLocationType.safeZone,
+            ),
       addedBy: data['added_by'] ?? '',
       createdAt: parseDate(data['created_at']),
     );

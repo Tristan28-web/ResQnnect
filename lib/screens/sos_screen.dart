@@ -41,7 +41,7 @@ class _SOSScreenState extends State<SOSScreen> {
           ),
           content: Text(
             sosVerification == 'Strict'
-                ? 'Are you absolutely sure you want to broadcast a system-wide SOS? This will alert all responders and authorities immediately.'
+                ? 'Are you absolutely sure you want to broadcast a system-wide SOS? This will alert emergency authorities and LGU command immediately.'
                 : 'Send SOS alert now? Help will be dispatched to your location.',
             style: const TextStyle(color: Colors.white70),
           ),
@@ -158,8 +158,8 @@ class _SOSScreenState extends State<SOSScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(smsSent 
-                ? 'SOS Alert Sent! Responders and emergency contacts notified.' 
-                : 'SOS Sent to Responders. (Check SMS Permissions for contacts)'),
+                ? 'SOS Alert Sent! LGU command and emergency contacts notified.' 
+                : 'SOS Sent to Emergency Command. (Check SMS Permissions for contacts)'),
             backgroundColor: smsSent ? Colors.green : Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
@@ -188,7 +188,7 @@ class _SOSScreenState extends State<SOSScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Press the button below to send your\nlive location to emergency responders.',
+              'Press the button below to send your\nlive location to emergency command.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),

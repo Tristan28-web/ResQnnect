@@ -167,23 +167,6 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                       isVerified: true,
                       createdAt: DateTime.now(),
                     );
-                  } else if (userEmail?.contains('responder') == true || 
-                             userEmail?.contains('respondent') == true ||
-                             userEmail?.contains('rescue') == true ||
-                             userEmail?.contains('pnp') == true ||
-                             userEmail?.contains('bfp') == true ||
-                             userEmail == 'john@resqnnect.com') {
-                    // 🛡️ High-Priority Responder Detection
-                    initialModel = UserModel(
-                      userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'Field Responder',
-                      email: userEmail ?? '',
-                      phone: '',
-                      profileImage: '',
-                      role: AppConstants.roleResponder,
-                      isVerified: true,
-                      createdAt: DateTime.now(),
-                    );
                   } else {
                     // UNIVERSAL FALLBACK for Google and Registered Citizens
                     initialModel = UserModel(
@@ -203,19 +186,12 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                     // Update the model once the real Firestore document arrives (contains real role/verified status)
                     if (doc != null) {
                       final isPrivileged = doc.role == AppConstants.roleAdmin ||
-                          doc.role == AppConstants.roleResponder ||
                           doc.role == AppConstants.rolePNP ||
                           doc.role == AppConstants.roleBFP ||
                           doc.role == AppConstants.roleRescue ||
-                          doc.email.contains('admin') ||
-                          doc.email.contains('responder') ||
-                          doc.email.contains('respondent') ||
-                          doc.email.contains('rescue') ||
-                          doc.email.contains('pnp') ||
-                          doc.email.contains('bfp') ||
-                          doc.email == 'john@resqnnect.com';
+                          doc.email.contains('admin');
                       if (isPrivileged && doc.profileImage.isNotEmpty) {
-                        // Reset admin and responder profile image to empty string as requested
+                        // Reset admin profile image to empty string as requested
                         firestore.updateUserModel(doc.copyWith(profileImage: ''));
                         return doc.copyWith(profileImage: '');
                       }
@@ -286,14 +262,7 @@ class AuthWrapper extends StatelessWidget {
       email: userEmail ?? 'guest@gis.local',
       role: userEmail == 'admin@catanduanes.gov.ph' || userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
           ? AppConstants.roleAdmin 
-          : (userEmail?.contains('responder') == true || 
-             userEmail?.contains('respondent') == true ||
-             userEmail?.contains('rescue') == true ||
-             userEmail?.contains('pnp') == true ||
-             userEmail?.contains('bfp') == true ||
-             userEmail == 'john@resqnnect.com' 
-               ? AppConstants.roleResponder 
-               : AppConstants.roleCitizen),
+          : AppConstants.roleCitizen,
       phone: '',
       profileImage: firebaseUser.photoURL ?? '',
       isVerified: true, // Allow instant access while Firestore syncs in background
@@ -303,10 +272,9 @@ class AuthWrapper extends StatelessWidget {
     // Determine authorization using the effective user
     bool isAuthorized = effectiveUser.isVerified ||
         effectiveUser.role == AppConstants.roleAdmin ||
-        effectiveUser.role == AppConstants.roleResponder ||
         userEmail == 'admin@catanduanes.gov.ph' ||
         userEmail == 'admin@cadiz.gov.ph' ||
-        (userEmail?.contains('responder') == true);
+        (userEmail?.contains('admin') == true);
  
     return isAuthorized
         ? const DashboardScreen()

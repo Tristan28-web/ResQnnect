@@ -20,13 +20,10 @@ class ProfileScreen extends StatelessWidget {
     
     if (email == 'admin@catanduanes.gov.ph' || email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
       role = AppConstants.roleAdmin;
-    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com' || email.contains('rescue') || email.contains('pnp') || email.contains('bfp')) {
-      role = AppConstants.roleResponder;
     }
 
     String title = 'CITIZEN PROFILE';
     if (role == AppConstants.roleAdmin) title = 'ADMIN CONSOLE';
-    if (role == AppConstants.roleResponder) title = 'RESPONDER PROFILE';
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -81,17 +78,11 @@ class ProfileScreen extends StatelessWidget {
       roleLabel = 'SYSTEM ADMINISTRATOR';
       roleBg = AppColors.retroLilac;
       roleText = const Color(0xFF6D28D9);
-    } else if (role == AppConstants.roleResponder) {
-      roleLabel = 'ACTIVE RESPONDER';
-      roleBg = AppColors.retroPeach;
-      roleText = const Color(0xFFEA580C);
     }
 
     final idTag = role == AppConstants.roleAdmin 
         ? 'GIS-ADMIN-001' 
-        : (role == AppConstants.roleResponder 
-             ? 'GIS-RSP-001' 
-             : 'GIS-ID-9921');
+        : 'GIS-ID-9921';
 
     return Container(
       width: double.infinity,
@@ -159,9 +150,7 @@ class ProfileScreen extends StatelessWidget {
                 ? user.name
                 : (role == AppConstants.roleAdmin
                       ? 'Admin User'
-                      : (role == AppConstants.roleResponder 
-                           ? 'Active Responder' 
-                           : 'Citizen User')),
+                      : 'Citizen User'),
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.retroDarkBorder,
               fontSize: 22,

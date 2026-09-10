@@ -31,7 +31,7 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
       'type': 'alert',
     },
     {
-      'action': 'Responder Account Approved: Juan Dela Cruz',
+      'action': 'Citizen Account Verified: Juan Dela Cruz',
       'user': 'Admin',
       'timestamp': DateTime.now().subtract(const Duration(hours: 2)),
       'type': 'user',

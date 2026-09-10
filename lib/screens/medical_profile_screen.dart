@@ -146,7 +146,7 @@ class _MedicalProfileScreenState extends State<MedicalProfileScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              'This information will only be visible to emergency responders during an SOS dispatch.',
+              'This information will only be visible to emergency personnel during an SOS dispatch.',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13),
             ),
           ),

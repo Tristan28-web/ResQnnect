@@ -5,7 +5,6 @@ import '../core/constants.dart';
 import '../models/user_model.dart';
 import 'citizen_dashboard.dart';
 import 'admin_dashboard.dart';
-import 'responder_dashboard.dart';
 import 'profile_screen.dart';
 import 'alerts_screen.dart';
 import 'incident_mapping_screen.dart';
@@ -35,8 +34,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     if (email == 'admin@catanduanes.gov.ph' || email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
       role = AppConstants.roleAdmin;
-    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com' || email.contains('rescue') || email.contains('pnp') || email.contains('bfp')) {
-      role = AppConstants.roleResponder;
     }
 
     return Scaffold(
@@ -62,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     String displayName = user?.name.isNotEmpty == true 
         ? user!.name 
-        : (role == AppConstants.roleAdmin ? 'GIS Admin' : (role == AppConstants.roleResponder ? 'Field Responder' : 'Citizen'));
+        : (role == AppConstants.roleAdmin ? 'GIS Admin' : 'Citizen');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -197,13 +194,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Module 08: Notifications and Alerts
         return const AlertsScreen();
       case 4:
-        // Profile Screen for all roles (Admin, Responder, Citizen)
+        // Profile Screen for all roles (Admin, Citizen)
         return const ProfileScreen();
       case 0:
       default:
         // Module 07: Dashboard (Central LGU Command Overview)
         if (role == AppConstants.roleAdmin) return const AdminDashboard();
-        if (role == AppConstants.roleResponder) return const ResponderDashboard();
         return const CitizenDashboard();
     }
   }

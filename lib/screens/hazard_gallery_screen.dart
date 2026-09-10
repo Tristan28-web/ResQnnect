@@ -149,7 +149,7 @@ class HazardGalleryScreen extends StatelessWidget {
   void _showHazardDetail(BuildContext context, HazardModel hazard) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = Provider.of<UserModel?>(context, listen: false);
-    final isResponder = user?.role == 'responder' || user?.role == 'admin';
+    final isAdmin = user?.role == 'admin';
 
     showModalBottomSheet(
       context: context,
@@ -215,7 +215,7 @@ class HazardGalleryScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                       _buildDetailRow(Icons.location_on_outlined, 'Location', '${hazard.latitude.toStringAsFixed(4)}, ${hazard.longitude.toStringAsFixed(4)}', isDark),
                       _buildDetailRow(Icons.calendar_today_outlined, 'Reported At', DateFormat('MMMM d, yyyy - h:mm a').format(hazard.timestamp), isDark),
-                      if (isResponder) ...[
+                      if (isAdmin) ...[
                         const SizedBox(height: 32),
                         ElevatedButton.icon(
                           onPressed: () => _confirmDeleteHazard(context, hazard),

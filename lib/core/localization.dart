@@ -112,7 +112,7 @@ class AppTranslations {
        'Hiligaynon': 'Kusa nga Pag-log',
        'Cebuano': 'Awtomatikong Pag-log',
     },
-    'Automatically log responder activities': {
+    'Automatically log system activities': {
        'Filipino': 'Awtomatikong i-record ang aksyon',
        'Hiligaynon': 'Kusa i-rekord ang aktibidad',
        'Cebuano': 'I-rekord ang mga kalihokan',
@@ -159,7 +159,6 @@ class AppTranslations {
     'Broadcast': {'Filipino': 'I-broadcast', 'Hiligaynon': 'Ipahibalo', 'Cebuano': 'I-sibya'},
     'Profile': {'Filipino': 'Profile', 'Hiligaynon': 'Profile', 'Cebuano': 'Profile'},
     'Dashboard': {'Filipino': 'Dashboard', 'Hiligaynon': 'Dashboard', 'Cebuano': 'Dashboard'},
-    'Responders': {'Filipino': 'Mga Responder', 'Hiligaynon': 'Mga Responder', 'Cebuano': 'Mga Responder'},
     'Global Map': {'Filipino': 'Mapa', 'Hiligaynon': 'Mapa', 'Cebuano': 'Mapa'},
     'Config': {'Filipino': 'Mga Setting', 'Hiligaynon': 'Setting', 'Cebuano': 'Mga Setting'},
   };
