@@ -8,7 +8,7 @@ class IncidentPinPickerDialog extends StatefulWidget {
 
   const IncidentPinPickerDialog({
     super.key,
-    this.initialPosition = const LatLng(10.9574, 123.2978), // Cadiz City Center
+    this.initialPosition = const LatLng(13.5840, 124.2330), // Catanduanes Center (Virac)
     this.initialBarangay,
   });
 

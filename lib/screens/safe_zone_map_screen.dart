@@ -29,7 +29,7 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
   LatLng? _activeRouteDestination;
   bool _isFetchingRoute = false;
 
-  static const LatLng _cadizCenter = LatLng(10.9574, 123.2978);
+  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
 
   @override
   void initState() {
@@ -207,7 +207,7 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
               if (_currentPosition != null) {
                 _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_currentPosition!, 15.0));
               } else {
-                _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_cadizCenter, 13.0));
+                _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_catanduanesCenter, 13.0));
               }
             },
           ),
@@ -230,8 +230,8 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
             children: [
               GoogleMap(
                 initialCameraPosition: CameraPosition(
-                  target: _currentPosition ?? _cadizCenter,
-                  zoom: 14.0,
+                  target: _currentPosition ?? _catanduanesCenter,
+                  zoom: 13.0,
                 ),
                 mapType: MapType.normal,
                 onMapCreated: (controller) => _mapController = controller,
@@ -434,7 +434,7 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
                     child: _buildDetailItem(context, Icons.map_outlined, 'Coordinates', '${loc.latitude.toStringAsFixed(4)}, ${loc.longitude.toStringAsFixed(4)}'),
                   ),
                   Expanded(
-                    child: _buildDetailItem(context, Icons.verified_user_outlined, 'Verified by', 'ResQnnect Admin'),
+                    child: _buildDetailItem(context, Icons.verified_user_outlined, 'Verified by', 'GIS Admin'),
                   ),
                 ],
               ),
@@ -491,7 +491,7 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Admin has not yet pinned any evacuation centers or medical facilities for Cadiz City.',
+              'Admin has not yet pinned any evacuation centers or medical facilities for Catanduanes.',
               textAlign: TextAlign.center,
               style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 14),
             ),

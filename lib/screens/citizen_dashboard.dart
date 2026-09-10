@@ -275,7 +275,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             ),
             const SizedBox(height: 12),
             Text(
-              'The Command Center is requesting a status update from all citizens in Cadiz City.',
+              'The Command Center is requesting a status update from all citizens in Catanduanes.',
               textAlign: TextAlign.center,
               style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
             ),
@@ -398,7 +398,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasLoc ? 'Current Location' : 'Cadiz City (Fixed)',
+                        hasLoc ? 'Current Location' : 'Catanduanes (Fixed)',
                         style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(height: 8),
@@ -561,7 +561,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
         _buildActionCard(context, 'HAZARDS', 'Recent danger pics', Icons.warning_amber_rounded, Colors.orange, const HazardGalleryScreen()),
         _buildActionCard(context, 'OFFLINE VAULT', 'First Aid & Safety', Icons.book_rounded, const Color(0xFFF59E0B), const OfflineVaultScreen()),
         _buildActionCard(context, 'CONTACTS', 'Emergency services', Icons.contact_phone_rounded, const Color(0xFF10B981), const ContactsScreen()),
-        _buildActionCard(context, 'WEATHER', 'Cadiz City Forecast', Icons.cloud_queue_rounded, Colors.lightBlue, const WeatherScreen()),
+        _buildActionCard(context, 'WEATHER', 'Catanduanes Forecast', Icons.cloud_queue_rounded, Colors.lightBlue, const WeatherScreen()),
       ],
     );
   }

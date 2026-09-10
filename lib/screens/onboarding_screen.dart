@@ -61,22 +61,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Image.asset(
             AppConstants.logoAsset,
-            height: 120,
-            color: AppConstants.primaryRed,
+            height: 140,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           Text(
-            'Welcome to ResQnnect',
+            'Welcome to GIS',
             style: TextStyle(
               color: textColor,
               fontSize: 28,
               fontWeight: FontWeight.bold,
+              letterSpacing: 2,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            'The official emergency response and disaster preparedness platform for Cadiz City. Empowering citizens and responders to stay connected during critical moments.',
+            'The official emergency response and disaster preparedness platform for the Province of Catanduanes. Empowering citizens and responders to stay connected during critical moments.',
             style: TextStyle(
               color: textColor.withOpacity(0.7),
               fontSize: 16,
@@ -113,10 +113,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: SingleChildScrollView(
                 child: Text(
-                  '1. User Agreement: By using ResQnnect, you agree to provide accurate information during emergencies to ensure efficient dispatch.\n\n'
+                  '1. User Agreement: By using GIS, you agree to provide accurate information during emergencies to ensure efficient dispatch.\n\n'
                   '2. Google Terms: This app utilizes Google Maps and Google Authentication. By proceeding, you agree to Google\'s Terms of Service and Privacy Policy.\n\n'
-                  '3. Data Collection: We collect essential contact information (name, phone number, location) to facilitate emergency assistance. This data is handled with strict confidentiality and used only for safety purposes in coordination with Cadiz City authorities.\n\n'
-                  '4. Emergency Responsibility: While ResQnnect facilitates connection, the user remains responsible for following local safety guidelines issued by official channels.\n\n'
+                  '3. Data Collection: We collect essential contact information (name, phone number, location) to facilitate emergency assistance. This data is handled with strict confidentiality and used only for safety purposes in coordination with Catanduanes authorities.\n\n'
+                  '4. Emergency Responsibility: While GIS facilitates connection, the user remains responsible for following local safety guidelines issued by official channels.\n\n'
                   '5. Gesture Controls: Our SOS gesture feature requires accessibility setup to detect emergency triggers accurately even when the screen is locked.',
                   style: TextStyle(
                     color: textColor.withOpacity(0.8),
@@ -214,7 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Permissions are essential for real-time safety monitoring in Cadiz City.',
+                    'Permissions are essential for real-time safety monitoring in Catanduanes.',
                     style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 12),
                   ),
                 ),

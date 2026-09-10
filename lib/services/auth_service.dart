@@ -141,11 +141,14 @@ class AuthService {
       if (user.isAnonymous) {
         targetRole = AppConstants.roleCitizen;
         targetVerified = true; // Guests can use basic features immediately
-      } else if (user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
+      } else if (user.email == 'admin@catanduanes.gov.ph' || user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
         targetRole = AppConstants.roleAdmin;
         targetVerified = true;
       } else if (user.email?.contains('responder') == true || 
                  user.email?.contains('respondent') == true ||
+                 user.email?.contains('rescue') == true ||
+                 user.email?.contains('pnp') == true ||
+                 user.email?.contains('bfp') == true ||
                  user.email == 'john@resqnnect.com') {
         targetRole = AppConstants.roleResponder;
         targetVerified = true;
@@ -156,8 +159,8 @@ class AuthService {
           userId: user.uid,
           name: user.isAnonymous 
               ? 'Guest Account' 
-              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'City Admin' : 'New User')),
-          email: user.email ?? 'guest@resqnnect.local',
+              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'Catanduanes Admin' : 'GIS User')),
+          email: user.email ?? 'guest@gis.local',
           phone: '',
           profileImage: user.photoURL ?? '',
           role: targetRole,

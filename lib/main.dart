@@ -33,17 +33,17 @@ void main() async {
     print('Firebase initialization failed: $e');
   }
   
-  runApp(const ResQnnectApp());
+  runApp(const GISApp());
 }
 
-class ResQnnectApp extends StatefulWidget {
-  const ResQnnectApp({super.key});
+class GISApp extends StatefulWidget {
+  const GISApp({super.key});
 
   @override
-  State<ResQnnectApp> createState() => _ResQnnectAppState();
+  State<GISApp> createState() => _GISAppState();
 }
 
-class _ResQnnectAppState extends State<ResQnnectApp> with WidgetsBindingObserver {
+class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
   static const MethodChannel _sosChannel = MethodChannel('com.yummyjoy.resqnnect/sos');
 
   @override
@@ -121,19 +121,20 @@ class _ResQnnectAppState extends State<ResQnnectApp> with WidgetsBindingObserver
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
                       name: 'Guest Account',
-                      email: 'guest@resqnnect.local',
+                      email: 'guest@gis.local',
                       phone: '',
                       profileImage: '',
                       role: AppConstants.roleCitizen,
                       isVerified: true,
                       createdAt: DateTime.now(),
                     );
-                  } else if (userEmail == 'admin@cadiz.gov.ph' || 
+                  } else if (userEmail == 'admin@catanduanes.gov.ph' || 
+                             userEmail == 'admin@cadiz.gov.ph' || 
                              userEmail?.contains('admin') == true) {
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'City Admin',
-                      email: userEmail ?? 'admin@cadiz.gov.ph',
+                      name: firebaseUser.displayName ?? 'Catanduanes Admin',
+                      email: userEmail ?? 'admin@catanduanes.gov.ph',
                       phone: '',
                       profileImage: firebaseUser.photoURL ?? '',
                       role: AppConstants.roleAdmin,
@@ -142,11 +143,14 @@ class _ResQnnectAppState extends State<ResQnnectApp> with WidgetsBindingObserver
                     );
                   } else if (userEmail?.contains('responder') == true || 
                              userEmail?.contains('respondent') == true ||
+                             userEmail?.contains('rescue') == true ||
+                             userEmail?.contains('pnp') == true ||
+                             userEmail?.contains('bfp') == true ||
                              userEmail == 'john@resqnnect.com') {
                     // 🛡️ High-Priority Responder Detection
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'Field Responder',
+                      name: firebaseUser.displayName ?? 'Catanduanes Responder',
                       email: userEmail ?? '',
                       phone: '',
                       profileImage: firebaseUser.photoURL ?? '',
@@ -158,7 +162,7 @@ class _ResQnnectAppState extends State<ResQnnectApp> with WidgetsBindingObserver
                     // UNIVERSAL FALLBACK for Google and Registered Citizens
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'ResQnnect User',
+                      name: firebaseUser.displayName ?? 'GIS User',
                       email: userEmail ?? '',
                       phone: '',
                       profileImage: firebaseUser.photoURL ?? '',
@@ -232,12 +236,15 @@ class AuthWrapper extends StatelessWidget {
     
     UserModel effectiveUser = userModel ?? UserModel(
       userId: firebaseUser.uid,
-      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'City Admin' : 'ResQnnect User'),
-      email: userEmail ?? 'guest@resqnnect.local',
-      role: userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
+      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'Catanduanes Admin' : 'GIS User'),
+      email: userEmail ?? 'guest@gis.local',
+      role: userEmail == 'admin@catanduanes.gov.ph' || userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
           ? AppConstants.roleAdmin 
           : (userEmail?.contains('responder') == true || 
              userEmail?.contains('respondent') == true ||
+             userEmail?.contains('rescue') == true ||
+             userEmail?.contains('pnp') == true ||
+             userEmail?.contains('bfp') == true ||
              userEmail == 'john@resqnnect.com' 
                ? AppConstants.roleResponder 
                : AppConstants.roleCitizen),
@@ -251,6 +258,7 @@ class AuthWrapper extends StatelessWidget {
     bool isAuthorized = effectiveUser.isVerified ||
         effectiveUser.role == AppConstants.roleAdmin ||
         effectiveUser.role == AppConstants.roleResponder ||
+        userEmail == 'admin@catanduanes.gov.ph' ||
         userEmail == 'admin@cadiz.gov.ph' ||
         (userEmail?.contains('responder') == true);
  

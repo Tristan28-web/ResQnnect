@@ -313,7 +313,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Generated: ${DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.now())} • Cadiz City Command',
+            'Generated: ${DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.now())} • Catanduanes Command Center',
             style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black45),
           ),
           const SizedBox(height: 12),

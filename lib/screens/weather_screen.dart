@@ -64,7 +64,7 @@ class WeatherScreen extends StatelessWidget {
     return Column(
       children: [
         Text(
-          hasLoc ? 'Current Location' : 'Cadiz City, Philippines',
+          hasLoc ? 'Current Location' : 'Catanduanes, Philippines',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87, letterSpacing: 0.5),
         ),
         Text(
@@ -159,7 +159,7 @@ class WeatherScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isRisk 
-              ? 'Heavy rain or thunderstorms detected. Stay indoors and avoid flood-prone areas in Cadiz City.'
+              ? 'Heavy rain or thunderstorms detected. Stay indoors and avoid flood-prone areas in Catanduanes.'
               : 'Conditions are favorable for outdoor activities. No immediate weather threats detected.',
             textAlign: TextAlign.center,
             style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),

@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
               Text(
-                'ResQnnect',
+                'GIS',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   letterSpacing: 4,
                   fontWeight: FontWeight.w900,
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Smart Disaster Preparedness & Response',
+                'Catanduanes Emergency & Disaster Management',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 1),
               ),

@@ -37,7 +37,7 @@ class SMSService {
     // 3. Prepare message
     // Google Maps Link for instant navigation
     final String locationLink = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-    final String message = "🚨 RESQNNECT SOS: I am in danger! \n"
+    final String message = "🚨 GIS SOS: I am in danger! \n"
         "📍 My Location: $locationLink \n"
         "🆘 Details: $description";
 

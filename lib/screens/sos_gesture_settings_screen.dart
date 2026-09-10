@@ -205,7 +205,7 @@ class _SOSGestureSettingsScreenState extends State<SOSGestureSettingsScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              'To change these permissions, visit Device Settings > Accessibility > ResQnnect Accessibility Service.',
+              'To change these permissions, visit Device Settings > Accessibility > GIS Accessibility Service.',
               style: TextStyle(
                 color: isDark ? Colors.white38 : Colors.black38,
                 fontSize: 11,

@@ -19,7 +19,7 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
   String _selectedFilter = 'All';
   IncidentModel? _selectedIncident;
 
-  static const LatLng _cadizCenter = LatLng(10.9574, 123.2978);
+  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
 
   double _getMarkerHue(String type) {
     switch (type.toLowerCase()) {
@@ -116,8 +116,8 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
             children: [
               GoogleMap(
                 initialCameraPosition: const CameraPosition(
-                  target: _cadizCenter,
-                  zoom: 13.5,
+                  target: _catanduanesCenter,
+                  zoom: 12.5,
                 ),
                 onMapCreated: (controller) => _mapController = controller,
                 markers: markers,

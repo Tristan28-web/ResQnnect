@@ -33,7 +33,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
   GoogleMapController? _mapController;
   String _selectedHazardFilter = 'All';
 
-  static const LatLng _cadizCenter = LatLng(10.9574, 123.2978);
+  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
 
   // Group incidents into geographical clusters per barangay
   List<HotspotCluster> _computeClusters(List<IncidentModel> incidents) {
@@ -95,7 +95,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
         }
       }
 
-      LatLng center = _cadizCenter;
+      LatLng center = _catanduanesCenter;
       if (validCoords > 0) {
         center = LatLng(sumLat / validCoords, sumLng / validCoords);
       } else {
@@ -128,12 +128,18 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
 
   LatLng _approximateBarangayLocation(String bgy) {
     final lower = bgy.toLowerCase();
-    if (lower.contains('san juan')) return const LatLng(10.9420, 123.3150);
-    if (lower.contains('mabini')) return const LatLng(10.9650, 123.2810);
-    if (lower.contains('daga')) return const LatLng(10.9700, 123.3100);
-    if (lower.contains('tinampaan')) return const LatLng(10.9500, 123.2800);
-    if (lower.contains('sicaba')) return const LatLng(10.9300, 123.2500);
-    return const LatLng(10.9574, 123.2978);
+    if (lower.contains('virac')) return const LatLng(13.5840, 124.2330);
+    if (lower.contains('andres')) return const LatLng(13.5975, 124.1006);
+    if (lower.contains('bato')) return const LatLng(13.6067, 124.2883);
+    if (lower.contains('baras')) return const LatLng(13.6708, 124.3644);
+    if (lower.contains('gigmoto')) return const LatLng(13.7806, 124.3944);
+    if (lower.contains('pandan')) return const LatLng(14.0458, 124.1706);
+    if (lower.contains('caramoran')) return const LatLng(13.9986, 124.1333);
+    if (lower.contains('bagamanoc')) return const LatLng(13.9408, 124.2883);
+    if (lower.contains('panganiban')) return const LatLng(13.9017, 124.3017);
+    if (lower.contains('viga')) return const LatLng(13.8767, 124.3108);
+    if (lower.contains('miguel')) return const LatLng(13.6450, 124.3000);
+    return const LatLng(13.5840, 124.2330);
   }
 
   Color _getDensityColor(double density) {
@@ -218,7 +224,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
           return Stack(
             children: [
               GoogleMap(
-                initialCameraPosition: const CameraPosition(target: _cadizCenter, zoom: 13.0),
+                initialCameraPosition: const CameraPosition(target: _catanduanesCenter, zoom: 11.5),
                 onMapCreated: (ctrl) => _mapController = ctrl,
                 circles: heatmapCircles,
                 markers: hotspotMarkers,

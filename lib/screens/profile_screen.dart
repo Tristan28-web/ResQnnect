@@ -22,9 +22,9 @@ class ProfileScreen extends StatelessWidget {
     String role = user?.role ?? AppConstants.roleCitizen;
     final email = authService.currentUserEmail?.toLowerCase() ?? '';
     
-    if (email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
+    if (email == 'admin@catanduanes.gov.ph' || email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
       role = AppConstants.roleAdmin;
-    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com') {
+    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com' || email.contains('rescue') || email.contains('pnp') || email.contains('bfp')) {
       role = AppConstants.roleResponder;
     }
 

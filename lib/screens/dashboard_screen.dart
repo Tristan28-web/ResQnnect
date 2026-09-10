@@ -36,9 +36,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String role = user?.role ?? AppConstants.roleCitizen;
     final email = authService.currentUserEmail?.toLowerCase() ?? '';
     
-    if (email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
+    if (email == 'admin@catanduanes.gov.ph' || email == 'admin@cadiz.gov.ph' || email.contains('admin')) {
       role = AppConstants.roleAdmin;
-    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com') {
+    } else if (email.contains('responder') || email.contains('respondent') || email == 'john@resqnnect.com' || email.contains('rescue') || email.contains('pnp') || email.contains('bfp')) {
       role = AppConstants.roleResponder;
     }
 
@@ -252,7 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         title: Text('Sign Out', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
-        content: Text('Are you sure you want to log out of ResQnnect?', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+        content: Text('Are you sure you want to log out of GIS?', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

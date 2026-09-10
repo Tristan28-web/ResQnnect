@@ -19,7 +19,7 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
       'type': 'config',
     },
     {
-      'action': 'New Map Pin Added: Cadiz City Hospital',
+      'action': 'New Map Pin Added: Eastern Bicol Medical Center',
       'user': 'Admin',
       'timestamp': DateTime.now().subtract(const Duration(minutes: 12)),
       'type': 'map',

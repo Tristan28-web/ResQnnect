@@ -22,43 +22,43 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.primaryRed,
+      backgroundColor: const Color(0xFF0F141C),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
               AppConstants.logoAsset,
-              height: 120,
-              color: Colors.white, // Tinting white for the red background
+              height: 150,
               errorBuilder: (context, error, stackTrace) => const Icon(
                 Icons.security,
                 size: 100,
-                color: Colors.white,
+                color: AppConstants.primaryRed,
               ),
             ),
             const SizedBox(height: 24),
             const Text(
-              'ResQnnect',
+              'GIS',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 6,
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              'CADIZ CITY',
+              'PROVINCE OF CATANDUANES',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 14,
-                letterSpacing: 8,
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 4,
               ),
             ),
             const SizedBox(height: 60),
             const CircularProgressIndicator(
-              color: Colors.white,
+              color: AppConstants.primaryRed,
             ),
           ],
         ),

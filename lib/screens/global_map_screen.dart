@@ -33,7 +33,7 @@ class GlobalMapScreen extends StatefulWidget {
 class _GlobalMapScreenState extends State<GlobalMapScreen> {
   GoogleMapController? _mapController;
 
-  static const LatLng _cadizCenter = LatLng(10.9574, 123.2978);
+  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
 
   MapType _selectedMapType = MapType.normal;
   bool _isAddingPin = false; // admin pin placement mode
@@ -259,7 +259,10 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
   bool _isAdmin(BuildContext context) {
     final user = Provider.of<UserModel?>(context, listen: false);
     final auth = Provider.of<AuthService>(context, listen: false);
-    return user?.role == 'admin' || auth.currentUserEmail == 'admin@cadiz.gov.ph';
+    return user?.role == 'admin' || 
+           auth.currentUserEmail == 'admin@catanduanes.gov.ph' || 
+           auth.currentUserEmail == 'admin@cadiz.gov.ph' ||
+           auth.currentUserEmail?.contains('admin') == true;
   }
 
   bool _isResponder(BuildContext context) {
@@ -276,7 +279,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'CADIZ CITY TRACKING MAP'.tr(context),
+          'CATANDUANES GIS TRACKING MAP'.tr(context),
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.5),
         ),
         centerTitle: true,
@@ -346,7 +349,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           // ═══════════════════════════════════ GOOGLE MAP ════════════════════════════════════
                           GoogleMap(
                             initialCameraPosition: CameraPosition(
-                              target: widget.initialLocation ?? _cadizCenter,
+                              target: widget.initialLocation ?? _catanduanesCenter,
                               zoom: widget.initialLocation != null ? 15.0 : 13.0,
                             ),
                             mapType: _selectedMapType,
@@ -504,11 +507,11 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                                 // ZOOM OUT
                                 _mapFab(Icons.remove, () => _mapController?.animateCamera(CameraUpdate.zoomOut())),
                                 const SizedBox(height: 12),
-                                // RECENTER ON CADIZ CITY
+                                // RECENTER ON CATANDUANES
                                 Tooltip(
-                                  message: 'Recenter to Cadiz City',
+                                  message: 'Recenter to Catanduanes',
                                   child: _mapFab(Icons.home_outlined, () => _mapController?.animateCamera(
-                                    CameraUpdate.newLatLngZoom(_cadizCenter, 13.0))),
+                                    CameraUpdate.newLatLngZoom(_catanduanesCenter, 13.0))),
                                 ),
                                 const SizedBox(height: 24),
                                 // REPORT HAZARD

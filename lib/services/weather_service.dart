@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
 
 class WeatherService {
-  // Cadiz City Coordinates (Default)
-  static const double defaultLat = 10.9575;
-  static const double defaultLon = 123.3086;
+  // Catanduanes Coordinates (Virac Capital Default)
+  static const double defaultLat = 13.5840;
+  static const double defaultLon = 124.2330;
 
   static const String baseUrl = 'https://api.open-meteo.com/v1/forecast';
 

@@ -85,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppConstants.backgroundBlack : AppConstants.backgroundWhite,
       appBar: AppBar(
-        title: const Text('JOIN RESQNNECT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        title: const Text('JOIN GIS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -127,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Help us keep Cadiz City safe.',
+                'Help us keep Catanduanes safe.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
               ),
