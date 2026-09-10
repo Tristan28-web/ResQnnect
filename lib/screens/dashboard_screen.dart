@@ -52,7 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildRetroBottomNav(role, isDark),
+      bottomNavigationBar: _buildRetroBottomNav(context, role, isDark),
     );
   }
 
@@ -212,9 +212,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // --- Retro Pill Floating Navigation Bar (Reverse Engineered from Attached Image) ---
-  Widget _buildRetroBottomNav(String role, bool isDark) {
+  // --- Retro Pill Floating Navigation Bar (Safe from Android system buttons on any device) ---
+  Widget _buildRetroBottomNav(BuildContext context, String role, bool isDark) {
     final isAdmin = role == AppConstants.roleAdmin;
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
     final navItems = [
       {'icon': Icons.home_rounded, 'label': 'Home'},
@@ -224,21 +225,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'icon': isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded, 'label': 'Users'},
     ];
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-      height: 64,
-      decoration: BoxDecoration(
-        color: AppConstants.retroMint, // Solid Signature Mint/Teal
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppConstants.retroDarkBorder, width: 1.8),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black45 : AppConstants.retroDarkBorder.withOpacity(0.25),
-            offset: const Offset(3, 4),
-            blurRadius: 0, // Crisp neo-brutalist offset shadow
-          ),
-        ],
-      ),
+    return SafeArea(
+      top: false,
+      left: false,
+      right: false,
+      bottom: true,
+      child: Container(
+        margin: EdgeInsets.fromLTRB(20, 0, 20, bottomInset > 0 ? 6 : 16),
+        height: 64,
+        decoration: BoxDecoration(
+          color: AppConstants.retroMint, // Solid Signature Mint/Teal
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: AppConstants.retroDarkBorder, width: 1.8),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black45 : AppConstants.retroDarkBorder.withOpacity(0.25),
+              offset: const Offset(3, 4),
+              blurRadius: 0, // Crisp neo-brutalist offset shadow
+            ),
+          ],
+        ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(navItems.length, (index) {
@@ -278,6 +284,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }),
       ),
-    );
-  }
+    ),
+  );
+}
 }
