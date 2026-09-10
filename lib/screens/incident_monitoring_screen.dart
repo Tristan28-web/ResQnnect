@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
 import '../models/incident_model.dart';
-import '../models/user_model.dart';
 import '../core/constants.dart';
 
 class IncidentMonitoringScreen extends StatefulWidget {
@@ -22,16 +21,17 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
     switch (status.toLowerCase()) {
       case 'pending':
       case 'reported':
-        return Colors.orangeAccent;
+        return const Color(0xFFD97706);
+      case 'active':
       case 'dispatched':
       case 'responding':
-        return Colors.lightBlueAccent;
+        return const Color(0xFF2563EB);
       case 'resolved':
-        return Colors.greenAccent;
+        return const Color(0xFF16A34A);
       case 'closed':
-        return Colors.grey;
+        return const Color(0xFF64748B);
       default:
-        return Colors.amber;
+        return const Color(0xFFD97706);
     }
   }
 
@@ -40,14 +40,20 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
       case 'fire':
         return AppConstants.primaryRed;
       case 'flood':
-        return Colors.blue;
+        return const Color(0xFF2563EB);
       case 'crime':
-        return Colors.purpleAccent;
+        return const Color(0xFF7C3AED);
       case 'accident':
-        return Colors.orange;
+        return const Color(0xFFEA580C);
       default:
-        return Colors.amber;
+        return const Color(0xFF10B981);
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -58,51 +64,85 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'INCIDENT MONITORING',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'INCIDENT MONITORING',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
       ),
       body: Column(
         children: [
           // Search & Filters Header
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
             child: Column(
               children: [
-                // Search Input
-                TextField(
-                  controller: _searchController,
-                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'Search by Ref ID, Barangay, or Type...',
-                    hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 12),
-                    prefixIcon: Icon(Icons.search_rounded, size: 18, color: isDark ? Colors.white54 : Colors.black54),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                // Retro Search Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+                        offset: const Offset(2.5, 2.5),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                    style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontSize: 13, fontWeight: FontWeight.w600),
+                    decoration: InputDecoration(
+                      hintText: 'Search Ref ID, Barangay, or Type...',
+                      hintStyle: TextStyle(color: isDark ? Colors.white30 : const Color(0xFF9CA3AF), fontSize: 12),
+                      prefixIcon: Icon(Icons.search_rounded, size: 18, color: isDark ? Colors.white54 : AppColors.retroDarkBorder),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // Status Filter Chips
+                // Retro Status Filter Pills
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildStatusFilterChip('All'),
+                      _buildRetroFilterPill('All', isDark),
                       const SizedBox(width: 8),
-                      _buildStatusFilterChip('Reported'),
+                      _buildRetroFilterPill('Pending', isDark),
                       const SizedBox(width: 8),
-                      _buildStatusFilterChip('Dispatched'),
+                      _buildRetroFilterPill('Active', isDark),
                       const SizedBox(width: 8),
-                      _buildStatusFilterChip('Resolved'),
+                      _buildRetroFilterPill('Resolved', isDark),
+                      const SizedBox(width: 8),
+                      _buildRetroFilterPill('Closed', isDark),
                     ],
                   ),
                 ),
@@ -122,12 +162,14 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                 final incidents = snapshot.data ?? [];
                 final filtered = incidents.where((inc) {
                   // Status filter
-                  if (_selectedStatus == 'Reported') {
+                  if (_selectedStatus == 'Pending') {
                     if (inc.status != 'pending' && inc.status != 'reported') return false;
-                  } else if (_selectedStatus == 'Dispatched') {
-                    if (inc.status != 'dispatched' && inc.status != 'responding') return false;
+                  } else if (_selectedStatus == 'Active') {
+                    if (inc.status != 'active' && inc.status != 'dispatched' && inc.status != 'responding') return false;
                   } else if (_selectedStatus == 'Resolved') {
-                    if (inc.status != 'resolved' && inc.status != 'closed') return false;
+                    if (inc.status != 'resolved') return false;
+                  } else if (_selectedStatus == 'Closed') {
+                    if (inc.status != 'closed') return false;
                   }
 
                   // Search query
@@ -148,11 +190,23 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.assignment_turned_in_outlined, size: 54, color: (isDark ? Colors.white : Colors.black).withOpacity(0.15)),
-                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.retroDarkCard : AppColors.retroCream,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.8),
+                          ),
+                          child: Icon(Icons.assignment_turned_in_outlined, size: 40, color: isDark ? Colors.white38 : AppColors.retroDarkBorder),
+                        ),
+                        const SizedBox(height: 14),
                         Text(
                           'No incidents matching monitoring filters',
-                          style: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 13),
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : AppColors.retroDarkBorder,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ],
                     ),
@@ -161,7 +215,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
 
                 return ListView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final item = filtered[index];
@@ -176,18 +230,47 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
     );
   }
 
-  Widget _buildStatusFilterChip(String status) {
+  Widget _buildRetroFilterPill(String status, bool isDark) {
     final isSelected = _selectedStatus == status;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Color activeBg = AppColors.retroLilac;
+    if (status == 'Pending') activeBg = AppColors.retroPeach;
+    if (status == 'Active') activeBg = const Color(0xFFFEF08A);
+    if (status == 'Resolved') activeBg = const Color(0xFFDCFCE7);
+    if (status == 'Closed') activeBg = const Color(0xFFE2E8F0);
 
-    return ChoiceChip(
-      label: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black54))),
-      selected: isSelected,
-      selectedColor: AppConstants.primaryRed,
-      backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-      onSelected: (val) => setState(() => _selectedStatus = status),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      side: BorderSide.none,
+    return GestureDetector(
+      onTap: () => setState(() => _selectedStatus = status),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBg : (isDark ? AppColors.retroDarkCard : Colors.white),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.retroDarkBorder
+                : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder.withOpacity(0.4)),
+            width: isSelected ? 1.8 : 1.2,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          status.toUpperCase(),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.6,
+            color: isDark ? (isSelected ? AppColors.retroDarkBorder : Colors.white70) : AppColors.retroDarkBorder,
+          ),
+        ),
+      ),
     );
   }
 
@@ -197,17 +280,20 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
     final statusColor = _getStatusColor(item.status);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3.5, 3.5),
+            blurRadius: 0,
           ),
         ],
       ),
@@ -224,11 +310,12 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: typeColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: typeColor.withOpacity(0.5), width: 1.2),
                     ),
                     child: Text(
                       item.incidentType.toUpperCase(),
-                      style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.8),
+                      style: TextStyle(color: typeColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.6),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -237,7 +324,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -248,6 +335,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: statusColor.withOpacity(0.6), width: 1.2),
                 ),
                 child: Row(
                   children: [
@@ -262,7 +350,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           // Location & Barangay
           Row(
@@ -273,9 +361,9 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                 child: Text(
                   '${item.barangay} • ${item.location}',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     fontSize: 13,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -288,13 +376,13 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
           // Description
           Text(
             item.description,
-            style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 12),
+            style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF4B5563), fontSize: 12, height: 1.3),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 12),
 
-          Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12),
+          Divider(height: 1, color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.1)),
           const SizedBox(height: 10),
 
           // Bottom Bar: Timestamp & Actions
@@ -303,27 +391,46 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white38 : Colors.black38),
+                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white38 : const Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Text(
                     DateFormat('MMM dd • hh:mm a').format(item.timestamp),
-                    style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11),
+                    style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  // Action button to update status
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: const Icon(Icons.edit_note_rounded, size: 16, color: AppConstants.primaryRed),
-                    label: const Text('STATUS', style: TextStyle(color: AppConstants.primaryRed, fontSize: 11, fontWeight: FontWeight.bold)),
-                    onPressed: () => _showStatusUpdateDialog(context, item, firestore),
+              GestureDetector(
+                onTap: () => _showStatusUpdateDialog(context, item, firestore),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
                   ),
-                ],
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit_note_rounded, size: 14, color: AppColors.retroDarkBorder),
+                      SizedBox(width: 4),
+                      Text(
+                        'STATUS',
+                        style: TextStyle(
+                          color: AppColors.retroDarkBorder,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -341,46 +448,78 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('UPDATE INCIDENT STATUS (${incident.referenceId})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+          backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: BorderSide(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 2.0),
+          ),
+          elevation: 0,
+          title: Text(
+            'UPDATE STATUS (${incident.referenceId})',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+              letterSpacing: 0.8,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<String>(
-                value: ['pending', 'dispatched', 'responding', 'resolved', 'closed'].contains(newStatus.toLowerCase())
-                    ? newStatus.toLowerCase()
-                    : 'pending',
-                dropdownColor: isDark ? const Color(0xFF161E31) : Colors.white,
-                decoration: const InputDecoration(labelText: 'Status Workflow'),
-                items: const [
-                  DropdownMenuItem(value: 'pending', child: Text('Reported / Pending')),
-                  DropdownMenuItem(value: 'dispatched', child: Text('Dispatched')),
-                  DropdownMenuItem(value: 'responding', child: Text('Responding On-Scene')),
-                  DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
-                  DropdownMenuItem(value: 'closed', child: Text('Closed')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setDialogState(() => newStatus = val);
-                },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black26 : const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.4),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: ['pending', 'active', 'resolved', 'closed'].contains(newStatus.toLowerCase())
+                        ? newStatus.toLowerCase()
+                        : 'pending',
+                    dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
+                    items: const [
+                      DropdownMenuItem(value: 'pending', child: Text('Reported / Pending', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                      DropdownMenuItem(value: 'active', child: Text('Active Incident', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                      DropdownMenuItem(value: 'resolved', child: Text('Resolved', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                      DropdownMenuItem(value: 'closed', child: Text('Archived / Closed', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setDialogState(() => newStatus = val);
+                    },
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Resolution / Dispatcher Notes',
-                  hintText: 'e.g. Unit deployed, flood receded, fire contained...',
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black26 : const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.4),
+                ),
+                child: TextField(
+                  controller: notesController,
+                  maxLines: 2,
+                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+                  decoration: const InputDecoration(
+                    hintText: 'Notes: flood receded, hazard cleared, etc...',
+                    hintStyle: TextStyle(fontSize: 11),
+                    contentPadding: EdgeInsets.all(12),
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryRed),
-              onPressed: () async {
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontWeight: FontWeight.bold)),
+            ),
+            GestureDetector(
+              onTap: () async {
                 await firestore.updateIncidentStatusWithNotes(
                   incident.incidentId,
                   newStatus,
@@ -388,7 +527,21 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                 );
                 if (context.mounted) Navigator.pop(ctx);
               },
-              child: const Text('UPDATE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.retroMint,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.6),
+                  boxShadow: const [
+                    BoxShadow(color: AppColors.retroDarkBorder, offset: Offset(2, 2), blurRadius: 0),
+                  ],
+                ),
+                child: const Text(
+                  'SAVE',
+                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900),
+                ),
+              ),
             ),
           ],
         ),

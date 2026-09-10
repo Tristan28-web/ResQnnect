@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +32,12 @@ class HotspotIdentificationScreen extends StatefulWidget {
 class _HotspotIdentificationScreenState extends State<HotspotIdentificationScreen> {
   GoogleMapController? _mapController;
   String _selectedHazardFilter = 'All';
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
 
   // Group incidents into geographical clusters per barangay
   List<HotspotCluster> _computeClusters(List<IncidentModel> incidents, LatLng fallbackCenter) {
@@ -104,17 +109,17 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
   }
 
   Color _getDensityColor(double density) {
-    if (density >= 0.8) return Colors.redAccent.withOpacity(0.45);
-    if (density >= 0.55) return Colors.orangeAccent.withOpacity(0.40);
-    if (density >= 0.35) return Colors.amberAccent.withOpacity(0.35);
-    return Colors.greenAccent.withOpacity(0.30);
+    if (density >= 0.8) return Colors.redAccent.withValues(alpha: 0.45);
+    if (density >= 0.55) return Colors.orangeAccent.withValues(alpha: 0.40);
+    if (density >= 0.35) return Colors.amberAccent.withValues(alpha: 0.35);
+    return Colors.greenAccent.withValues(alpha: 0.30);
   }
 
   Color _getStrokeColor(double density) {
-    if (density >= 0.8) return Colors.red;
-    if (density >= 0.55) return Colors.orange;
-    if (density >= 0.35) return Colors.amber;
-    return Colors.green;
+    if (density >= 0.8) return const Color(0xFFDC2626);
+    if (density >= 0.55) return const Color(0xFFEA580C);
+    if (density >= 0.35) return const Color(0xFFD97706);
+    return const Color(0xFF16A34A);
   }
 
   @override
@@ -124,19 +129,36 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
     final userPos = locationService.currentPosition;
     final LatLng initialTarget = userPos != null
         ? LatLng(userPos.latitude, userPos.longitude)
-        : const LatLng(14.5995, 120.9842);
+        : const LatLng(AppConstants.defaultLat, AppConstants.defaultLng);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'HOTSPOT IDENTIFICATION',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'HOTSPOT IDENTIFICATION',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
       ),
       body: StreamBuilder<List<IncidentModel>>(
         stream: firestore.getIncidents(),
@@ -149,14 +171,14 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
 
           for (int i = 0; i < clusters.length; i++) {
             final c = clusters[i];
-            // Density heatmap circles (inner intense core + outer gradient halo)
+            // Density heatmap circles
             heatmapCircles.add(
               Circle(
                 circleId: CircleId('outer_${c.barangay}_$i'),
                 center: c.center,
                 radius: 350 + (c.densityScore * 300),
                 fillColor: _getDensityColor(c.densityScore),
-                strokeColor: _getStrokeColor(c.densityScore).withOpacity(0.6),
+                strokeColor: _getStrokeColor(c.densityScore).withValues(alpha: 0.6),
                 strokeWidth: 2,
               ),
             );
@@ -166,7 +188,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
                 circleId: CircleId('core_${c.barangay}_$i'),
                 center: c.center,
                 radius: 120 + (c.densityScore * 100),
-                fillColor: _getStrokeColor(c.densityScore).withOpacity(0.55),
+                fillColor: _getStrokeColor(c.densityScore).withValues(alpha: 0.55),
                 strokeColor: _getStrokeColor(c.densityScore),
                 strokeWidth: 2,
               ),
@@ -198,44 +220,51 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
                 zoomControlsEnabled: false,
               ),
 
-              // Top Hazard Filter
+              // Top Hazard Filter (Retro Horizontal Chips)
               Positioned(
                 top: 14,
-                left: 14,
-                right: 14,
+                left: 16,
+                right: 16,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildHazardChip('All'),
+                      _buildRetroHazardChip('All', isDark),
                       const SizedBox(width: 8),
-                      _buildHazardChip('Fire'),
+                      _buildRetroHazardChip('Fire', isDark),
                       const SizedBox(width: 8),
-                      _buildHazardChip('Flood'),
+                      _buildRetroHazardChip('Flood', isDark),
                       const SizedBox(width: 8),
-                      _buildHazardChip('Crime'),
+                      _buildRetroHazardChip('Crime', isDark),
                       const SizedBox(width: 8),
-                      _buildHazardChip('Accident'),
+                      _buildRetroHazardChip('Accident', isDark),
                     ],
                   ),
                 ),
               ),
 
-              // Bottom Hotspot Ranking Card
+              // Bottom Hotspot Ranking Card (Neo-Brutalist Retro)
               Positioned(
-                bottom: 20,
+                bottom: 24,
                 left: 16,
                 right: 16,
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF1E2841) : Colors.white).withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(20),
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 2.0,
+                    ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 16, offset: const Offset(0, 6)),
+                      BoxShadow(
+                        color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                        offset: const Offset(4, 4),
+                        blurRadius: 0,
+                      ),
                     ],
-                    border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -246,85 +275,147 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.whatshot_rounded, color: AppConstants.primaryRed, size: 18),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.retroPeach,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                                ),
+                                child: const Icon(Icons.whatshot_rounded, color: Color(0xFFEA580C), size: 16),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'IDENTIFIED HOTSPOTS',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   letterSpacing: 1.1,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
                                 ),
                               ),
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppConstants.primaryRed.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(6),
+                              color: const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                             ),
                             child: Text(
                               '${clusters.length} CLUSTERS',
-                              style: const TextStyle(color: AppConstants.primaryRed, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Color(0xFFDC2626),
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      SizedBox(
-                        height: 75,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: clusters.length,
-                          itemBuilder: (ctx, idx) {
-                            final cluster = clusters[idx];
-                            final color = _getStrokeColor(cluster.densityScore);
-
-                            return Container(
-                              width: 175,
-                              margin: const EdgeInsets.only(right: 10),
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: (isDark ? const Color(0xFF161E31) : const Color(0xFFF5F7FB)),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: color.withOpacity(0.4)),
+                      if (clusters.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: Text(
+                              'No density clusters found for selected filter.',
+                              style: TextStyle(
+                                color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                                fontSize: 11,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    cluster.barangay,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 11,
-                                      color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 80,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: clusters.length,
+                            itemBuilder: (ctx, idx) {
+                              final cluster = clusters[idx];
+                              final strokeColor = _getStrokeColor(cluster.densityScore);
+
+                              return GestureDetector(
+                                onTap: () {
+                                  _mapController?.animateCamera(
+                                    CameraUpdate.newLatLngZoom(cluster.center, 15.0),
+                                  );
+                                },
+                                child: Container(
+                                  width: 170,
+                                  margin: const EdgeInsets.only(right: 10),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF262C38) : AppColors.retroPeach,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                                      width: 1.4,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${cluster.count} Incidents',
-                                        style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 10),
-                                      ),
-                                      Text(
-                                        cluster.dominantHazard.toUpperCase(),
-                                        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withValues(alpha: 0.1),
+                                        offset: const Offset(2, 2),
+                                        blurRadius: 0,
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        cluster.barangay,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 12,
+                                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${cluster.count} Reports',
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: strokeColor, width: 1.0),
+                                            ),
+                                            child: Text(
+                                              cluster.dominantHazard.toUpperCase(),
+                                              style: TextStyle(
+                                                color: strokeColor,
+                                                fontSize: 8,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -336,27 +427,39 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
     );
   }
 
-  Widget _buildHazardChip(String hazard) {
+  Widget _buildRetroHazardChip(String hazard, bool isDark) {
     final isSelected = _selectedHazardFilter.toLowerCase() == hazard.toLowerCase();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedHazardFilter = hazard),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppConstants.primaryRed : (isDark ? const Color(0xFF1E2841) : Colors.white).withOpacity(0.9),
+          color: isSelected
+              ? AppColors.retroLilac
+              : (isDark ? AppColors.retroDarkCard : Colors.white),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.retroDarkBorder
+                : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder.withValues(alpha: 0.4)),
+            width: isSelected ? 1.8 : 1.2,
+          ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: isDark ? Colors.black45 : AppColors.retroDarkBorder,
+              offset: isSelected ? const Offset(2, 2) : const Offset(1.5, 1.5),
+              blurRadius: 0,
+            ),
           ],
         ),
         child: Text(
-          hazard,
+          hazard.toUpperCase(),
           style: TextStyle(
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+            color: isDark ? (isSelected ? AppColors.retroDarkBorder : Colors.white70) : AppColors.retroDarkBorder,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
           ),
         ),
       ),

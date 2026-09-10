@@ -41,9 +41,6 @@ class AppConstants {
   // Roles
   static const String roleAdmin = 'admin';
   static const String roleCitizen = 'citizen';
-  static const String rolePNP = 'pnp'; // Philippine National Police (Crimes & Accidents)
-  static const String roleBFP = 'bfp'; // Bureau of Fire Protection (Fire)
-  static const String roleRescue = 'rescue'; // CDRRMO / Emergency Rescue (Floods, Disasters)
 
   // Blueprint Incident Types
   static const String incidentTypeFire = 'Fire';

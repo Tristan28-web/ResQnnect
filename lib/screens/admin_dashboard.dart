@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../core/constants.dart';
 import '../services/firestore_service.dart';
 import '../models/incident_model.dart';
+import '../models/hazard_model.dart';
+import '../models/map_location_model.dart';
 import 'package:intl/intl.dart';
 import 'admin_verification_screen.dart';
 import 'alerts_screen.dart';
@@ -12,8 +14,10 @@ import 'incident_monitoring_screen.dart';
 import 'hotspot_identification_screen.dart';
 import 'predictive_analysis_screen.dart';
 import 'report_generation_screen.dart';
-import 'lgu_user_management_screen.dart';
+import 'safe_zone_map_screen.dart';
 import 'report_screen.dart';
+import 'incident_pinning_screen.dart';
+import 'lgu_user_management_screen.dart';
 import '../services/location_service.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -348,12 +352,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return StreamBuilder<List<IncidentModel>>(
       stream: firestore.getIncidents(),
-      builder: (context, snapshot) {
-        final incidents = snapshot.data ?? [];
-        final total = incidents.length;
-        final ongoing = incidents.where((i) => i.status != 'resolved' && i.status != 'closed').length;
-        final resolved = incidents.where((i) => i.status == 'resolved').length;
-        final closed = incidents.where((i) => i.status == 'closed').length;
+      builder: (context, incSnap) {
+        final incidents = incSnap.data ?? [];
+        final totalIncidents = incidents.length;
 
         // Calculate distribution by type (Module 7: Incidents by Type)
         final typeCounts = <String, int>{
@@ -379,157 +380,216 @@ class _AdminDashboardState extends State<AdminDashboard> {
           }
         }
 
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.retroDarkCard : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-              width: 1.8,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
-                offset: const Offset(3, 3),
-                blurRadius: 0,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.retroLilac,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+        return StreamBuilder<List<HazardModel>>(
+          stream: firestore.getHazards(),
+          builder: (context, hazSnap) {
+            final hazardCount = hazSnap.data?.length ?? 0;
+
+            return StreamBuilder<List<MapLocationModel>>(
+              stream: firestore.getMapLocations(),
+              builder: (context, locSnap) {
+                final locations = locSnap.data ?? [];
+                final safeZoneCount = locations.where((l) => l.type == MapLocationType.safeZone || l.type == MapLocationType.medical).length;
+
+                return StreamBuilder<List<AlertModel>>(
+                  stream: firestore.getAlerts(),
+                  builder: (context, alertSnap) {
+                    final alertCount = alertSnap.data?.length ?? 0;
+
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.retroDarkCard : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                          width: 1.8,
                         ),
-                        child: const Icon(Icons.dashboard_rounded, color: AppColors.retroDarkBorder, size: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '07. DASHBOARD KPI SUMMARY',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.1,
-                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
-                    ),
-                    child: const Text(
-                      'GIS ACTIVE',
-                      style: TextStyle(
-                        color: Color(0xFF16A34A),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // KPI Boxes: Total, Ongoing, Resolved, Closed
-              Row(
-                children: [
-                  Expanded(child: _buildRetroKpiBox('TOTAL', '$total', AppColors.retroLilac, isDark ? Colors.white : AppColors.retroDarkBorder, isDark)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildRetroKpiBox('ONGOING', '$ongoing', AppColors.retroPeach, const Color(0xFFD97706), isDark)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildRetroKpiBox('RESOLVED', '$resolved', const Color(0xFFDCFCE7), const Color(0xFF16A34A), isDark)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildRetroKpiBox('CLOSED', '$closed', const Color(0xFFF1F5F9), const Color(0xFF64748B), isDark)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Divider(color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.15), height: 1),
-              const SizedBox(height: 16),
-
-              // Incidents by Type (Module 7)
-              Text(
-                'INCIDENTS BY TYPE',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                  color: isDark ? Colors.white38 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...typeCounts.entries.map((entry) {
-                final count = entry.value;
-                final percentage = total > 0 ? (count / total) : 0.0;
-                final barColor = _getTypeColor(entry.key);
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '$count (${(percentage * 100).toStringAsFixed(0)}%)',
-                            style: TextStyle(
-                              color: barColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                            offset: const Offset(3, 3),
+                            blurRadius: 0,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.25),
-                            width: 1.0,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.retroLilac,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                                    ),
+                                    child: const Icon(Icons.dashboard_rounded, color: AppColors.retroDarkBorder, size: 16),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '07. DASHBOARD KPI SUMMARY',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.1,
+                                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDCFCE7),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                                ),
+                                child: const Text(
+                                  'GIS ACTIVE',
+                                  style: TextStyle(
+                                    color: Color(0xFF16A34A),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: percentage.clamp(0.0, 1.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: barColor,
-                              borderRadius: BorderRadius.circular(3),
+                          const SizedBox(height: 18),
+
+                          // GIS KPI Boxes: Incidents, Hazards, Safe Zones, Alerts
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildRetroKpiBox(
+                                  'INCIDENTS',
+                                  '$totalIncidents',
+                                  AppColors.retroLilac,
+                                  isDark ? Colors.white : AppColors.retroDarkBorder,
+                                  isDark,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentMonitoringScreen())),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildRetroKpiBox(
+                                  'HAZARDS',
+                                  '$hazardCount',
+                                  AppColors.retroPeach,
+                                  const Color(0xFFEA580C),
+                                  isDark,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentMappingScreen())),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildRetroKpiBox(
+                                  'SAFE ZONES',
+                                  '$safeZoneCount',
+                                  const Color(0xFFCCFBF1),
+                                  const Color(0xFF0D9488),
+                                  isDark,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SafeZoneMapScreen())),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildRetroKpiBox(
+                                  'ALERTS',
+                                  '$alertCount',
+                                  const Color(0xFFFEE2E2),
+                                  const Color(0xFFDC2626),
+                                  isDark,
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen())),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Divider(color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.15), height: 1),
+                          const SizedBox(height: 16),
+
+                          // Incidents by Type (Module 7)
+                          Text(
+                            'INCIDENTS BY TYPE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: isDark ? Colors.white38 : const Color(0xFF6B7280),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          ...typeCounts.entries.map((entry) {
+                            final count = entry.value;
+                            final percentage = totalIncidents > 0 ? (count / totalIncidents) : 0.0;
+                            final barColor = _getTypeColor(entry.key);
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        entry.key,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$count (${(percentage * 100).toStringAsFixed(0)}%)',
+                                        style: TextStyle(
+                                          color: barColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Stack(
+                                      children: [
+                                        Container(
+                                          height: 6,
+                                          width: double.infinity,
+                                          color: isDark ? Colors.white10 : AppColors.retroDarkBorder.withOpacity(0.08),
+                                        ),
+                                        FractionallySizedBox(
+                                          widthFactor: percentage,
+                                          child: Container(
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                              color: barColor,
+                                              borderRadius: BorderRadius.circular(3),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 );
-              }),
-            ],
-          ),
+              },
+            );
+          },
         );
       },
     );
@@ -550,34 +610,40 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  Widget _buildRetroKpiBox(String label, String val, Color fill, Color textColor, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF262C38) : fill,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-          width: 1.4,
+  Widget _buildRetroKpiBox(String label, String val, Color fill, Color textColor, bool isDark, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF262C38) : fill,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.4,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            val,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textColor),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white54 : AppColors.retroDarkBorder,
-              letterSpacing: 0.5,
+        child: Column(
+          children: [
+            Text(
+              val,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textColor),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white54 : AppColors.retroDarkBorder,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -608,15 +674,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
           mainAxisSpacing: 14,
           childAspectRatio: 1.15,
           children: [
-            _buildRetroActionCard(context, '01. Reporting', 'Evidence submission', Icons.add_location_alt_rounded, AppColors.retroPeach, const Color(0xFFE11D48), const ReportScreen()),
+            _buildRetroActionCard(context, '01. Reporting', 'Incident submission', Icons.add_location_alt_rounded, AppColors.retroPeach, const Color(0xFFE11D48), const ReportScreen()),
             _buildRetroActionCard(context, '02. Mapping', 'Interactive GIS pins', Icons.map_rounded, AppColors.retroLilac, const Color(0xFF2563EB), const IncidentMappingScreen()),
-            _buildRetroActionCard(context, '03. Pinning', 'Coordinate picker', Icons.pin_drop_rounded, AppColors.retroPeach, const Color(0xFF0891B2), const ReportScreen()),
+            _buildRetroActionCard(context, '03. Pinning', 'Coordinate picker', Icons.pin_drop_rounded, AppColors.retroPeach, const Color(0xFF0891B2), const IncidentPinningScreen()),
             _buildRetroActionCard(context, '04. Monitoring', 'Live incident tracker', Icons.dvr_rounded, AppColors.retroLilac, const Color(0xFF4F46E5), const IncidentMonitoringScreen()),
             _buildRetroActionCard(context, '05. Hotspots', 'High-risk clusters', Icons.whatshot_rounded, AppColors.retroPeach, const Color(0xFFEA580C), const HotspotIdentificationScreen()),
             _buildRetroActionCard(context, '06. Predictive AI', '7-day logic & risk', Icons.auto_awesome_rounded, AppColors.retroLilac, const Color(0xFF7C3AED), const PredictiveAnalysisScreen()),
             _buildRetroActionCard(context, '08. Alerts', 'Broadcast advisory', Icons.notifications_active_rounded, AppColors.retroPeach, const Color(0xFFDB2777), const AlertsScreen()),
             _buildRetroActionCard(context, '09. Report Gen', 'Audit & KPI export', Icons.assessment_rounded, AppColors.retroLilac, const Color(0xFF059669), const ReportGenerationScreen()),
-            _buildRetroActionCard(context, '10. Users', 'LGU roles & access', Icons.admin_panel_settings_rounded, AppColors.retroPeach, const Color(0xFF6D28D9), const LGUUserManagementScreen()),
+            _buildRetroActionCard(context, '10. User Mgmt', 'Citizens & Admin access', Icons.manage_accounts_rounded, AppColors.retroPeach, const Color(0xFF6D28D9), const LGUUserManagementScreen()),
             _buildRetroVerifyCard(context),
           ],
         ),

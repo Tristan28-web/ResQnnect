@@ -47,13 +47,30 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'REPORT GENERATION',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'REPORT GENERATION',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
       ),
       body: StreamBuilder<List<IncidentModel>>(
         stream: firestore.getIncidents(),
@@ -79,61 +96,94 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Filter Panel (Date From, Date To, Incident Type, Barangay)
-                _buildFilterCard(context, allIncidents),
-                const SizedBox(height: 24),
+                _buildFilterCard(context, allIncidents, isDark),
+                const SizedBox(height: 18),
 
                 // Generate Report Button
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.primaryRed,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 4,
-                  ),
-                  icon: const Icon(Icons.analytics_rounded, color: Colors.white, size: 20),
-                  label: const Text(
-                    'GENERATE REPORT',
-                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-                  ),
-                  onPressed: () {
+                GestureDetector(
+                  onTap: () {
                     setState(() => _hasGenerated = true);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Report generated: ${filtered.length} records matching criteria.'),
-                        backgroundColor: AppConstants.primaryRed,
+                        content: Text('Report compiled: ${filtered.length} records matching criteria.'),
+                        backgroundColor: AppColors.retroMintDark,
                         duration: const Duration(seconds: 2),
                       ),
                     );
                   },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroMint,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                          offset: const Offset(4, 4),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.analytics_rounded, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'GENERATE OFFICIAL AUDIT REPORT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
                 // Generated Report Section
                 if (_hasGenerated) ...[
-                  _buildReportHeaderCard(context, filtered.length),
+                  _buildReportHeaderCard(context, filtered.length, isDark),
+                  const SizedBox(height: 16),
+                  _buildKpiMetrics(context, filtered, isDark),
                   const SizedBox(height: 20),
-                  _buildKpiMetrics(context, filtered),
-                  const SizedBox(height: 24),
-                  _buildTypeDistributionCard(context, filtered),
-                  const SizedBox(height: 24),
-                  _buildIncidentDataTable(context, filtered),
+                  _buildTypeDistributionCard(context, filtered, isDark),
+                  const SizedBox(height: 20),
+                  _buildIncidentDataTable(context, filtered, isDark),
                   const SizedBox(height: 40),
                 ] else ...[
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      padding: const EdgeInsets.symmetric(vertical: 36),
                       child: Column(
                         children: [
-                          Icon(Icons.assessment_outlined, size: 64, color: (isDark ? Colors.white : Colors.black).withOpacity(0.15)),
-                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.retroDarkCard : AppColors.retroPeach,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.8),
+                            ),
+                            child: Icon(Icons.assessment_outlined, size: 44, color: isDark ? Colors.white38 : AppColors.retroDarkBorder),
+                          ),
+                          const SizedBox(height: 14),
                           Text(
-                            'Select filters above and tap "Generate Report"',
-                            style: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 13),
+                            'Select filter criteria above and tap "Generate Official Audit Report"',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -148,9 +198,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     );
   }
 
-  Widget _buildFilterCard(BuildContext context, List<IncidentModel> allIncidents) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildFilterCard(BuildContext context, List<IncidentModel> allIncidents, bool isDark) {
     final detectedBarangays = allIncidents
         .map((i) => i.barangay.trim())
         .where((b) => b.isNotEmpty)
@@ -161,26 +209,44 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     final currentBarangay = barangayOptions.contains(_selectedBarangay) ? _selectedBarangay : 'All Barangays';
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3.5, 3.5),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.filter_list_rounded, color: AppConstants.primaryRed, size: 20),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.retroPeach,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                ),
+                child: const Icon(Icons.filter_list_rounded, color: AppColors.retroDarkBorder, size: 16),
+              ),
               const SizedBox(width: 8),
               Text(
                 'REPORT FILTERS',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                  color: isDark ? Colors.white70 : Colors.black87,
+                  letterSpacing: 1.1,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
                 ),
               ),
             ],
@@ -191,11 +257,11 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildDateButton('Date From', _startDate, _selectStartDate),
+                child: _buildDateButton('DATE FROM', _startDate, _selectStartDate, isDark),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: _buildDateButton('Date To', _endDate, _selectEndDate),
+                child: _buildDateButton('DATE TO', _endDate, _selectEndDate, isDark),
               ),
             ],
           ),
@@ -204,22 +270,41 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
           // Incident Type Dropdown
           Text(
             'INCIDENT TYPE',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0, color: isDark ? Colors.white38 : Colors.black45),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF161E31) : Colors.black.withOpacity(0.04),
+              color: isDark ? const Color(0xFF262C38) : const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedType,
                 isExpanded: true,
-                dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
+                dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
                 items: ['All', ...AppConstants.incidentTypes].map((t) {
-                  return DropdownMenuItem<String>(value: t, child: Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)));
+                  return DropdownMenuItem<String>(
+                    value: t,
+                    child: Text(
+                      t,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      ),
+                    ),
+                  );
                 }).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedType = val);
@@ -232,22 +317,41 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
           // Barangay Dropdown
           Text(
             'AREA / BARANGAY',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0, color: isDark ? Colors.white38 : Colors.black45),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF161E31) : Colors.black.withOpacity(0.04),
+              color: isDark ? const Color(0xFF262C38) : const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: currentBarangay,
                 isExpanded: true,
-                dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
+                dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
                 items: barangayOptions.map((b) {
-                  return DropdownMenuItem<String>(value: b, child: Text(b, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)));
+                  return DropdownMenuItem<String>(
+                    value: b,
+                    child: Text(
+                      b,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      ),
+                    ),
+                  );
                 }).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedBarangay = val);
@@ -260,30 +364,53 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     );
   }
 
-  Widget _buildDateButton(String label, DateTime date, VoidCallback onTap) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return InkWell(
+  Widget _buildDateButton(String label, DateTime date, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF161E31) : Colors.black.withOpacity(0.04),
+          color: isDark ? const Color(0xFF262C38) : AppColors.retroCream,
           borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.4,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isDark ? Colors.white38 : Colors.black45)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+                color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+              ),
+            ),
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.calendar_month_rounded, size: 14, color: AppConstants.primaryRed),
+                const Icon(Icons.calendar_today_rounded, size: 13, color: AppConstants.primaryRed),
                 const SizedBox(width: 6),
-                Text(
-                  DateFormat('yyyy-MM-dd').format(date),
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                Expanded(
+                  child: Text(
+                    DateFormat('MMM dd, yyyy').format(date),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -293,15 +420,23 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     );
   }
 
-  Widget _buildReportHeaderCard(BuildContext context, int count) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildReportHeaderCard(BuildContext context, int count, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
+        color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3, 3),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,68 +446,107 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             children: [
               Text(
                 'LGU INCIDENT SUMMARY REPORT',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.1, color: isDark ? Colors.white : Colors.black87),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-                child: const Text('OFFICIAL', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                ),
+                child: const Text(
+                  'OFFICIAL',
+                  style: TextStyle(color: Color(0xFF16A34A), fontSize: 9, fontWeight: FontWeight.w900),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
             'Generated: ${DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.now())} • GIS Command Center',
-            style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black45),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             'Scope: $_selectedType Incidents in $_selectedBarangay (${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d, yyyy').format(_endDate)})',
-            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isDark ? Colors.white70 : AppColors.retroDarkBorder),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildKpiMetrics(BuildContext context, List<IncidentModel> list) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildKpiMetrics(BuildContext context, List<IncidentModel> list, bool isDark) {
     final total = list.length;
     final resolved = list.where((i) => i.status == 'resolved' || i.status == 'closed').length;
     final rate = total > 0 ? ((resolved / total) * 100).round() : 100;
 
     return Row(
       children: [
-        Expanded(child: _buildMetricTile('TOTAL INCIDENTS', '$total', Colors.blueAccent, isDark)),
-        const SizedBox(width: 10),
-        Expanded(child: _buildMetricTile('RESOLVED', '$resolved', Colors.greenAccent, isDark)),
-        const SizedBox(width: 10),
-        Expanded(child: _buildMetricTile('RESOLUTION RATE', '$rate%', AppConstants.primaryRed, isDark)),
+        Expanded(
+          child: _buildRetroMetricBox('TOTAL', '$total', AppColors.retroLilac, isDark ? Colors.white : AppColors.retroDarkBorder, isDark),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildRetroMetricBox('RESOLVED', '$resolved', const Color(0xFFDCFCE7), const Color(0xFF16A34A), isDark),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildRetroMetricBox('RATE', '$rate%', const Color(0xFFFEF08A), const Color(0xFFB45309), isDark),
+        ),
       ],
     );
   }
 
-  Widget _buildMetricTile(String title, String val, Color color, bool isDark) {
+  Widget _buildRetroMetricBox(String label, String val, Color fill, Color textColor, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: isDark ? const Color(0xFF262C38) : fill,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: isDark ? Colors.white38 : Colors.black45)),
-          const SizedBox(height: 6),
-          Text(val, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color)),
+          Text(
+            val,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textColor),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white54 : AppColors.retroDarkBorder,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTypeDistributionCard(BuildContext context, List<IncidentModel> list) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildTypeDistributionCard(BuildContext context, List<IncidentModel> list, bool isDark) {
     final Map<String, int> typeMap = {};
     for (var i in list) {
       typeMap[i.incidentType] = (typeMap[i.incidentType] ?? 0) + 1;
@@ -381,20 +555,38 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3.5, 3.5),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'INCIDENTS BY TYPE DISTRIBUTION',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0, color: isDark ? Colors.white70 : Colors.black87),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+            ),
           ),
           const SizedBox(height: 14),
           if (typeMap.isEmpty)
-            Text('No incidents recorded in this filter window.', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12))
+            Text(
+              'No incidents recorded in this filter window.',
+              style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF6B7280), fontSize: 11),
+            )
           else
             Column(
               children: typeMap.entries.map((entry) {
@@ -404,22 +596,32 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 70,
-                        child: Text(entry.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        width: 75,
+                        child: Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                          ),
+                        ),
                       ),
                       Expanded(
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: percent,
-                            minHeight: 10,
-                            backgroundColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-                            valueColor: AlwaysStoppedAnimation(AppConstants.primaryRed),
+                            minHeight: 8,
+                            backgroundColor: isDark ? Colors.white10 : AppColors.retroDarkBorder.withOpacity(0.08),
+                            valueColor: const AlwaysStoppedAnimation(Color(0xFFE11D48)),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text('${entry.value} (${(percent * 100).toInt()}%)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      Text(
+                        '${entry.value} (${(percent * 100).toInt()}%)',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFFE11D48)),
+                      ),
                     ],
                   ),
                 );
@@ -430,15 +632,23 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     );
   }
 
-  Widget _buildIncidentDataTable(BuildContext context, List<IncidentModel> list) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildIncidentDataTable(BuildContext context, List<IncidentModel> list, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3.5, 3.5),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,9 +658,29 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             children: [
               Text(
                 'ITEMIZED INCIDENT LOGS',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0, color: isDark ? Colors.white70 : Colors.black87),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                ),
               ),
-              Text('${list.length} Records', style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.retroLilac,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.0),
+                ),
+                child: Text(
+                  '${list.length} RECORDS',
+                  style: const TextStyle(
+                    color: AppColors.retroDarkBorder,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -458,29 +688,50 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: list.length,
-            separatorBuilder: (_, __) => Divider(height: 16, color: isDark ? Colors.white10 : Colors.black12),
+            separatorBuilder: (_, __) => Divider(
+              height: 16,
+              color: isDark ? Colors.white10 : AppColors.retroDarkBorder.withOpacity(0.1),
+            ),
             itemBuilder: (ctx, i) {
               final inc = list[i];
               return Row(
                 children: [
-                  Text(inc.referenceId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  const SizedBox(width: 10),
+                  Text(
+                    inc.referenceId,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: AppConstants.primaryRed.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
-                    child: Text(inc.incidentType, style: const TextStyle(color: AppConstants.primaryRed, fontSize: 10, fontWeight: FontWeight.bold)),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEE2E2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: const Color(0xFFDC2626), width: 0.8),
+                    ),
+                    child: Text(
+                      inc.incidentType.toUpperCase(),
+                      style: const TextStyle(color: Color(0xFFDC2626), fontSize: 8, fontWeight: FontWeight.w900),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       inc.barangay,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : const Color(0xFF374151),
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
                     DateFormat('MM/dd').format(inc.timestamp),
-                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black38),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: isDark ? Colors.white38 : const Color(0xFF6B7280)),
                   ),
                 ],
               );

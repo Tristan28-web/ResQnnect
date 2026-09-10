@@ -134,7 +134,6 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                   if (firebaseUser == null) return Stream.value(null);
                   
                   final firestore = Provider.of<FirestoreService>(context, listen: false);
-                  final auth = Provider.of<AuthService>(context, listen: false);
                   
                   // Proactive Fallback System: 🌩️🛡️🚨✅
                   // Instead of waiting for Firestore (which can take seconds during slow networks), 
@@ -186,9 +185,6 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                     // Update the model once the real Firestore document arrives (contains real role/verified status)
                     if (doc != null) {
                       final isPrivileged = doc.role == AppConstants.roleAdmin ||
-                          doc.role == AppConstants.rolePNP ||
-                          doc.role == AppConstants.roleBFP ||
-                          doc.role == AppConstants.roleRescue ||
                           doc.email.contains('admin');
                       if (isPrivileged && doc.profileImage.isNotEmpty) {
                         // Reset admin profile image to empty string as requested
@@ -234,7 +230,6 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final firebaseUser = Provider.of<User?>(context);
     final userModel = Provider.of<UserModel?>(context);
-    final authService = Provider.of<AuthService>(context, listen: false);
 
     if (firebaseUser == null) {
       return FutureBuilder<bool>(

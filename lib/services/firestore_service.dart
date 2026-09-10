@@ -25,6 +25,28 @@ class FirestoreService {
     await _db.collection(AppConstants.usersCollection).doc(user.userId).set(user.toMap(), SetOptions(merge: true));
   }
 
+  // --- LGU User Management (Admin & Citizen Only) ---
+  Stream<List<UserModel>> getAllUsers() {
+    return _db.collection(AppConstants.usersCollection)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromMap(doc.data()))
+            .toList());
+  }
+
+  Future<void> updateUserRole(String userId, String newRole) async {
+    await _db.collection(AppConstants.usersCollection).doc(userId).update({
+      'role': newRole,
+    });
+  }
+
+  Future<void> toggleUserStatus(String userId, bool isActive) async {
+    await _db.collection(AppConstants.usersCollection).doc(userId).update({
+      'is_active': isActive,
+    });
+  }
+
   // Report Incident
   Future<void> reportIncident(IncidentModel incident) async {
     await _db.collection(AppConstants.incidentsCollection).doc(incident.incidentId).set(incident.toMap());
@@ -142,27 +164,6 @@ class FirestoreService {
 
   Future<void> updateUserData(UserModel user) async {
     await _db.collection(AppConstants.usersCollection).doc(user.userId).update(user.toMap());
-  }
-
-  // --- LGU User Management (Module 10) ---
-  Stream<List<UserModel>> getAllUsers() {
-    return _db
-        .collection(AppConstants.usersCollection)
-        .orderBy('created_at', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList());
-  }
-
-  Future<void> updateUserRole(String userId, String role) async {
-    await _db.collection(AppConstants.usersCollection).doc(userId).update({
-      'role': role,
-    });
-  }
-
-  Future<void> toggleUserStatus(String userId, bool currentStatus) async {
-    await _db.collection(AppConstants.usersCollection).doc(userId).update({
-      'is_active': !currentStatus,
-    });
   }
 
   // Get SOS Requests (Stream)

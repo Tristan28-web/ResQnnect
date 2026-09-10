@@ -84,6 +84,7 @@ class _ReportScreenState extends State<ReportScreen> {
     if (permission == LocationPermission.deniedForever) return;
 
     final position = await Geolocator.getCurrentPosition();
+    if (!mounted) return;
     final locService = Provider.of<LocationService>(context, listen: false);
     String detectedName = locService.currentLocationName;
     if (detectedName.isEmpty || detectedName == 'Detecting Location...') {
@@ -99,30 +100,28 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-  Future<void> _openPinPicker() async {
-    final locService = Provider.of<LocationService>(context, listen: false);
-    final userPos = locService.currentPosition;
-    final fallbackLatLng = userPos != null
-        ? LatLng(userPos.latitude, userPos.longitude)
-        : const LatLng(14.5995, 120.9842);
+  void _openPinPicker() async {
+    final defaultTarget = _pinnedLocation ??
+        LatLng(
+          Provider.of<LocationService>(context, listen: false).currentPosition?.latitude ?? AppConstants.defaultLat,
+          Provider.of<LocationService>(context, listen: false).currentPosition?.longitude ?? AppConstants.defaultLng,
+        );
 
-    final result = await showDialog<Map<String, dynamic>>(
+    final selectedLatLng = await showDialog<LatLng>(
       context: context,
-      builder: (ctx) => IncidentPinPickerDialog(
-        initialPosition: _pinnedLocation ?? fallbackLatLng,
-        initialBarangay: _barangayController.text.isNotEmpty ? _barangayController.text : locService.currentLocationName,
-      ),
+      builder: (ctx) => IncidentPinPickerDialog(initialPosition: defaultTarget),
     );
 
-    if (result != null) {
-      final LatLng pos = result['position'];
-      final String bgy = result['barangay'] ?? '';
+    if (selectedLatLng != null && mounted) {
+      final locService = Provider.of<LocationService>(context, listen: false);
+      final resolvedName = await locService.reverseGeocode(selectedLatLng.latitude, selectedLatLng.longitude);
+
       setState(() {
-        _pinnedLocation = pos;
-        if (bgy.isNotEmpty) {
-          _barangayController.text = bgy;
+        _pinnedLocation = selectedLatLng;
+        _locationController.text = '${selectedLatLng.latitude.toStringAsFixed(5)}, ${selectedLatLng.longitude.toStringAsFixed(5)}';
+        if (resolvedName.isNotEmpty) {
+          _barangayController.text = resolvedName;
         }
-        _locationController.text = '$bgy (${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)})';
         _isLocationVerified = true;
       });
     }
@@ -135,13 +134,15 @@ class _ReportScreenState extends State<ReportScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
-    if (pickedDate == null) return;
+
+    if (pickedDate == null || !mounted) return;
 
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_incidentDateTime),
     );
-    if (pickedTime == null) return;
+
+    if (pickedTime == null || !mounted) return;
 
     setState(() {
       _incidentDateTime = DateTime(
@@ -183,8 +184,8 @@ class _ReportScreenState extends State<ReportScreen> {
 
       final locText = _locationController.text.trim();
       final bgyText = _barangayController.text.trim();
-      final resolvedBarangay = bgyText.isNotEmpty 
-          ? bgyText 
+      final resolvedBarangay = bgyText.isNotEmpty
+          ? bgyText
           : (locText.isNotEmpty ? locText.split(',')[0].trim() : 'Local Area');
 
       final incident = IncidentModel(
@@ -211,9 +212,11 @@ class _ReportScreenState extends State<ReportScreen> {
         _showSuccessDialog(generatedRefId);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit report: $e'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit report: $e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isReporting = false);
     }
@@ -225,66 +228,92 @@ class _ReportScreenState extends State<ReportScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 24,
+        backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 2.0,
+          ),
+        ),
+        elevation: 0,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: const Color(0xFFDCFCE7),
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
               ),
-              child: const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 48),
+              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 40),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               'REPORT SUBMITTED',
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                letterSpacing: 1,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+                letterSpacing: 0.8,
               ),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppConstants.primaryRed.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Tracking ID: $refId',
-                style: const TextStyle(
-                  color: AppConstants.primaryRed,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Text(
-              'LGU Emergency Command has received this incident. Please keep safe.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 13),
-            ),
-            const SizedBox(height: 28),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.primaryRed,
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              'Reference ID: $refId',
+              style: const TextStyle(
+                color: Color(0xFF2563EB),
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
               ),
-              onPressed: () {
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'LGU Emergency Command has logged this GIS incident.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () {
                 Navigator.pop(ctx);
                 Navigator.pop(context);
               },
-              child: const Text('BACK TO DASHBOARD', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  color: AppColors.retroPeach,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+                    width: 2.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                      offset: const Offset(3, 3),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'BACK TO DASHBOARD',
+                    style: TextStyle(
+                      color: AppColors.retroDarkBorder,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -294,103 +323,193 @@ class _ReportScreenState extends State<ReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'INCIDENT REPORTING',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'INCIDENT GEO-REPORTING',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildInfoCard(),
-            const SizedBox(height: 24),
+            _buildRetroProtocolCard(isDark),
+            const SizedBox(height: 20),
 
-            // 1. Incident Type (Dropdown from blueprint)
-            _buildSectionTitle('1. Incident Type', Icons.category_rounded),
+            // 1. Incident Type
+            _buildSectionHeader('01. Incident Category', Icons.category_rounded, isDark),
             const SizedBox(height: 10),
-            _buildIncidentTypeSelector(),
-            const SizedBox(height: 24),
+            _buildIncidentTypeSelector(isDark),
+            const SizedBox(height: 20),
 
             // 2. Location & GIS Pinning
-            _buildSectionTitle('2. Location & GIS Pin', Icons.location_on_rounded),
+            _buildSectionHeader('02. Location & Coordinate Pin', Icons.location_on_rounded, isDark),
             const SizedBox(height: 10),
-            _buildLocationSection(),
-            const SizedBox(height: 24),
+            _buildLocationSection(isDark),
+            const SizedBox(height: 20),
 
-            // 3. Description
-            _buildSectionTitle('3. Incident Description', Icons.description_rounded),
+            // 3. Incident Description
+            _buildSectionHeader('03. Incident Details', Icons.description_rounded, isDark),
             const SizedBox(height: 10),
-            _buildGlassField(
+            _buildRetroField(
               controller: _descriptionController,
-              hint: 'Provide clear details of the incident (e.g. water rising, electrical fire, injured persons)...',
+              hint: 'Describe what happened (water depth, fire spread, casualties, trapped residents)...',
               maxLines: 4,
+              isDark: isDark,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // 4. Date & Time
-            _buildSectionTitle('4. Date & Time', Icons.access_time_rounded),
+            _buildSectionHeader('04. Date & Time of Occurrence', Icons.access_time_rounded, isDark),
             const SizedBox(height: 10),
-            _buildDateTimeTile(),
-            const SizedBox(height: 24),
+            _buildDateTimeTile(isDark),
+            const SizedBox(height: 20),
 
-            // 5. Photo Attachment
-            _buildSectionTitle('5. Attachment / Evidence', Icons.camera_alt_rounded),
+            // 5. Evidence Photo
+            _buildSectionHeader('05. Camera Evidence / Photo', Icons.camera_alt_rounded, isDark),
             const SizedBox(height: 10),
-            _buildImagePicker(),
-            const SizedBox(height: 36),
+            _buildImagePicker(isDark),
+            const SizedBox(height: 30),
 
             // Submit Button
-            _buildSubmitButton(),
-            const SizedBox(height: 30),
+            _buildRetroSubmitButton(isDark),
+            const SizedBox(height: 35),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildRetroProtocolCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3, 3),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.black38 : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? Colors.white24 : AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
+            ),
+            child: const Icon(Icons.add_location_alt_rounded, color: Color(0xFFE11D48), size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LGU GIS REPORTING PROTOCOL',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Geotagged reports feed directly into live disaster maps and risk clustering.',
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : const Color(0xFF4B5563),
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, bool isDark) {
     return Row(
       children: [
-        Icon(icon, color: AppConstants.primaryRed, size: 18),
+        Icon(icon, color: AppConstants.primaryRed, size: 16),
         const SizedBox(width: 8),
         Text(
           title.toUpperCase(),
           style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black87.withOpacity(0.7),
+            color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
             fontSize: 11,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
+            letterSpacing: 1.1,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildIncidentTypeSelector() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildIncidentTypeSelector(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+            offset: const Offset(2.5, 2.5),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedIncidentType,
           isExpanded: true,
-          dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
+          dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
           items: AppConstants.incidentTypes.map((type) {
             IconData icon = Icons.warning_rounded;
             Color iconColor = Colors.amber;
@@ -399,27 +518,27 @@ class _ReportScreenState extends State<ReportScreen> {
               iconColor = AppConstants.primaryRed;
             } else if (type == AppConstants.incidentTypeFlood) {
               icon = Icons.waves_rounded;
-              iconColor = Colors.blue;
+              iconColor = const Color(0xFF2563EB);
             } else if (type == AppConstants.incidentTypeCrime) {
               icon = Icons.shield_rounded;
-              iconColor = Colors.purpleAccent;
+              iconColor = const Color(0xFF7C3AED);
             } else if (type == AppConstants.incidentTypeAccident) {
               icon = Icons.car_crash_rounded;
-              iconColor = Colors.orange;
+              iconColor = const Color(0xFFEA580C);
             }
 
             return DropdownMenuItem<String>(
               value: type,
               child: Row(
                 children: [
-                  Icon(icon, color: iconColor, size: 20),
-                  const SizedBox(width: 12),
+                  Icon(icon, color: iconColor, size: 18),
+                  const SizedBox(width: 10),
                   Text(
                     type,
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -434,52 +553,89 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildLocationSection() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildLocationSection(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Area / Barangay input field
-        _buildGlassField(
+        _buildRetroField(
           controller: _barangayController,
-          hint: 'Area / Barangay (e.g. Barangay, District, Town)...',
+          hint: 'Barangay / District / Area...',
+          isDark: isDark,
         ),
         const SizedBox(height: 10),
-
-        // Text input for specific street/landmark
-        _buildGlassField(
+        _buildRetroField(
           controller: _locationController,
-          hint: 'Enter street, landmark, or GPS coordinates...',
+          hint: 'Street, landmark, or GPS coordinates...',
+          isDark: isDark,
         ),
-        const SizedBox(height: 10),
-
-        // Pin on GIS Map & GPS buttons
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppConstants.primaryRed,
-                  side: const BorderSide(color: AppConstants.primaryRed),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              child: GestureDetector(
+                onTap: _openPinPicker,
+                child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2338) : AppColors.retroLilac,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF4A3C58) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                        offset: const Offset(2.5, 2.5),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.pin_drop_rounded, size: 18, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+                      const SizedBox(width: 8),
+                      Text(
+                        'PIN ON GIS MAP',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.8,
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                icon: const Icon(Icons.pin_drop_rounded, size: 18),
-                label: const Text('PIN ON GIS MAP', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-                onPressed: _openPinPicker,
               ),
             ),
             const SizedBox(width: 10),
-            IconButton(
-              icon: Icon(Icons.my_location_rounded, color: _isLocationVerified ? Colors.greenAccent : AppConstants.primaryRed),
-              style: IconButton.styleFrom(
-                backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.05),
+            GestureDetector(
+              onTap: _getCurrentLocation,
+              child: Container(
                 padding: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(
+                  color: _isLocationVerified ? const Color(0xFFDCFCE7) : (isDark ? AppColors.retroDarkCard : Colors.white),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.8,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                      offset: const Offset(2.5, 2.5),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.my_location_rounded,
+                  color: _isLocationVerified ? const Color(0xFF16A34A) : AppColors.primaryRed,
+                  size: 20,
+                ),
               ),
-              onPressed: _getCurrentLocation,
-              tooltip: 'Use GPS Location',
             ),
           ],
         ),
@@ -487,8 +643,52 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildDateTimeTile() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildRetroField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    required bool isDark,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+            offset: const Offset(2.5, 2.5),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: TextStyle(
+          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: isDark ? Colors.white30 : const Color(0xFF9CA3AF),
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+          ),
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimeTile(bool isDark) {
     final formatted = DateFormat('yyyy-MM-dd • hh:mm a').format(_incidentDateTime);
 
     return InkWell(
@@ -497,9 +697,19 @@ class _ReportScreenState extends State<ReportScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+              offset: const Offset(2.5, 2.5),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -508,18 +718,30 @@ class _ReportScreenState extends State<ReportScreen> {
             Text(
               formatted,
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const Spacer(),
-            Text(
-              'CHANGE',
-              style: TextStyle(
-                color: isDark ? Colors.white38 : Colors.black45,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white12 : const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? Colors.white24 : AppColors.retroDarkBorder,
+                  width: 1.2,
+                ),
+              ),
+              child: Text(
+                'CHANGE',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ],
@@ -528,74 +750,51 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppConstants.primaryRed.withOpacity(isDark ? 0.12 : 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppConstants.primaryRed.withOpacity(0.25)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.shield_rounded, color: AppConstants.primaryRed, size: 22),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              'LGU Incident Dispatch System. False reports are subject to penalty under RA 10121.',
-              style: TextStyle(color: AppConstants.primaryRed, fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlassField({required TextEditingController controller, required String hint, int maxLines = 1}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26, fontSize: 13),
-        filled: true,
-        fillColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePicker() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildImagePicker(bool isDark) {
     return GestureDetector(
       onTap: _pickImage,
       child: Container(
         height: 130,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? Colors.white12 : Colors.black12, style: BorderStyle.solid),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+              offset: const Offset(2.5, 2.5),
+              blurRadius: 0,
+            ),
+          ],
         ),
         child: _image != null
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 child: Image.file(_image!, width: double.infinity, fit: BoxFit.cover),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_rounded, size: 32, color: (isDark ? Colors.white : Colors.black).withOpacity(0.3)),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroPeach,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, size: 24, color: AppColors.retroDarkBorder),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Attach Camera Photo Evidence',
-                    style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : AppColors.retroDarkBorder,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -603,21 +802,38 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppConstants.primaryRed,
+  Widget _buildRetroSubmitButton(bool isDark) {
+    return GestureDetector(
+      onTap: _isReporting ? null : _submitReport,
+      child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 4,
-      ),
-      onPressed: _isReporting ? null : _submitReport,
-      child: _isReporting
-          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-          : const Text(
-              'SUBMIT INCIDENT REPORT',
-              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+        decoration: BoxDecoration(
+          color: _isReporting ? Colors.grey : AppColors.primaryRed,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+              offset: const Offset(4, 4),
+              blurRadius: 0,
             ),
+          ],
+        ),
+        child: Center(
+          child: _isReporting
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text(
+                  'SUBMIT INCIDENT REPORT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }

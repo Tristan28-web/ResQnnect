@@ -330,8 +330,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       },
       {
         'num': '4',
-        'title': 'LGU Multi-Agency Dispatch',
-        'desc': 'Reports are triaged by authorized PNP, BFP, and CDRRMO emergency personnel.',
+        'title': 'LGU Emergency Command',
+        'desc': 'Reports are triaged by authorized LGU Emergency Command personnel.',
         'color': const Color(0xFFDBEAFE),
       },
     ];
