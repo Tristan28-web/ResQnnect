@@ -170,8 +170,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 Container(
-                  width: 90,
-                  height: 90,
+                  width: 94,
+                  height: 94,
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: AppColors.retroYellow,
                     shape: BoxShape.circle,
@@ -187,11 +188,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ],
                   ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      AppConstants.logoAsset,
-                      fit: BoxFit.contain,
-                    ),
+                  child: Image.asset(
+                    AppConstants.logoAsset,
+                    fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(height: 18),

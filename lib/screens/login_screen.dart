@@ -206,15 +206,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      AppConstants.logoAsset,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.shield_rounded,
-                        size: 50,
-                        color: AppColors.retroMint,
-                      ),
+                  child: Image.asset(
+                    AppConstants.logoAsset,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.shield_rounded,
+                      size: 50,
+                      color: AppColors.retroMint,
                     ),
                   ),
                 ),
