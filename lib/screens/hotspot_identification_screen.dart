@@ -217,6 +217,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
                 circles: heatmapCircles,
                 markers: hotspotMarkers,
                 myLocationEnabled: true,
+                myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
               ),
 

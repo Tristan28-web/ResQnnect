@@ -112,6 +112,7 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
             onCameraMove: _onCameraMove,
             onCameraIdle: _onCameraIdle,
             myLocationEnabled: true,
+            myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
             compassEnabled: false,
           ),

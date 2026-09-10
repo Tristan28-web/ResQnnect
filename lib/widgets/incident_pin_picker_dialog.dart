@@ -169,6 +169,8 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                           },
                         ),
                       },
+                      zoomControlsEnabled: false,
+                      myLocationButtonEnabled: false,
                     ),
                     // Retro Coordinate Banner Overlay
                     Positioned(
