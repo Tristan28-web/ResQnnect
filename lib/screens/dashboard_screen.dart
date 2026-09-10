@@ -170,26 +170,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
               const SizedBox(width: 10),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: borderColor, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark ? Colors.black26 : borderColor.withOpacity(0.1),
-                      offset: const Offset(2, 2),
-                      blurRadius: 0,
-                    )
-                  ],
-                ),
-                padding: const EdgeInsets.all(6),
+              SizedBox(
+                width: 38,
+                height: 38,
                 child: Image.asset(
                   AppConstants.logoAsset,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.shield_rounded, color: AppConstants.primaryRed, size: 18),
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.shield_rounded, color: AppConstants.primaryRed, size: 20),
                 ),
               ),
             ],

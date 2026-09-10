@@ -169,25 +169,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             child: Column(
               children: [
-                Container(
-                  width: 94,
-                  height: 94,
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.retroYellow,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.retroDarkBorder,
-                      width: 2,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.retroDarkBorder,
-                        offset: Offset(3, 3),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
+                SizedBox(
+                  width: 90,
+                  height: 90,
                   child: Image.asset(
                     AppConstants.logoAsset,
                     fit: BoxFit.contain,
