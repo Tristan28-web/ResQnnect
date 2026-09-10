@@ -24,16 +24,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _checkInitialPermissions() async {
-    final locStatus = await Permission.location.status;
-    final notifStatus = await Permission.notification.status;
-    final camStatus = await Permission.camera.status;
+    try {
+      final locStatus = await Permission.location.status;
+      final notifStatus = await Permission.notification.status;
+      final camStatus = await Permission.camera.status;
 
-    if (mounted) {
-      setState(() {
-        _locationAllowed = locStatus.isGranted;
-        _notificationsAllowed = notifStatus.isGranted;
-        _cameraAllowed = camStatus.isGranted;
-      });
+      if (mounted) {
+        setState(() {
+          _locationAllowed = locStatus.isGranted;
+          _notificationsAllowed = notifStatus.isGranted;
+          _cameraAllowed = camStatus.isGranted;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking initial permissions: $e');
     }
   }
 
@@ -671,23 +675,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _requestLocationPermission() async {
-    final status = await Permission.location.request();
-    if (status.isGranted) {
-      setState(() => _locationAllowed = true);
+    try {
+      final status = await Permission.location.request();
+      if (status.isGranted && mounted) {
+        setState(() => _locationAllowed = true);
+      }
+    } catch (e) {
+      debugPrint('Location permission request error: $e');
     }
   }
 
   Future<void> _requestNotificationPermission() async {
-    final status = await Permission.notification.request();
-    if (status.isGranted) {
-      setState(() => _notificationsAllowed = true);
+    try {
+      final status = await Permission.notification.request();
+      if (status.isGranted && mounted) {
+        setState(() => _notificationsAllowed = true);
+      }
+    } catch (e) {
+      debugPrint('Notification permission request error: $e');
     }
   }
 
   Future<void> _requestCameraPermission() async {
-    final status = await Permission.camera.request();
-    if (status.isGranted) {
-      setState(() => _cameraAllowed = true);
+    try {
+      final status = await Permission.camera.request();
+      if (status.isGranted && mounted) {
+        setState(() => _cameraAllowed = true);
+      }
+    } catch (e) {
+      debugPrint('Camera permission request error: $e');
     }
   }
 

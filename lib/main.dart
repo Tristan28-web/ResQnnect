@@ -25,12 +25,37 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Custom ErrorWidget so any unexpected UI render error displays clearly rather than blank screen
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      color: const Color(0xFF14171F),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Text(
+              'Startup / Render Exception:\n\n${details.exceptionAsString()}\n\nStack:\n${details.stack}',
+              style: const TextStyle(color: Colors.amberAccent, fontSize: 12, fontFamily: 'monospace'),
+            ),
+          ),
+        ),
+      ),
+    );
+  };
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    print('Firebase initialization failed: $e');
+    debugPrint('Firebase initialization with options failed: $e');
+    try {
+      // Native fallback on Android/iOS if options differ from google-services.json
+      await Firebase.initializeApp();
+    } catch (e2) {
+      debugPrint('Firebase native fallback failed: $e2');
+    }
   }
   
   runApp(const GISApp());
@@ -95,6 +120,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
         StreamProvider<User?>(
           create: (context) => Provider.of<AuthService>(context, listen: false).userStream,
           initialData: null,
+          catchError: (_, __) => null,
         ),
       ],
       child: Consumer2<ThemeProvider, User?>(
@@ -180,6 +206,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                   });
                 },
                 initialData: null,
+                catchError: (_, __) => null,
               ),
             ],
             child: MaterialApp(
