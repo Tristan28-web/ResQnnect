@@ -6,7 +6,6 @@ import '../core/constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import '../widgets/profile_image.dart';
-import '../services/location_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -54,8 +53,6 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildProfileHeader(context, user, role),
-            const SizedBox(height: 24),
-            _buildAccountInfoCard(context, user, email, role),
             const SizedBox(height: 24),
             _buildSignOutButton(context, authService),
             const SizedBox(height: 100),
@@ -220,128 +217,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  // --- RETRO ACCOUNT INFO CARD ---
-  Widget _buildAccountInfoCard(BuildContext context, UserModel? user, String email, String role) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final locationService = Provider.of<LocationService>(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.retroDarkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-          width: 1.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
-            offset: const Offset(3, 3),
-            blurRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'ACCOUNT CREDENTIALS & LOCATION',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.3,
-              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildInfoRow(
-            icon: Icons.email_rounded,
-            label: 'Email',
-            value: email.isNotEmpty ? email : (user?.email ?? 'Not set'),
-            isDark: isDark,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.phone_rounded,
-            label: 'Phone',
-            value: (user?.phone != null && user!.phone.isNotEmpty) ? user.phone : '0917-555-0199',
-            isDark: isDark,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.place_rounded,
-            label: 'Current Location',
-            value: locationService.currentLocationName,
-            isDark: isDark,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.wifi_tethering_rounded,
-            label: 'GIS Link',
-            value: 'Connected to Cloud Firestore',
-            isDark: isDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required bool isDark,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF262C38) : AppColors.retroLilac,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-              width: 1.4,
-            ),
-          ),
-          child: Center(
-            child: Icon(icon, size: 18, color: isDark ? Colors.white70 : AppColors.retroDarkBorder),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: isDark ? Colors.white38 : const Color(0xFF6B7280),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

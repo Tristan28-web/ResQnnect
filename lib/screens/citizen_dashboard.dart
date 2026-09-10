@@ -1432,36 +1432,25 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                             const SizedBox(width: 12),
                             Expanded(
                               flex: 3,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.retroDarkBorder,
-                                      offset: Offset(2.5, 2.5),
-                                      blurRadius: 0,
-                                    ),
-                                  ],
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedCategory = tempCategory;
+                                    _selectedLgu = tempLgu;
+                                    _selectedSeverity = tempSeverity;
+                                    _selectedStatus = tempStatus;
+                                  });
+                                  Navigator.pop(ctx);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.retroMint,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedCategory = tempCategory;
-                                      _selectedLgu = tempLgu;
-                                      _selectedSeverity = tempSeverity;
-                                      _selectedStatus = tempStatus;
-                                    });
-                                    Navigator.pop(ctx);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.retroMint,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: const Text('APPLY FILTERS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
-                                ),
+                                child: const Text('APPLY FILTERS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
                               ),
                             ),
                           ],
