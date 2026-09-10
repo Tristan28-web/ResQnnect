@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
+import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
 
@@ -33,45 +34,24 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
   GoogleMapController? _mapController;
   String _selectedHazardFilter = 'All';
 
-  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
-
   // Group incidents into geographical clusters per barangay
-  List<HotspotCluster> _computeClusters(List<IncidentModel> incidents) {
+  List<HotspotCluster> _computeClusters(List<IncidentModel> incidents, LatLng fallbackCenter) {
     final filtered = _selectedHazardFilter == 'All'
         ? incidents
         : incidents.where((i) => i.incidentType.toLowerCase() == _selectedHazardFilter.toLowerCase()).toList();
 
     final Map<String, List<IncidentModel>> bgyMap = {};
     for (var inc in filtered) {
-      final bgy = inc.barangay.isNotEmpty ? inc.barangay : 'Virac (Capital)';
+      final bgy = inc.barangay.isNotEmpty
+          ? inc.barangay
+          : (inc.location.split(',')[0].trim().isNotEmpty
+              ? inc.location.split(',')[0].trim()
+              : 'Active Zone');
       bgyMap.putIfAbsent(bgy, () => []).add(inc);
     }
 
     if (bgyMap.isEmpty) {
-      // Provide standard baseline hotspots if no incidents exist yet
-      return [
-        HotspotCluster(
-          barangay: 'Virac (Capital)',
-          center: const LatLng(13.5840, 124.2330),
-          count: 12,
-          dominantHazard: 'Flood',
-          densityScore: 0.95,
-        ),
-        HotspotCluster(
-          barangay: 'San Andres (Calolbon)',
-          center: const LatLng(13.5960, 124.0980),
-          count: 9,
-          dominantHazard: 'Typhoon',
-          densityScore: 0.75,
-        ),
-        HotspotCluster(
-          barangay: 'Bato',
-          center: const LatLng(13.6080, 124.2880),
-          count: 6,
-          dominantHazard: 'Accident',
-          densityScore: 0.60,
-        ),
-      ];
+      return [];
     }
 
     int maxCount = 1;
@@ -95,12 +75,9 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
         }
       }
 
-      LatLng center = _catanduanesCenter;
+      LatLng center = fallbackCenter;
       if (validCoords > 0) {
         center = LatLng(sumLat / validCoords, sumLng / validCoords);
-      } else {
-        // Approximate location for barangay
-        center = _approximateBarangayLocation(bgy);
       }
 
       String dominant = 'General';
@@ -126,22 +103,6 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
     return clusters;
   }
 
-  LatLng _approximateBarangayLocation(String bgy) {
-    final lower = bgy.toLowerCase();
-    if (lower.contains('virac')) return const LatLng(13.5840, 124.2330);
-    if (lower.contains('andres')) return const LatLng(13.5975, 124.1006);
-    if (lower.contains('bato')) return const LatLng(13.6067, 124.2883);
-    if (lower.contains('baras')) return const LatLng(13.6708, 124.3644);
-    if (lower.contains('gigmoto')) return const LatLng(13.7806, 124.3944);
-    if (lower.contains('pandan')) return const LatLng(14.0458, 124.1706);
-    if (lower.contains('caramoran')) return const LatLng(13.9986, 124.1333);
-    if (lower.contains('bagamanoc')) return const LatLng(13.9408, 124.2883);
-    if (lower.contains('panganiban')) return const LatLng(13.9017, 124.3017);
-    if (lower.contains('viga')) return const LatLng(13.8767, 124.3108);
-    if (lower.contains('miguel')) return const LatLng(13.6450, 124.3000);
-    return const LatLng(13.5840, 124.2330);
-  }
-
   Color _getDensityColor(double density) {
     if (density >= 0.8) return Colors.redAccent.withOpacity(0.45);
     if (density >= 0.55) return Colors.orangeAccent.withOpacity(0.40);
@@ -159,6 +120,11 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
   @override
   Widget build(BuildContext context) {
     final firestore = Provider.of<FirestoreService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(context);
+    final userPos = locationService.currentPosition;
+    final LatLng initialTarget = userPos != null
+        ? LatLng(userPos.latitude, userPos.longitude)
+        : const LatLng(14.5995, 120.9842);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -176,7 +142,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
         stream: firestore.getIncidents(),
         builder: (context, snapshot) {
           final incidents = snapshot.data ?? [];
-          final clusters = _computeClusters(incidents);
+          final clusters = _computeClusters(incidents, initialTarget);
 
           final Set<Circle> heatmapCircles = {};
           final Set<Marker> hotspotMarkers = {};
@@ -224,11 +190,11 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
           return Stack(
             children: [
               GoogleMap(
-                initialCameraPosition: const CameraPosition(target: _catanduanesCenter, zoom: 11.5),
+                initialCameraPosition: CameraPosition(target: initialTarget, zoom: 13.5),
                 onMapCreated: (ctrl) => _mapController = ctrl,
                 circles: heatmapCircles,
                 markers: hotspotMarkers,
-                myLocationEnabled: false,
+                myLocationEnabled: true,
                 zoomControlsEnabled: false,
               ),
 

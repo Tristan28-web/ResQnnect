@@ -61,34 +61,9 @@ class AppConstants {
     incidentTypeOther,
   ];
 
-  // Catanduanes Provincial Coordinates (Capital: Virac)
-  static const double catanduanesLat = 13.5840;
-  static const double catanduanesLng = 124.2330;
-
-  // Standard Catanduanes Municipalities & Key Barangays (Catanduanes LGU jurisdiction)
-  static const List<String> lguBarangays = [
-    'Virac (Capital)',
-    'San Andres (Calolbon)',
-    'Bato',
-    'Baras',
-    'Gigmoto',
-    'Pandan',
-    'Caramoran',
-    'Bagamanoc',
-    'Panganiban (Payo)',
-    'Viga',
-    'San Miguel',
-    'Virac - Concepcion (Poblacion)',
-    'Virac - San Roque',
-    'Virac - Santa Cruz',
-    'Virac - San Jose',
-    'Virac - Rawis',
-    'Virac - Francia',
-    'Virac - Calatagan',
-    'San Andres - Codon',
-    'Bato - Cabugao',
-    'Baras - Puraran',
-  ];
+  // Default national fallback coordinates (only used if GPS permission is completely disabled)
+  static const double defaultLat = 14.5995;
+  static const double defaultLng = 120.9842;
 }
 
 typedef AppColors = AppConstants;

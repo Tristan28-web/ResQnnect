@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/firestore_service.dart';
+import '../services/location_service.dart';
 import '../models/alert_model.dart';
 import '../widgets/alert_card.dart';
 import '../core/constants.dart';
@@ -273,6 +274,12 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
   // --- RETRO EMPTY STATE ---
   Widget _buildEmptyState(BuildContext context, bool isDark) {
+    final locationService = Provider.of<LocationService>(context);
+    final rawLoc = locationService.currentLocationName;
+    final currentArea = (rawLoc.isNotEmpty && !rawLoc.startsWith('GPS') && !rawLoc.startsWith('Locating'))
+        ? rawLoc.split(',')[0].trim().toUpperCase()
+        : 'CURRENT AREA';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
@@ -308,7 +315,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            'ALL CLEAR IN CATANDUANES',
+            'ALL CLEAR IN $currentArea',
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.retroDarkBorder,
               fontWeight: FontWeight.w900,
@@ -318,7 +325,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'No emergency bulletins or disaster alerts currently issued. PDRRMO units are continuously monitoring provincial telemetry.',
+            'No emergency bulletins or disaster alerts currently issued. Emergency command units are continuously monitoring area telemetry.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isDark ? Colors.white60 : const Color(0xFF6B7280),

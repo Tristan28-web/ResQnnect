@@ -364,7 +364,7 @@ class ProfileScreen extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
             ),
             content: Text(
-              'Are you sure you want to log out of GIS Catanduanes?',
+              'Are you sure you want to log out of ResQnnect GIS?',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13),
             ),
             actions: [

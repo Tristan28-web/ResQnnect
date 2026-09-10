@@ -33,8 +33,6 @@ class GlobalMapScreen extends StatefulWidget {
 class _GlobalMapScreenState extends State<GlobalMapScreen> {
   GoogleMapController? _mapController;
 
-  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
-
   MapType _selectedMapType = MapType.normal;
   bool _isAddingPin = false; // admin pin placement mode
   LatLng? _pendingPinLatLng;   // tap position waiting for confirmation
@@ -279,7 +277,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'CATANDUANES GIS TRACKING MAP'.tr(context),
+          'GIS TRACKING MAP'.tr(context),
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.5),
         ),
         centerTitle: true,
@@ -349,7 +347,10 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           // ═══════════════════════════════════ GOOGLE MAP ════════════════════════════════════
                           GoogleMap(
                             initialCameraPosition: CameraPosition(
-                              target: widget.initialLocation ?? _catanduanesCenter,
+                              target: widget.initialLocation ??
+                                  (_currentPos != null
+                                      ? LatLng(_currentPos!.latitude, _currentPos!.longitude)
+                                      : const LatLng(14.5995, 120.9842)),
                               zoom: widget.initialLocation != null ? 15.0 : 13.0,
                             ),
                             mapType: _selectedMapType,
@@ -507,11 +508,10 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                                 // ZOOM OUT
                                 _mapFab(Icons.remove, () => _mapController?.animateCamera(CameraUpdate.zoomOut())),
                                 const SizedBox(height: 12),
-                                // RECENTER ON CATANDUANES
+                                // RECENTER TO MY LOCATION
                                 Tooltip(
-                                  message: 'Recenter to Catanduanes',
-                                  child: _mapFab(Icons.home_outlined, () => _mapController?.animateCamera(
-                                    CameraUpdate.newLatLngZoom(_catanduanesCenter, 13.0))),
+                                  message: 'Recenter to My Location',
+                                  child: _mapFab(Icons.my_location_rounded, () => _getCurrentLocation()),
                                 ),
                                 const SizedBox(height: 24),
                                 // REPORT HAZARD

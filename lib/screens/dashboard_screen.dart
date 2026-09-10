@@ -63,7 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     String displayName = user?.name.isNotEmpty == true 
         ? user!.name 
-        : (role == AppConstants.roleAdmin ? 'Catanduanes Admin' : (role == AppConstants.roleResponder ? 'Field Responder' : 'Citizen'));
+        : (role == AppConstants.roleAdmin ? 'GIS Admin' : (role == AppConstants.roleResponder ? 'Field Responder' : 'Citizen'));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),

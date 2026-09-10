@@ -24,10 +24,13 @@ class WeatherScreen extends StatelessWidget {
       ),
       body: FutureBuilder(
         future: locationService.getCurrentLocation().then((position) {
+          if (position == null) {
+            throw Exception('Current location required for weather monitoring');
+          }
           return weatherService.getWeatherData(
-            latitude: position?.latitude,
-            longitude: position?.longitude,
-          ).then((weather) => {'weather': weather, 'hasLoc': position != null});
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ).then((weather) => {'weather': weather, 'hasLoc': true});
         }),
         builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -64,7 +67,7 @@ class WeatherScreen extends StatelessWidget {
     return Column(
       children: [
         Text(
-          hasLoc ? 'Current Location' : 'Catanduanes, Philippines',
+          hasLoc ? 'Current Location' : 'Live Area Weather',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87, letterSpacing: 0.5),
         ),
         Text(
@@ -159,7 +162,7 @@ class WeatherScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isRisk 
-              ? 'Heavy rain or thunderstorms detected. Stay indoors and avoid flood-prone areas in Catanduanes.'
+              ? 'Heavy rain or thunderstorms detected. Stay indoors and avoid flood-prone areas in your vicinity.'
               : 'Conditions are favorable for outdoor activities. No immediate weather threats detected.',
             textAlign: TextAlign.center,
             style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),

@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
+import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
 import '../widgets/incident_pin_picker_dialog.dart';
@@ -22,14 +23,43 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+  final _barangayController = TextEditingController();
 
   String _selectedIncidentType = AppConstants.incidentTypeFire;
-  String _selectedBarangay = AppConstants.lguBarangays.first;
   DateTime _incidentDateTime = DateTime.now();
   LatLng? _pinnedLocation;
   File? _image;
   bool _isReporting = false;
   bool _isLocationVerified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final locService = Provider.of<LocationService>(context, listen: false);
+      if (locService.currentPosition != null) {
+        final pos = locService.currentPosition!;
+        setState(() {
+          _pinnedLocation = LatLng(pos.latitude, pos.longitude);
+          _locationController.text = '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+          if (locService.currentLocationName != 'Detecting Location...') {
+            _barangayController.text = locService.currentLocationName;
+          }
+          _isLocationVerified = true;
+        });
+      } else {
+        _getCurrentLocation();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _barangayController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -54,28 +84,44 @@ class _ReportScreenState extends State<ReportScreen> {
     if (permission == LocationPermission.deniedForever) return;
 
     final position = await Geolocator.getCurrentPosition();
+    final locService = Provider.of<LocationService>(context, listen: false);
+    String detectedName = locService.currentLocationName;
+    if (detectedName.isEmpty || detectedName == 'Detecting Location...') {
+      detectedName = await locService.reverseGeocode(position.latitude, position.longitude);
+    }
     setState(() {
       _pinnedLocation = LatLng(position.latitude, position.longitude);
       _locationController.text = '${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+      if (detectedName.isNotEmpty) {
+        _barangayController.text = detectedName;
+      }
       _isLocationVerified = true;
     });
   }
 
   Future<void> _openPinPicker() async {
+    final locService = Provider.of<LocationService>(context, listen: false);
+    final userPos = locService.currentPosition;
+    final fallbackLatLng = userPos != null
+        ? LatLng(userPos.latitude, userPos.longitude)
+        : const LatLng(14.5995, 120.9842);
+
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) => IncidentPinPickerDialog(
-        initialPosition: _pinnedLocation ?? const LatLng(10.9574, 123.2978),
-        initialBarangay: _selectedBarangay,
+        initialPosition: _pinnedLocation ?? fallbackLatLng,
+        initialBarangay: _barangayController.text.isNotEmpty ? _barangayController.text : locService.currentLocationName,
       ),
     );
 
     if (result != null) {
       final LatLng pos = result['position'];
-      final String bgy = result['barangay'];
+      final String bgy = result['barangay'] ?? '';
       setState(() {
         _pinnedLocation = pos;
-        _selectedBarangay = bgy;
+        if (bgy.isNotEmpty) {
+          _barangayController.text = bgy;
+        }
         _locationController.text = '$bgy (${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)})';
         _isLocationVerified = true;
       });
@@ -135,15 +181,21 @@ class _ReportScreenState extends State<ReportScreen> {
       final suffix = nowMillis.length > 4 ? nowMillis.substring(nowMillis.length - 4) : '001';
       final generatedRefId = 'INC-$suffix';
 
+      final locText = _locationController.text.trim();
+      final bgyText = _barangayController.text.trim();
+      final resolvedBarangay = bgyText.isNotEmpty 
+          ? bgyText 
+          : (locText.isNotEmpty ? locText.split(',')[0].trim() : 'Local Area');
+
       final incident = IncidentModel(
         incidentId: nowMillis,
         referenceId: generatedRefId,
         userId: userId,
         incidentType: _selectedIncidentType,
-        barangay: _selectedBarangay,
+        barangay: resolvedBarangay,
         description: _descriptionController.text.trim(),
         imageBase64: imageBase64,
-        location: _locationController.text.trim(),
+        location: locText.isNotEmpty ? locText : resolvedBarangay,
         latitude: _pinnedLocation?.latitude,
         longitude: _pinnedLocation?.longitude,
         severity: _selectedIncidentType == AppConstants.incidentTypeFire || _selectedIncidentType == AppConstants.incidentTypeFlood
@@ -388,37 +440,10 @@ class _ReportScreenState extends State<ReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Barangay dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedBarangay,
-              isExpanded: true,
-              dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-              items: AppConstants.lguBarangays.map((bgy) {
-                return DropdownMenuItem<String>(
-                  value: bgy,
-                  child: Text(
-                    bgy,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedBarangay = val);
-              },
-            ),
-          ),
+        // Area / Barangay input field
+        _buildGlassField(
+          controller: _barangayController,
+          hint: 'Area / Barangay (e.g. Barangay, District, Town)...',
         ),
         const SizedBox(height: 10),
 

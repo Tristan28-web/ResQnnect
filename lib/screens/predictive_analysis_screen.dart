@@ -46,7 +46,11 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
       // Ingest live ground data in parallel
       final incidentsFuture = firestore.getIncidents().first.catchError((_) => <IncidentModel>[]);
       final alertsFuture = firestore.getAlerts().first.catchError((_) => <AlertModel>[]);
-      final weatherFuture = weatherService.getWeatherData().catchError((_) => WeatherModel(
+      final userPos = locationService.currentPosition ?? await locationService.getCurrentLocation();
+      final weatherFuture = (userPos != null
+              ? weatherService.getWeatherData(latitude: userPos.latitude, longitude: userPos.longitude)
+              : Future<WeatherModel>.error('Current location unavailable'))
+          .catchError((_) => WeatherModel(
         temperature: 28.0,
         humidity: 80.0,
         description: 'Mainly Clear',

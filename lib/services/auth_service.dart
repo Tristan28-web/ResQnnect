@@ -158,7 +158,7 @@ class AuthService {
           userId: user.uid,
           name: user.isAnonymous 
               ? 'Guest Account' 
-              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'Catanduanes Admin' : 'GIS User')),
+              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GIS Admin' : 'GIS User')),
           email: user.email ?? 'guest@gis.local',
           phone: '',
           profileImage: user.photoURL ?? '',

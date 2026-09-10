@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
+import '../services/location_service.dart';
 import '../models/safety_check_model.dart';
 import '../core/constants.dart';
 
@@ -57,9 +58,17 @@ class _SafetyHeatmapScreenState extends State<SafetyHeatmapScreen> {
                   builder: (context, responseSnapshot) {
                     final responses = responseSnapshot.data ?? [];
                     
+                    final locService = Provider.of<LocationService>(context, listen: false);
+                    final userPos = locService.currentPosition;
+                    final initialPos = userPos != null
+                        ? LatLng(userPos.latitude, userPos.longitude)
+                        : const LatLng(14.5995, 120.9842);
+
                     return GoogleMap(
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(10.9575, 123.3217),
+                      initialCameraPosition: CameraPosition(
+                        target: responses.isNotEmpty
+                            ? LatLng(responses.first.latitude, responses.first.longitude)
+                            : initialPos,
                         zoom: 13.0,
                       ),
                       onMapCreated: (controller) {
@@ -67,12 +76,12 @@ class _SafetyHeatmapScreenState extends State<SafetyHeatmapScreen> {
                           setState(() => _mapController = controller);
                         }
                       },
-                      myLocationEnabled: false,
+                      myLocationEnabled: true,
                       zoomControlsEnabled: false,
                       circles: responses.map((r) {
                         final isSafe = r.status == 'safe';
                         return Circle(
-                          circleId: CircleId('circle_${r.responseId ?? r.userId}'),
+                          circleId: CircleId('circle_${r.responseId}'),
                           center: LatLng(r.latitude, r.longitude),
                           radius: isSafe ? 200 : 400,
                           fillColor: (isSafe 
@@ -84,7 +93,7 @@ class _SafetyHeatmapScreenState extends State<SafetyHeatmapScreen> {
                       }).toSet(),
                       markers: responses.where((r) => r.status != 'safe').map((r) {
                         return Marker(
-                          markerId: MarkerId('marker_${r.responseId ?? r.userId}'),
+                          markerId: MarkerId('marker_${r.responseId}'),
                           position: LatLng(r.latitude, r.longitude),
                           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
                           infoWindow: const InfoWindow(title: 'CITIZEN IN DANGER'),

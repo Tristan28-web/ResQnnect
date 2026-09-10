@@ -84,7 +84,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Filter Panel (Date From, Date To, Incident Type, Barangay)
-                _buildFilterCard(context),
+                _buildFilterCard(context, allIncidents),
                 const SizedBox(height: 24),
 
                 // Generate Report Button
@@ -148,8 +148,17 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
     );
   }
 
-  Widget _buildFilterCard(BuildContext context) {
+  Widget _buildFilterCard(BuildContext context, List<IncidentModel> allIncidents) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final detectedBarangays = allIncidents
+        .map((i) => i.barangay.trim())
+        .where((b) => b.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    final barangayOptions = ['All Barangays', ...detectedBarangays];
+    final currentBarangay = barangayOptions.contains(_selectedBarangay) ? _selectedBarangay : 'All Barangays';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -222,7 +231,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
 
           // Barangay Dropdown
           Text(
-            'BARANGAY JURISDICTION',
+            'AREA / BARANGAY',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0, color: isDark ? Colors.white38 : Colors.black45),
           ),
           const SizedBox(height: 6),
@@ -234,10 +243,10 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _selectedBarangay,
+                value: currentBarangay,
                 isExpanded: true,
                 dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-                items: ['All Barangays', ...AppConstants.lguBarangays].map((b) {
+                items: barangayOptions.map((b) {
                   return DropdownMenuItem<String>(value: b, child: Text(b, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)));
                 }).toList(),
                 onChanged: (val) {
@@ -313,7 +322,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Generated: ${DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.now())} • Catanduanes Command Center',
+            'Generated: ${DateFormat('yyyy-MM-dd hh:mm a').format(DateTime.now())} • GIS Command Center',
             style: TextStyle(fontSize: 11, color: isDark ? Colors.white38 : Colors.black45),
           ),
           const SizedBox(height: 12),

@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'LGU CATANDUANES GIS',
+                          'RESQNNECT GIS',
                           style: TextStyle(
                             color: isDark ? Colors.white : AppColors.retroDarkBorder,
                             fontSize: 10,
@@ -98,17 +98,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         color: isDark ? AppColors.retroDarkCard : AppColors.retroLilac,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                          width: 1.4,
+                          color: AppColors.retroDarkBorder,
+                          width: 1.5,
                         ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.retroDarkBorder,
+                            offset: Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
                       ),
                       child: Text(
                         'SKIP',
                         style: TextStyle(
-                          color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                          fontSize: 10,
                           fontWeight: FontWeight.w900,
-                          fontSize: 11,
-                          letterSpacing: 0.6,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -116,15 +123,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 18),
             Expanded(
               child: PageView(
                 controller: _pageController,
-                physics: const BouncingScrollPhysics(),
-                onPageChanged: (int page) {
-                  setState(() {
-                    _currentPage = page;
-                  });
-                },
+                onPageChanged: (index) => setState(() => _currentPage = index),
+                physics: const ClampingScrollPhysics(),
                 children: [
                   _buildIntroStep(isDark),
                   _buildTermsStep(isDark),
@@ -143,23 +147,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildIntroStep(bool isDark) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         children: [
+          const SizedBox(height: 8),
           Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
-              borderRadius: BorderRadius.circular(26),
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
-                width: 2.0,
+                color: isDark ? Colors.white.withOpacity(0.12) : AppColors.retroDarkBorder,
+                width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.black45 : AppColors.retroMintDark,
-                  offset: const Offset(4, 4),
+                  color: isDark ? Colors.transparent : AppColors.retroDarkBorder,
+                  offset: const Offset(3, 3),
                   blurRadius: 0,
                 ),
               ],
@@ -167,16 +170,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
-                  padding: const EdgeInsets.all(8),
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.retroYellow,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: AppColors.retroDarkBorder,
-                      width: 2.0,
+                      width: 2,
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.retroDarkBorder,
+                        offset: Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
                   ),
                   child: ClipOval(
                     child: Image.asset(
@@ -187,7 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Catanduanes GIS',
+                  'ResQnnect GIS',
                   style: TextStyle(
                     color: isDark ? Colors.white : AppColors.retroDarkBorder,
                     fontSize: 24,
@@ -195,27 +204,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.retroLilac,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
-                  ),
-                  child: const Text(
-                    'INCIDENT MAPPING & PREDICTIVE LOGIC',
-                    style: TextStyle(
-                      color: AppColors.retroDarkBorder,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 14),
                 Text(
-                  'Centralized municipal portal for real-time incident reporting, GPS coordinate pinning, and predictive disaster tracking across Catanduanes island.',
+                  'Centralized portal for real-time incident reporting, GPS coordinate pinning, and predictive disaster tracking based on your live location.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDark ? Colors.white70 : const Color(0xFF4B5563),
@@ -515,7 +506,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _buildRetroPermissionCard(
             icon: Icons.location_on_rounded,
             title: 'GPS Location Access',
-            subtitle: 'Enables precise coordinate pinning on Catanduanes maps.',
+            subtitle: 'Enables precise coordinate pinning on live GIS maps.',
             isGranted: _locationAllowed,
             accentColor: AppColors.retroPeach,
             iconColor: const Color(0xFFEF4444),
@@ -526,7 +517,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _buildRetroPermissionCard(
             icon: Icons.notifications_active_rounded,
             title: 'Push Notifications',
-            subtitle: 'Receive real-time LGU disaster alerts & responder dispatch updates.',
+            subtitle: 'Receive real-time disaster alerts & responder dispatch updates.',
             isGranted: _notificationsAllowed,
             accentColor: AppColors.retroLilac,
             iconColor: const Color(0xFF7C3AED),

@@ -173,39 +173,39 @@ class GeminiAIService {
         : 'Weather telemetry: Tropical Maritime Climate, seasonal monsoon moisture';
 
     final incidentsSummary = incidents.isEmpty
-        ? 'No currently active emergency incidents reported in Catanduanes.'
+        ? 'No currently active emergency incidents reported in $currentLocation.'
         : incidents
             .take(10)
             .map((i) =>
-                '${i.incidentType} in Barangay ${i.barangay}, reported at ${i.timestamp.toIso8601String()}')
+                '${i.incidentType} in ${i.barangay}, reported at ${i.timestamp.toIso8601String()}')
             .join('; ');
 
     final alertsSummary = alerts.isEmpty
-        ? 'No active public broadcast alerts issued by PDRRMO.'
+        ? 'No active public broadcast alerts issued by emergency command.'
         : alerts
             .take(5)
             .map((a) => '${a.disasterType} alert: "${a.title}"')
             .join('; ');
 
     return '''
-You are the Provincial GIS Disaster Predictive Intelligence AI for Catanduanes, Philippines (PDRRMO ResQnnect Command).
-Analyze the ground conditions and return predictive hazard forecasts for the 11 municipalities (Virac, San Andres, Bato, Baras, Gigmoto, San Miguel, Viga, Panganiban, Bagamanoc, Caramoran, Pandan).
+You are the GIS Disaster Predictive Intelligence AI for $currentLocation, Philippines (ResQnnect Emergency Command).
+Analyze the ground conditions and return predictive hazard forecasts for $currentLocation and its local operational sectors.
 
 CURRENT GROUND TELEMETRY:
 - User Location: $currentLocation
 - Live Weather: $weatherDesc
-- Active Incidents ($incidents.length total): $incidentsSummary
-- Active PDRRMO Broadcasts ($alerts.length total): $alertsSummary
+- Active Incidents (${incidents.length} total): $incidentsSummary
+- Active Emergency Broadcasts (${alerts.length} total): $alertsSummary
 
 REQUIRED JSON OUTPUT FORMAT:
 {
-  "executive_summary": "Comprehensive 2-sentence situational intelligence assessment for Catanduanes LGUs and citizens.",
+  "executive_summary": "Comprehensive 2-sentence situational intelligence assessment for $currentLocation and local citizens.",
   "overall_threat_level": "HIGH or MODERATE or LOW",
   "high_risk_zones": [
     {
-      "name": "Municipality Name (e.g. Virac, Bato, San Miguel)",
+      "name": "Local Sector / Barangay Name in $currentLocation",
       "risk_score_percentage": 75.0,
-      "hazard_type": "Flooding / Landslide / Coastal Surge / Storm Wind",
+      "hazard_type": "Flooding / Landslide / Storm Wind / Accident",
       "recommended_action": "Targeted actionable directive for responders and citizens in this zone."
     }
   ],
@@ -278,31 +278,35 @@ Return ONLY valid raw JSON.
         ? 'HIGH'
         : (rainRisk ? 'MODERATE' : 'LOW');
 
+    final areaName = (currentLocation.isNotEmpty && !currentLocation.startsWith('GPS') && !currentLocation.startsWith('Locating'))
+        ? currentLocation.split(',')[0].trim()
+        : 'Operational Area';
+
     return GeminiDisasterAnalysis(
       executiveSummary:
-          'Catanduanes disaster surveillance indicates stable regional indicators. Soil saturation in mountainous sectors remains within normal baseline thresholds, with responder units standing by across all 11 municipal LGUs.',
+          '$areaName disaster surveillance indicates stable regional indicators. Soil saturation and meteorological telemetry remain within baseline thresholds, with responder units standing by.',
       overallThreatLevel: threat,
       highRiskZones: [
         GeminiRiskZone(
-          name: 'Virac (Capital)',
+          name: '$areaName - Sector 1',
           riskScorePercentage: 42.0,
-          hazardType: 'Urban Drainage & Coastal Runoff',
+          hazardType: 'Urban Drainage & Surface Runoff',
           recommendedAction:
-              'Maintain monitoring along riverine channels and keep storm drain grates clear.',
+              'Maintain monitoring along primary channels and keep storm drain systems clear.',
         ),
         GeminiRiskZone(
-          name: 'San Andres (Calolbon)',
+          name: '$areaName - Sector 2',
           riskScorePercentage: 38.0,
-          hazardType: 'Coastal Wave Swell',
+          hazardType: 'Precipitation & Wind Exposure',
           recommendedAction:
-              'Fisherfolk advised to verify sea condition bulletins before coastal departure.',
+              'Residents advised to secure loose structures and review local emergency bulletins.',
         ),
         GeminiRiskZone(
-          name: 'Bato',
+          name: '$areaName - Sector 3',
           riskScorePercentage: 35.0,
-          hazardType: 'Bato River Level Elevation',
+          hazardType: 'Low-Lying Catchment Elevation',
           recommendedAction:
-              'PDRRMO automated water level sensors operating normally.',
+              'Local command automated telemetry sensors operating normally.',
         ),
       ],
       forecastTrend: [
@@ -312,9 +316,9 @@ Return ONLY valid raw JSON.
         GeminiForecastDay(day: 'Day 4', projectedIncidents: 0, mainThreat: 'Fair Skies'),
       ],
       actionableRecommendations: [
-        'LGU Operations Centers: Maintain 24/7 telemetry monitoring across all 11 municipal stations.',
-        'Emergency Responders: Inspect portable power generators, satellite radios, and first response medical packs.',
-        'Citizens: Keep emergency go-bags stocked and verify barangay evacuation center locations on GIS map.',
+        'LGU Operations Centers: Maintain 24/7 telemetry monitoring across all operational zones.',
+        'Emergency Responders: Inspect portable power generators, radios, and first response medical equipment.',
+        'Citizens: Keep emergency go-bags stocked and check real-time evacuation routes on the GIS map.',
       ],
       analyzedAt: DateTime.now(),
       isLiveAI: false,

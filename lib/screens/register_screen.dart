@@ -127,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Help us keep Catanduanes safe.',
+                'Help keep our community safe.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
               ),

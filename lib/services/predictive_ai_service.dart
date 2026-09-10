@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import '../models/incident_model.dart';
 import '../models/predictive_ai_model.dart';
-import '../core/constants.dart';
 
 class PredictiveAIService {
   static final PredictiveAIService _instance = PredictiveAIService._internal();
@@ -118,13 +117,12 @@ class PredictiveAIService {
     final Map<String, List<IncidentModel>> barangayMap = {};
 
     for (var incident in incidents) {
-      final bgy = incident.barangay.isNotEmpty ? incident.barangay : 'Virac (Capital)';
+      final bgy = incident.barangay.isNotEmpty
+          ? incident.barangay
+          : (incident.location.split(',')[0].trim().isNotEmpty
+              ? incident.location.split(',')[0].trim()
+              : 'Local Area');
       barangayMap.putIfAbsent(bgy, () => []).add(incident);
-    }
-
-    // Ensure standard major barangays are present
-    for (var bgy in AppConstants.lguBarangays.take(6)) {
-      barangayMap.putIfAbsent(bgy, () => []);
     }
 
     // Find max frequency for normalization

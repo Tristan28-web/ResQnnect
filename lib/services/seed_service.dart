@@ -22,7 +22,7 @@ class SeedService {
       {
         'email': 'admin@catanduanes.gov.ph',
         'password': 'password123',
-        'name': 'Catanduanes Admin',
+        'name': 'GIS Administrator',
         'phone': '09123456789',
         'role': 'admin',
       },
@@ -36,7 +36,7 @@ class SeedService {
       {
         'email': 'respondent@catanduanes.gov.ph',
         'password': 'password123',
-        'name': 'Catanduanes Responder',
+        'name': 'Field Responder',
         'phone': '09987654321',
         'role': 'responder',
       },
@@ -109,7 +109,7 @@ class SeedService {
       AlertModel(
         alertId: 'alert_01',
         title: 'Heavy Rainfall Warning',
-        description: 'Expect heavy rains in Catanduanes for the next 6 hours. Stay indoors.',
+        description: 'Expect heavy rains in this area for the next 6 hours. Stay indoors.',
         disasterType: 'Weather',
         createdAt: DateTime.now(),
       ),

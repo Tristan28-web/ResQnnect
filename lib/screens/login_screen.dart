@@ -222,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 18),
               Text(
-                'GIS CATANDUANES',
+                'RESQNNECT GIS',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,

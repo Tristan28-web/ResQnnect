@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../core/constants.dart';
+import '../services/location_service.dart';
 
 class IncidentPinPickerDialog extends StatefulWidget {
   final LatLng initialPosition;
@@ -8,7 +9,7 @@ class IncidentPinPickerDialog extends StatefulWidget {
 
   const IncidentPinPickerDialog({
     super.key,
-    this.initialPosition = const LatLng(13.5840, 124.2330), // Catanduanes Center (Virac)
+    required this.initialPosition,
     this.initialBarangay,
   });
 
@@ -18,14 +19,32 @@ class IncidentPinPickerDialog extends StatefulWidget {
 
 class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
   late LatLng _selectedPin;
-  late String _selectedBarangay;
+  late TextEditingController _barangayController;
   GoogleMapController? _mapController;
 
   @override
   void initState() {
     super.initState();
     _selectedPin = widget.initialPosition;
-    _selectedBarangay = widget.initialBarangay ?? AppConstants.lguBarangays.first;
+    _barangayController = TextEditingController(text: widget.initialBarangay ?? '');
+    if (_barangayController.text.isEmpty) {
+      _resolveLocationName(_selectedPin);
+    }
+  }
+
+  @override
+  void dispose() {
+    _barangayController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _resolveLocationName(LatLng point) async {
+    try {
+      final name = await LocationService().reverseGeocode(point.latitude, point.longitude);
+      if (mounted && name.isNotEmpty && name != 'Unknown Area') {
+        setState(() => _barangayController.text = name);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -103,6 +122,7 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                       onTap: (point) {
                         setState(() => _selectedPin = point);
                         _mapController?.animateCamera(CameraUpdate.newLatLng(point));
+                        _resolveLocationName(point);
                       },
                       markers: {
                         Marker(
@@ -112,6 +132,7 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
                           onDragEnd: (newPos) {
                             setState(() => _selectedPin = newPos);
+                            _resolveLocationName(newPos);
                           },
                         ),
                       },
@@ -153,7 +174,7 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'DESIGNATED BARANGAY',
+                      'DESIGNATED AREA / BARANGAY',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
@@ -163,33 +184,25 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF1E2841) : const Color(0xFFF5F7FB),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedBarangay,
-                          isExpanded: true,
-                          dropdownColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          items: AppConstants.lguBarangays.map((bgy) {
-                            return DropdownMenuItem<String>(
-                              value: bgy,
-                              child: Text(bgy),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedBarangay = val);
-                            }
-                          },
+                      child: TextField(
+                        controller: _barangayController,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter area or barangay name...',
+                          border: InputBorder.none,
+                          isDense: true,
+                          prefixIcon: Icon(Icons.location_city_rounded, size: 18, color: AppConstants.primaryRed),
+                          prefixIconConstraints: BoxConstraints(minWidth: 28, minHeight: 28),
                         ),
                       ),
                     ),
@@ -210,7 +223,9 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                       onPressed: () {
                         Navigator.of(context).pop({
                           'position': _selectedPin,
-                          'barangay': _selectedBarangay,
+                          'barangay': _barangayController.text.trim().isNotEmpty
+                              ? _barangayController.text.trim()
+                              : 'Pin Area',
                         });
                       },
                     ),

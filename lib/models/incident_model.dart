@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/constants.dart';
 
 class IncidentModel {
   final String incidentId;
@@ -58,22 +57,12 @@ class IncidentModel {
   }
 
   static String _inferBarangay(String loc) {
-    final lower = loc.toLowerCase();
-    for (var bgy in AppConstants.lguBarangays) {
-      if (lower.contains(bgy.toLowerCase())) return bgy;
+    if (loc.trim().isEmpty) return 'Local Area';
+    final parts = loc.split(',');
+    if (parts.isNotEmpty && parts[0].trim().isNotEmpty) {
+      return parts[0].trim();
     }
-    if (lower.contains('virac')) return 'Virac (Capital)';
-    if (lower.contains('andres') || lower.contains('calolbon')) return 'San Andres (Calolbon)';
-    if (lower.contains('bato')) return 'Bato';
-    if (lower.contains('baras')) return 'Baras';
-    if (lower.contains('gigmoto')) return 'Gigmoto';
-    if (lower.contains('pandan')) return 'Pandan';
-    if (lower.contains('caramoran')) return 'Caramoran';
-    if (lower.contains('miguel')) return 'San Miguel';
-    if (lower.contains('viga')) return 'Viga';
-    if (lower.contains('panganiban')) return 'Panganiban';
-    if (lower.contains('bagamanoc')) return 'Bagamanoc';
-    return 'Virac (Capital)';
+    return loc.trim();
   }
 
   factory IncidentModel.fromMap(Map<String, dynamic> data) {

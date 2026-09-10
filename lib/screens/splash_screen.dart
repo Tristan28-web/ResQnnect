@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'PROVINCE OF CATANDUANES',
+              'EMERGENCY RESPONSE & DISASTER PORTAL',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.85),
                 fontSize: 13,

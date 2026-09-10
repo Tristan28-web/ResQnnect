@@ -159,8 +159,8 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                              userEmail?.contains('admin') == true) {
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'Catanduanes Admin',
-                      email: userEmail ?? 'admin@catanduanes.gov.ph',
+                      name: firebaseUser.displayName ?? 'GIS Admin',
+                      email: userEmail ?? 'admin@gis.gov.ph',
                       phone: '',
                       profileImage: firebaseUser.photoURL ?? '',
                       role: AppConstants.roleAdmin,
@@ -176,7 +176,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                     // 🛡️ High-Priority Responder Detection
                     initialModel = UserModel(
                       userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'Catanduanes Responder',
+                      name: firebaseUser.displayName ?? 'Field Responder',
                       email: userEmail ?? '',
                       phone: '',
                       profileImage: firebaseUser.photoURL ?? '',
@@ -263,7 +263,7 @@ class AuthWrapper extends StatelessWidget {
     
     UserModel effectiveUser = userModel ?? UserModel(
       userId: firebaseUser.uid,
-      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'Catanduanes Admin' : 'GIS User'),
+      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'GIS Admin' : 'GIS User'),
       email: userEmail ?? 'guest@gis.local',
       role: userEmail == 'admin@catanduanes.gov.ph' || userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
           ? AppConstants.roleAdmin 

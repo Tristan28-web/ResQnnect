@@ -22,8 +22,6 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
   late String _selectedFilter;
   IncidentModel? _selectedIncident;
 
-  static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
-
   @override
   void initState() {
     super.initState();
@@ -83,7 +81,7 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
     final userPos = locationService.currentPosition;
     final LatLng initialTarget = userPos != null
         ? LatLng(userPos.latitude, userPos.longitude)
-        : _catanduanesCenter;
+        : const LatLng(14.5995, 120.9842);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -116,8 +114,9 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
 
           final Set<Marker> markers = {};
           for (var inc in filteredIncidents) {
-            final lat = inc.latitude ?? 10.9574;
-            final lng = inc.longitude ?? 123.2978;
+            if (inc.latitude == null || inc.longitude == null) continue;
+            final lat = inc.latitude!;
+            final lng = inc.longitude!;
 
             markers.add(
               Marker(

@@ -1154,7 +1154,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your incident report has been verified by LGU Catanduanes and emergency responders are dispatched to your pinned location.',
+              'Your incident report has been verified by LGU Emergency Command and emergency responders are dispatched to your pinned location.',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: 20),
@@ -1212,25 +1212,12 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
     final userLocation = locationService.currentLocationName;
 
     final Set<String> lguOptions = {'All'};
-    if (userLocation.contains(',')) {
+    if (userLocation.isNotEmpty && !userLocation.startsWith('GPS') && !userLocation.startsWith('Locating')) {
       final localCity = userLocation.split(',')[0].trim();
-      if (localCity.isNotEmpty && !localCity.startsWith('GPS') && !localCity.startsWith('Locating')) {
+      if (localCity.isNotEmpty) {
         lguOptions.add(localCity);
       }
     }
-    lguOptions.addAll([
-      'Virac',
-      'San Andres',
-      'Bato',
-      'Baras',
-      'Gigmoto',
-      'Pandan',
-      'Caramoran',
-      'Bagamanoc',
-      'Panganiban',
-      'Viga',
-      'San Miguel',
-    ]);
 
     final categories = ['All', 'Fire', 'Flood', 'Medical', 'Accident', 'Crime'];
     final severities = ['All', 'Critical', 'High', 'Moderate', 'Low'];
