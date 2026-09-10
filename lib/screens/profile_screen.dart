@@ -180,10 +180,10 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           role == AppConstants.roleAdmin 
-              ? 'RESQ-ADMIN-001' 
+              ? 'GIS-ADMIN-001' 
               : (role == AppConstants.roleResponder 
-                   ? 'RESQ-RSP-001' 
-                   : 'RESQ-ID-9921'),
+                   ? 'GIS-RSP-001' 
+                   : 'GIS-ID-9921'),
           style: const TextStyle(
             color: AppConstants.primaryRed,
             fontSize: 12,
