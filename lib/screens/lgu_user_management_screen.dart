@@ -33,19 +33,35 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
     }
   }
 
-  Color _getRoleColor(String role) {
+  Color _getRoleBg(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.purpleAccent;
+        return AppColors.retroLilac;
       case 'pnp':
-        return Colors.blueAccent;
+        return const Color(0xFFDBEAFE);
       case 'bfp':
-        return AppConstants.primaryRed;
+        return AppColors.retroPeach;
       case 'rescue':
       case 'responder':
-        return Colors.orangeAccent;
+        return const Color(0xFFFEF3C7);
       default:
-        return Colors.tealAccent;
+        return const Color(0xFFDCFCE7);
+    }
+  }
+
+  Color _getRoleTextColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return const Color(0xFF6D28D9);
+      case 'pnp':
+        return const Color(0xFF1D4ED8);
+      case 'bfp':
+        return const Color(0xFFDC2626);
+      case 'rescue':
+      case 'responder':
+        return const Color(0xFFD97706);
+      default:
+        return const Color(0xFF16A34A);
     }
   }
 
@@ -57,52 +73,108 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'USER MANAGEMENT (RBAC)',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
       ),
       body: Column(
         children: [
           // Search & Role Filter Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'Search user name, email, or role...',
-                    hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 12),
-                    prefixIcon: Icon(Icons.search_rounded, size: 18, color: isDark ? Colors.white54 : Colors.black54),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                // Retro Pill Search Bar
+                Container(
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 20,
+                        color: isDark ? Colors.white60 : AppColors.retroDarkBorder,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search user name, email, or role...',
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.white30 : const Color(0xFF9CA3AF),
+                              fontSize: 12,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white60 : AppColors.retroDarkBorder,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                // Retro Role Filter Pills
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildRoleFilterChip('All'),
+                      _buildRoleFilterPill('All'),
                       const SizedBox(width: 8),
-                      _buildRoleFilterChip('Administrator', value: 'admin'),
+                      _buildRoleFilterPill('Administrator', value: 'admin'),
                       const SizedBox(width: 8),
-                      _buildRoleFilterChip('PNP Personnel', value: 'pnp'),
+                      _buildRoleFilterPill('PNP Personnel', value: 'pnp'),
                       const SizedBox(width: 8),
-                      _buildRoleFilterChip('BFP Personnel', value: 'bfp'),
+                      _buildRoleFilterPill('BFP Personnel', value: 'bfp'),
                       const SizedBox(width: 8),
-                      _buildRoleFilterChip('Rescue Team', value: 'rescue'),
+                      _buildRoleFilterPill('Rescue Team', value: 'rescue'),
                       const SizedBox(width: 8),
-                      _buildRoleFilterChip('Citizens', value: 'citizen'),
+                      _buildRoleFilterPill('Citizens', value: 'citizen'),
                     ],
                   ),
                 ),
@@ -116,7 +188,7 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
               stream: firestore.getAllUsers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: AppConstants.primaryRed));
+                  return const Center(child: CircularProgressIndicator(color: AppColors.retroMint));
                 }
 
                 final users = snapshot.data ?? [];
@@ -140,9 +212,20 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline_rounded, size: 54, color: (isDark ? Colors.white : Colors.black).withOpacity(0.15)),
+                        Icon(
+                          Icons.people_outline_rounded,
+                          size: 54,
+                          color: isDark ? Colors.white24 : Colors.black26,
+                        ),
                         const SizedBox(height: 12),
-                        Text('No users matching criteria', style: TextStyle(color: isDark ? Colors.white38 : Colors.black45)),
+                        Text(
+                          'No users matching criteria',
+                          style: TextStyle(
+                            color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -150,11 +233,11 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
 
                 return ListView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final user = filtered[index];
-                    return _buildUserCard(context, user, firestore);
+                    return _buildRetroUserCard(context, user, firestore);
                   },
                 );
               },
@@ -165,39 +248,86 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
     );
   }
 
-  Widget _buildRoleFilterChip(String label, {String? value}) {
+  Widget _buildRoleFilterPill(String label, {String? value}) {
     final effectiveVal = value ?? label;
     final isSelected = _selectedRoleFilter.toLowerCase() == effectiveVal.toLowerCase();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ChoiceChip(
-      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black54))),
-      selected: isSelected,
-      selectedColor: AppConstants.primaryRed,
-      backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.black.withOpacity(0.04),
-      onSelected: (val) => setState(() => _selectedRoleFilter = effectiveVal),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      side: BorderSide.none,
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRoleFilter = effectiveVal),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.retroMint
+              : (isDark ? AppColors.retroDarkCard : Colors.white),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.retroDarkBorder
+                : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+            width: 1.4,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
+                  )
+                ]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildUserCard(BuildContext context, UserModel user, FirestoreService firestore) {
+  Widget _buildRetroUserCard(BuildContext context, UserModel user, FirestoreService firestore) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final roleColor = _getRoleColor(user.role);
+    final roleBg = _getRoleBg(user.role);
+    final roleTextColor = _getRoleTextColor(user.role);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: roleColor.withOpacity(0.15),
-            child: Icon(Icons.person_rounded, color: roleColor, size: 20),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: roleBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+            ),
+            child: Center(
+              child: Icon(Icons.person_rounded, color: roleTextColor, size: 22),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -206,23 +336,40 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
               children: [
                 Text(
                   user.name.isNotEmpty ? user.name : 'Unknown User',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   user.email,
-                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black45),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: roleColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(4),
+                    color: roleBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                   ),
                   child: Text(
                     _formatRoleName(user.role),
-                    style: TextStyle(color: roleColor, fontSize: 9, fontWeight: FontWeight.w900),
+                    style: TextStyle(
+                      color: roleTextColor,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ],
@@ -233,31 +380,44 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Active toggle
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     user.isActive ? 'Active' : 'Inactive',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: user.isActive ? Colors.greenAccent : Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: user.isActive ? const Color(0xFF16A34A) : Colors.grey,
+                    ),
                   ),
+                  const SizedBox(width: 6),
                   Switch.adaptive(
                     value: user.isActive,
-                    activeColor: Colors.greenAccent,
+                    activeColor: AppColors.retroMint,
                     onChanged: (val) {
                       firestore.toggleUserStatus(user.userId, user.isActive);
                     },
                   ),
                 ],
               ),
-              // Role Edit Button
-              InkWell(
+              GestureDetector(
                 onTap: () => _showRoleSwitchDialog(context, user, firestore),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 2, right: 8),
-                  child: Text(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.retroLilac,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                  ),
+                  child: const Text(
                     'CHANGE ROLE',
-                    style: TextStyle(color: AppConstants.primaryRed, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                    style: TextStyle(
+                      color: AppColors.retroDarkBorder,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -276,9 +436,19 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('CHANGE ROLE: ${user.name}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+          backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
+          ),
+          title: Text(
+            'CHANGE ROLE: ${user.name}',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: AppColors.retroDarkBorder,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -286,9 +456,9 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                 value: ['admin', 'pnp', 'bfp', 'rescue', 'responder', 'citizen'].contains(selectedRole)
                     ? selectedRole
                     : 'citizen',
-                dropdownColor: isDark ? const Color(0xFF161E31) : Colors.white,
+                dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
                 items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Administrator (LGU)')),
+                  DropdownMenuItem(value: 'admin', child: Text('Administrator (LGU Command)')),
                   DropdownMenuItem(value: 'pnp', child: Text('PNP Personnel (Police)')),
                   DropdownMenuItem(value: 'bfp', child: Text('BFP Personnel (Fire)')),
                   DropdownMenuItem(value: 'rescue', child: Text('Rescue Team (CDRRMO)')),
@@ -298,13 +468,31 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                 onChanged: (val) {
                   if (val != null) setDialogState(() => selectedRole = val);
                 },
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
+                  ),
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF6B7280))),
+            ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryRed),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.retroMint,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
+                ),
+              ),
               onPressed: () async {
                 await firestore.updateUserRole(user.userId, selectedRole);
                 if (context.mounted) {
@@ -314,7 +502,7 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                   );
                 }
               },
-              child: const Text('SAVE ROLE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('SAVE ROLE', style: TextStyle(fontWeight: FontWeight.w900)),
             ),
           ],
         ),

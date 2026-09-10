@@ -19,17 +19,31 @@ class ResponderTasksScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: isDark ? AppConstants.backgroundBlack : Colors.grey.shade100,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text('MY TASKS & DISPATCHES', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          title: Text(
+            'MY TASKS & DISPATCHES',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.3,
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+            ),
+          ),
           centerTitle: true,
-          bottom: const TabBar(
-            tabs: [
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          bottom: TabBar(
+            tabs: const [
               Tab(text: 'INCIDENTS'),
               Tab(text: 'SOS REQUESTS'),
             ],
-            indicatorColor: AppConstants.primaryRed,
-            labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            indicatorColor: AppColors.retroMint,
+            indicatorWeight: 3,
+            labelColor: isDark ? Colors.white : AppColors.retroDarkBorder,
+            unselectedLabelColor: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+            labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.8),
           ),
         ),
         body: TabBarView(
@@ -47,24 +61,48 @@ class ResponderTasksScreen extends StatelessWidget {
       stream: firestoreService.getIncidents(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: AppConstants.primaryRed));
+          return const Center(child: CircularProgressIndicator(color: AppColors.retroMint));
         }
-        
+
         final allIncidents = snapshot.data ?? [];
         final myIncidents = allIncidents.where((i) => i.assignedTo == userId).toList();
 
         if (myIncidents.isEmpty) {
           return Center(
-            child: Text('No assigned incidents.', style: TextStyle(color: isDark ? Colors.white38 : Colors.black45)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: AppColors.retroPeach,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+                  ),
+                  child: const Icon(Icons.checklist_rounded, size: 32, color: AppColors.retroDarkBorder),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'No assigned incidents',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
         return ListView.builder(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           itemCount: myIncidents.length,
           itemBuilder: (context, index) {
             final incident = myIncidents[index];
-            return _buildTaskTile(
+            return _buildRetroTaskTile(
               context,
               title: incident.description,
               location: incident.location,
@@ -85,26 +123,50 @@ class ResponderTasksScreen extends StatelessWidget {
       stream: firestoreService.getSOSRequests(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: AppConstants.primaryRed));
+          return const Center(child: CircularProgressIndicator(color: AppColors.retroMint));
         }
-        
+
         final allSOS = snapshot.data ?? [];
         final mySOS = allSOS.where((s) => s.assignedTo == userId).toList();
 
         if (mySOS.isEmpty) {
           return Center(
-            child: Text('No assigned SOS requests.', style: TextStyle(color: isDark ? Colors.white38 : Colors.black45)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: AppColors.retroLilac,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+                  ),
+                  child: const Icon(Icons.emergency_rounded, size: 32, color: AppColors.retroDarkBorder),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'No assigned SOS requests',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
         return ListView.builder(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           itemCount: mySOS.length,
           itemBuilder: (context, index) {
             final sos = mySOS[index];
-            return _buildTaskTile(
+            return _buildRetroTaskTile(
               context,
-              title: 'SOS EMERGENCY',
+              title: 'SOS EMERGENCY DISPATCH',
               location: sos.location,
               status: sos.status,
               timestamp: sos.timestamp,
@@ -118,7 +180,7 @@ class ResponderTasksScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskTile(
+  Widget _buildRetroTaskTile(
     BuildContext context, {
     required String title,
     required String location,
@@ -128,25 +190,34 @@ class ResponderTasksScreen extends StatelessWidget {
     required String type,
     required bool isDark,
   }) {
-    Color statusColor = Colors.orange;
-    if (status == 'resolved') statusColor = Colors.green;
-    if (status == 'pending') statusColor = Colors.orange;
+    Color statusBg = AppColors.retroPeach;
+    Color statusTextColor = const Color(0xFFD97706);
+
+    if (status.toLowerCase() == 'resolved') {
+      statusBg = const Color(0xFFDCFCE7);
+      statusTextColor = const Color(0xFF16A34A);
+    } else if (status.toLowerCase() == 'in_progress' || status.toLowerCase() == 'dispatched') {
+      statusBg = AppColors.retroLilac;
+      statusTextColor = const Color(0xFF2563EB);
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? null : Colors.white,
-        gradient: isDark
-            ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-              )
-            : null,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.45 : 0.06), blurRadius: 10, offset: const Offset(0, 4))],
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(3, 3),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,38 +228,52 @@ class ResponderTasksScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (type == 'SOS' ? Colors.red : Colors.blue).withOpacity(0.1),
+                  color: type == 'SOS' ? const Color(0xFFFEE2E2) : AppColors.retroLilac,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                 ),
                 child: Text(
                   type,
                   style: TextStyle(
-                    color: type == 'SOS' ? Colors.red : Colors.blue,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    color: type == 'SOS' ? const Color(0xFFDC2626) : const Color(0xFF4F46E5),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
               Text(
                 DateFormat('hh:mm a').format(timestamp),
-                style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11),
+                style: TextStyle(
+                  color: isDark ? Colors.white38 : const Color(0xFF888E99),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             title,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.location_on, size: 14, color: AppConstants.primaryRed),
+              const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFEF4444)),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   location,
-                  style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12),
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -199,35 +284,61 @@ class ResponderTasksScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text('Status: ', style: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 13)),
-                  Text(
-                    status.toUpperCase(),
-                    style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.bold),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                ),
+                child: Text(
+                  status.toUpperCase(),
+                  style: TextStyle(
+                    color: statusTextColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
                   ),
-                ],
+                ),
               ),
               PopupMenuButton<String>(
                 onSelected: onStatusChange,
-                color: isDark ? AppConstants.surfaceDark : Colors.white,
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppConstants.primaryRed),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.retroMint,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
                   ),
                   child: const Row(
                     children: [
-                      Text('UPDATE', style: TextStyle(color: AppConstants.primaryRed, fontSize: 11, fontWeight: FontWeight.bold)),
-                      Icon(Icons.arrow_drop_down, color: AppConstants.primaryRed, size: 16),
+                      Text(
+                        'UPDATE STATUS',
+                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_drop_down_rounded, color: Colors.white, size: 16),
                     ],
                   ),
                 ),
                 itemBuilder: (context) => [
-                  PopupMenuItem(value: 'pending', child: Text('Pending', style: TextStyle(color: isDark ? Colors.white : Colors.black87))),
-                  PopupMenuItem(value: 'in_progress', child: Text('In Progress', style: TextStyle(color: isDark ? Colors.white : Colors.black87))),
-                  PopupMenuItem(value: 'resolved', child: Text('Resolved', style: TextStyle(color: isDark ? Colors.white : Colors.black87))),
+                  PopupMenuItem(
+                    value: 'pending',
+                    child: Text('Pending', style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.bold)),
+                  ),
+                  PopupMenuItem(
+                    value: 'in_progress',
+                    child: Text('In Progress', style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.bold)),
+                  ),
+                  PopupMenuItem(
+                    value: 'resolved',
+                    child: Text('Resolved', style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.bold)),
+                  ),
                 ],
               ),
             ],
