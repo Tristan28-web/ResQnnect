@@ -14,7 +14,14 @@ import '../core/constants.dart';
 import '../widgets/incident_pin_picker_dialog.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({super.key});
+  final LatLng? initialPosition;
+  final String? initialBarangay;
+
+  const ReportScreen({
+    super.key,
+    this.initialPosition,
+    this.initialBarangay,
+  });
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
@@ -35,22 +42,31 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final locService = Provider.of<LocationService>(context, listen: false);
-      if (locService.currentPosition != null) {
-        final pos = locService.currentPosition!;
-        setState(() {
-          _pinnedLocation = LatLng(pos.latitude, pos.longitude);
-          _locationController.text = '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
-          if (locService.currentLocationName != 'Detecting Location...') {
-            _barangayController.text = locService.currentLocationName;
-          }
-          _isLocationVerified = true;
-        });
-      } else {
-        _getCurrentLocation();
+    if (widget.initialPosition != null) {
+      _pinnedLocation = widget.initialPosition;
+      _locationController.text = '${widget.initialPosition!.latitude.toStringAsFixed(5)}, ${widget.initialPosition!.longitude.toStringAsFixed(5)}';
+      if (widget.initialBarangay != null && widget.initialBarangay!.isNotEmpty) {
+        _barangayController.text = widget.initialBarangay!;
       }
-    });
+      _isLocationVerified = true;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final locService = Provider.of<LocationService>(context, listen: false);
+        if (locService.currentPosition != null) {
+          final pos = locService.currentPosition!;
+          setState(() {
+            _pinnedLocation = LatLng(pos.latitude, pos.longitude);
+            _locationController.text = '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+            if (locService.currentLocationName != 'Detecting Location...') {
+              _barangayController.text = locService.currentLocationName;
+            }
+            _isLocationVerified = true;
+          });
+        } else {
+          _getCurrentLocation();
+        }
+      });
+    }
   }
 
   @override
@@ -101,29 +117,39 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void _openPinPicker() async {
+    final locService = Provider.of<LocationService>(context, listen: false);
+    final userPos = locService.currentPosition;
     final defaultTarget = _pinnedLocation ??
-        LatLng(
-          Provider.of<LocationService>(context, listen: false).currentPosition?.latitude ?? AppConstants.defaultLat,
-          Provider.of<LocationService>(context, listen: false).currentPosition?.longitude ?? AppConstants.defaultLng,
-        );
+        (userPos != null
+            ? LatLng(userPos.latitude, userPos.longitude)
+            : const LatLng(AppConstants.defaultLat, AppConstants.defaultLng));
 
-    final selectedLatLng = await showDialog<LatLng>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (ctx) => IncidentPinPickerDialog(initialPosition: defaultTarget),
+      builder: (ctx) => IncidentPinPickerDialog(
+        initialPosition: defaultTarget,
+        initialBarangay: _barangayController.text.isNotEmpty ? _barangayController.text : null,
+      ),
     );
 
-    if (selectedLatLng != null && mounted) {
-      final locService = Provider.of<LocationService>(context, listen: false);
-      final resolvedName = await locService.reverseGeocode(selectedLatLng.latitude, selectedLatLng.longitude);
+    if (result != null && mounted) {
+      final selectedLatLng = result['position'] as LatLng?;
+      final selectedBarangay = result['barangay'] as String?;
 
-      setState(() {
-        _pinnedLocation = selectedLatLng;
-        _locationController.text = '${selectedLatLng.latitude.toStringAsFixed(5)}, ${selectedLatLng.longitude.toStringAsFixed(5)}';
-        if (resolvedName.isNotEmpty) {
-          _barangayController.text = resolvedName;
-        }
-        _isLocationVerified = true;
-      });
+      if (selectedLatLng != null) {
+        final resolvedName = (selectedBarangay != null && selectedBarangay.isNotEmpty && selectedBarangay != 'Pin Area')
+            ? selectedBarangay
+            : await locService.reverseGeocode(selectedLatLng.latitude, selectedLatLng.longitude);
+
+        setState(() {
+          _pinnedLocation = selectedLatLng;
+          _locationController.text = '${selectedLatLng.latitude.toStringAsFixed(5)}, ${selectedLatLng.longitude.toStringAsFixed(5)}';
+          if (resolvedName.isNotEmpty) {
+            _barangayController.text = resolvedName;
+          }
+          _isLocationVerified = true;
+        });
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 import '../core/constants.dart';
 import 'report_screen.dart';
@@ -15,20 +16,35 @@ class IncidentPinningScreen extends StatefulWidget {
 
 class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
   GoogleMapController? _mapController;
-  LatLng _pinnedLocation = const LatLng(AppConstants.defaultLat, AppConstants.defaultLng);
+  late LatLng _pinnedLocation;
   String _pinnedBarangay = 'Detecting address...';
   bool _isGeocoding = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final loc = Provider.of<LocationService>(context, listen: false);
-      if (loc.currentPosition != null) {
-        final pos = loc.currentPosition!;
+    final loc = Provider.of<LocationService>(context, listen: false);
+    if (loc.currentPosition != null) {
+      _pinnedLocation = LatLng(loc.currentPosition!.latitude, loc.currentPosition!.longitude);
+      _updateReverseGeocode(_pinnedLocation);
+    } else {
+      _pinnedLocation = const LatLng(AppConstants.defaultLat, AppConstants.defaultLng);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final locService = Provider.of<LocationService>(context, listen: false);
+      Position? pos = locService.currentPosition;
+      if (pos == null) {
+        pos = await locService.getCurrentLocation();
+      }
+      if (pos != null && mounted) {
+        final target = LatLng(pos.latitude, pos.longitude);
         setState(() {
-          _pinnedLocation = LatLng(pos.latitude, pos.longitude);
+          _pinnedLocation = target;
         });
+        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(target, 16.5));
+        _updateReverseGeocode(target);
+      } else {
         _updateReverseGeocode(_pinnedLocation);
       }
     });
@@ -62,8 +78,9 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
 
   void _snapToGPS() async {
     final locService = Provider.of<LocationService>(context, listen: false);
-    final pos = locService.currentPosition;
-    if (pos != null) {
+    var pos = locService.currentPosition;
+    pos ??= await locService.refreshLocation();
+    if (pos != null && mounted) {
       final target = LatLng(pos.latitude, pos.longitude);
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(target, 16.5));
       setState(() => _pinnedLocation = target);
@@ -107,8 +124,17 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
         children: [
           // Full-Screen Google Map
           GoogleMap(
-            initialCameraPosition: CameraPosition(target: _pinnedLocation, zoom: 16.0),
-            onMapCreated: (ctrl) => _mapController = ctrl,
+            initialCameraPosition: CameraPosition(target: _pinnedLocation, zoom: 16.5),
+            onMapCreated: (ctrl) {
+              _mapController = ctrl;
+              final loc = Provider.of<LocationService>(context, listen: false);
+              if (loc.currentPosition != null) {
+                final target = LatLng(loc.currentPosition!.latitude, loc.currentPosition!.longitude);
+                setState(() => _pinnedLocation = target);
+                ctrl.animateCamera(CameraUpdate.newLatLngZoom(target, 16.5));
+                _updateReverseGeocode(target);
+              }
+            },
             onCameraMove: _onCameraMove,
             onCameraIdle: _onCameraIdle,
             myLocationEnabled: true,
@@ -297,7 +323,12 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const ReportScreen(),
+                          builder: (_) => ReportScreen(
+                            initialPosition: _pinnedLocation,
+                            initialBarangay: (_pinnedBarangay != 'Detecting address...' && _pinnedBarangay != 'Selected Location')
+                                ? _pinnedBarangay
+                                : null,
+                          ),
                         ),
                       );
                     },
