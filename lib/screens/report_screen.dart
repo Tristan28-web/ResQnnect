@@ -511,17 +511,17 @@ class _ReportScreenState extends State<ReportScreen> {
           isExpanded: true,
           dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
           items: AppConstants.incidentTypes.map((type) {
-            IconData icon = Icons.shield_rounded;
-            Color iconColor = const Color(0xFF8B5CF6);
+            IconData icon = Icons.warning_rounded;
+            Color iconColor = const Color(0xFF10B981);
             if (type == AppConstants.incidentTypeFire) {
               icon = Icons.local_fire_department_rounded;
               iconColor = const Color(0xFFEF4444);
             } else if (type == AppConstants.incidentTypeFlood) {
               icon = Icons.water_drop_rounded;
               iconColor = const Color(0xFF3B82F6);
-            } else if (type == AppConstants.incidentTypeMedical) {
-              icon = Icons.medical_services_rounded;
-              iconColor = const Color(0xFF10B981);
+            } else if (type == AppConstants.incidentTypeCrime) {
+              icon = Icons.shield_rounded;
+              iconColor = const Color(0xFF8B5CF6);
             } else if (type == AppConstants.incidentTypeAccident) {
               icon = Icons.car_crash_rounded;
               iconColor = const Color(0xFFEA580C);

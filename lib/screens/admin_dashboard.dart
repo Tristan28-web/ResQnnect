@@ -360,9 +360,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final typeCounts = <String, int>{
           'Fire': 0,
           'Flood': 0,
-          'Medical': 0,
-          'Accident': 0,
           'Crime': 0,
+          'Accident': 0,
+          'Other': 0,
         };
 
         for (var inc in incidents) {
@@ -371,12 +371,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             typeCounts['Fire'] = (typeCounts['Fire'] ?? 0) + 1;
           } else if (desc.contains('flood') || desc.contains('typhoon') || desc.contains('rain') || desc.contains('water')) {
             typeCounts['Flood'] = (typeCounts['Flood'] ?? 0) + 1;
-          } else if (desc.contains('medical') || desc.contains('injury') || desc.contains('wounded') || desc.contains('health') || desc.contains('ambulance')) {
-            typeCounts['Medical'] = (typeCounts['Medical'] ?? 0) + 1;
+          } else if (desc.contains('crime') || desc.contains('theft') || desc.contains('robbery') || desc.contains('assault')) {
+            typeCounts['Crime'] = (typeCounts['Crime'] ?? 0) + 1;
           } else if (desc.contains('accident') || desc.contains('crash') || desc.contains('vehicular') || desc.contains('collision')) {
             typeCounts['Accident'] = (typeCounts['Accident'] ?? 0) + 1;
           } else {
-            typeCounts['Crime'] = (typeCounts['Crime'] ?? 0) + 1;
+            typeCounts['Other'] = (typeCounts['Other'] ?? 0) + 1;
           }
         }
 
@@ -601,14 +601,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return const Color(0xFFEF4444);
       case 'Flood':
         return const Color(0xFF3B82F6);
-      case 'Medical':
-        return const Color(0xFF10B981);
-      case 'Accident':
-        return const Color(0xFFF59E0B);
       case 'Crime':
         return const Color(0xFF8B5CF6);
-      default:
-        return AppColors.retroMint;
+      case 'Accident':
+        return const Color(0xFFF59E0B);
+      default: // Other
+        return const Color(0xFF10B981);
     }
   }
 
@@ -869,9 +867,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       {'name': 'All', 'icon': Icons.apps_rounded, 'color': AppColors.retroMint},
       {'name': 'Fire', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
       {'name': 'Flood', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF3B82F6)},
-      {'name': 'Medical', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFF10B981)},
+      {'name': 'Crime', 'icon': Icons.shield_rounded, 'color': const Color(0xFF8B5CF6)},
       {'name': 'Accident', 'icon': Icons.car_crash_rounded, 'color': const Color(0xFFF97316)},
-      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': const Color(0xFF8B5CF6)},
+      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': AppColors.retroMintDark},
     ];
 
     return Column(

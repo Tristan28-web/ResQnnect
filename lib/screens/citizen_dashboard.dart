@@ -382,9 +382,9 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
       {'name': 'All', 'icon': Icons.apps_rounded, 'color': AppColors.retroMint},
       {'name': 'Fire', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
       {'name': 'Flood', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF3B82F6)},
-      {'name': 'Medical', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFF10B981)},
+      {'name': 'Crime', 'icon': Icons.shield_rounded, 'color': const Color(0xFF8B5CF6)},
       {'name': 'Accident', 'icon': Icons.car_crash_rounded, 'color': const Color(0xFFF97316)},
-      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': const Color(0xFF8B5CF6)},
+      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': AppColors.retroMintDark},
     ];
 
     return Column(
@@ -1219,7 +1219,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
       }
     }
 
-    final categories = ['All', 'Fire', 'Flood', 'Medical', 'Accident', 'Crime'];
+    final categories = ['All', 'Fire', 'Flood', 'Crime', 'Accident', 'Other'];
     final severities = ['All', 'Critical', 'High', 'Moderate', 'Low'];
     final statuses = ['All', 'Pending', 'Dispatched', 'Resolved'];
 
