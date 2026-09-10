@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/constants.dart';
 
 class IncidentModel {
   final String incidentId;
@@ -57,13 +58,22 @@ class IncidentModel {
   }
 
   static String _inferBarangay(String loc) {
-    if (loc.toLowerCase().contains('san juan')) return 'Brgy. San Juan';
-    if (loc.toLowerCase().contains('mabini')) return 'Brgy. Mabini';
-    if (loc.toLowerCase().contains('daga')) return 'Brgy. Daga';
-    if (loc.toLowerCase().contains('tinampaan')) return 'Brgy. Tinampaan';
-    if (loc.toLowerCase().contains('sicaba')) return 'Brgy. Sicaba';
-    if (loc.toLowerCase().contains('burgos')) return 'Brgy. Burgos';
-    return 'Brgy. Zone 1 (Poblacion)';
+    final lower = loc.toLowerCase();
+    for (var bgy in AppConstants.lguBarangays) {
+      if (lower.contains(bgy.toLowerCase())) return bgy;
+    }
+    if (lower.contains('virac')) return 'Virac (Capital)';
+    if (lower.contains('andres') || lower.contains('calolbon')) return 'San Andres (Calolbon)';
+    if (lower.contains('bato')) return 'Bato';
+    if (lower.contains('baras')) return 'Baras';
+    if (lower.contains('gigmoto')) return 'Gigmoto';
+    if (lower.contains('pandan')) return 'Pandan';
+    if (lower.contains('caramoran')) return 'Caramoran';
+    if (lower.contains('miguel')) return 'San Miguel';
+    if (lower.contains('viga')) return 'Viga';
+    if (lower.contains('panganiban')) return 'Panganiban';
+    if (lower.contains('bagamanoc')) return 'Bagamanoc';
+    return 'Virac (Capital)';
   }
 
   factory IncidentModel.fromMap(Map<String, dynamic> data) {

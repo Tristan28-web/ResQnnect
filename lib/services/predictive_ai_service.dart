@@ -118,7 +118,7 @@ class PredictiveAIService {
     final Map<String, List<IncidentModel>> barangayMap = {};
 
     for (var incident in incidents) {
-      final bgy = incident.barangay.isNotEmpty ? incident.barangay : 'Brgy. Zone 1 (Poblacion)';
+      final bgy = incident.barangay.isNotEmpty ? incident.barangay : 'Virac (Capital)';
       barangayMap.putIfAbsent(bgy, () => []).add(incident);
     }
 
@@ -319,33 +319,33 @@ class PredictiveAIService {
     final baselineAreas = [
       HighRiskAreaPrediction(
         rank: 1,
-        barangay: 'Brgy. Zone 1 (Poblacion)',
+        barangay: 'Virac (Capital)',
         riskScore: 84.5,
         riskLevel: 'HIGH',
-        primaryHazard: 'Fire',
+        primaryHazard: 'Flood',
         incidentCount: 16,
         probabilityPercentage: 88.0,
-        recommendation: 'Preposition BFP units and clear major hydrant pathways.',
+        recommendation: 'Preposition CDRRMO rescue boats along coastal lowlands.',
       ),
       HighRiskAreaPrediction(
         rank: 2,
-        barangay: 'Brgy. San Juan',
+        barangay: 'San Andres (Calolbon)',
         riskScore: 78.2,
         riskLevel: 'HIGH',
-        primaryHazard: 'Flood',
+        primaryHazard: 'Typhoon/Flood',
         incidentCount: 14,
         probabilityPercentage: 82.5,
-        recommendation: 'Monitor low-lying drainage and alert barangay rescue teams.',
+        recommendation: 'Alert coastal barangay response teams and inspect seawalls.',
       ),
       HighRiskAreaPrediction(
         rank: 3,
-        barangay: 'Brgy. Mabini',
+        barangay: 'Bato',
         riskScore: 61.0,
         riskLevel: 'MODERATE',
         primaryHazard: 'Accident',
         incidentCount: 9,
         probabilityPercentage: 64.0,
-        recommendation: 'Deploy highway patrol along high-speed intersection.',
+        recommendation: 'Deploy highway marshals along Bato-Virac national road.',
       ),
     ];
 
@@ -354,8 +354,8 @@ class PredictiveAIService {
       averageRiskScore: 74.5,
       trendPoints: baselinePoints,
       highRiskAreas: baselineAreas,
-      incidentsByType: {'Fire': 16, 'Flood': 14, 'Crime': 8, 'Accident': 12, 'Other': 3},
-      aiSummary: 'Baseline simulation active. Brgy. Zone 1 (Poblacion) and Brgy. San Juan identified as top sectors.',
+      incidentsByType: {'Fire': 6, 'Flood': 14, 'Crime': 3, 'Accident': 8, 'Other': 2},
+      aiSummary: 'Predictive simulation active. Virac (Capital) and San Andres identified as high-priority sectors.',
       generatedAt: now,
     );
   }

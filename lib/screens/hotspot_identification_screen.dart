@@ -43,7 +43,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
 
     final Map<String, List<IncidentModel>> bgyMap = {};
     for (var inc in filtered) {
-      final bgy = inc.barangay.isNotEmpty ? inc.barangay : 'Brgy. Zone 1 (Poblacion)';
+      final bgy = inc.barangay.isNotEmpty ? inc.barangay : 'Virac (Capital)';
       bgyMap.putIfAbsent(bgy, () => []).add(inc);
     }
 
@@ -51,25 +51,25 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
       // Provide standard baseline hotspots if no incidents exist yet
       return [
         HotspotCluster(
-          barangay: 'Brgy. Zone 1 (Poblacion)',
-          center: const LatLng(10.9580, 123.2985),
+          barangay: 'Virac (Capital)',
+          center: const LatLng(13.5840, 124.2330),
           count: 12,
-          dominantHazard: 'Fire',
+          dominantHazard: 'Flood',
           densityScore: 0.95,
         ),
         HotspotCluster(
-          barangay: 'Brgy. San Juan',
-          center: const LatLng(10.9420, 123.3150),
+          barangay: 'San Andres (Calolbon)',
+          center: const LatLng(13.5960, 124.0980),
           count: 9,
-          dominantHazard: 'Flood',
+          dominantHazard: 'Typhoon',
           densityScore: 0.75,
         ),
         HotspotCluster(
-          barangay: 'Brgy. Mabini',
-          center: const LatLng(10.9650, 123.2810),
+          barangay: 'Bato',
+          center: const LatLng(13.6080, 124.2880),
           count: 6,
           dominantHazard: 'Accident',
-          densityScore: 0.50,
+          densityScore: 0.60,
         ),
       ];
     }
