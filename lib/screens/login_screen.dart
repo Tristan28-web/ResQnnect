@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
 import '../core/constants.dart';
-import '../models/user_model.dart';
 import 'dashboard_screen.dart';
-import 'pending_verification_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,10 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      // ✅ Explicit navigation: clear entire stack and go directly to DashboardScreen.
-      // This is required because LoginScreen may be sitting on top of AuthWrapper
-      // in the Navigator stack (e.g. after a logout), which would block AuthWrapper
-      // from becoming visible even after it rebuilds to show the dashboard.
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
@@ -88,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Google Sign-In Cancelled or Failed.')),
         );
       } else {
-        // ✅ Explicit navigation after Google login
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
           (route) => false,
@@ -101,27 +93,18 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final result = await authService.signInAnonymously();
-      
+      await authService.signInAnonymously();
+
       if (mounted) {
-        setState(() => _isLoading = false);
-        if (result == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Guest login is currently unavailable. Please try registering or using Google Sign-In.')),
-          );
-        } else {
-          // ✅ Explicit navigation after guest login - clears stack
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-            (route) => false,
-          );
-        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         final errorStr = e.toString();
-        // Detect when Anonymous Auth is disabled in Firebase Console
         if (errorStr.contains('admin-restricted-operation') || 
             errorStr.contains('operation-not-allowed')) {
           _showGuestLoginDisabledDialog();
@@ -142,16 +125,19 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
+        ),
         title: Row(
           children: [
-            const Icon(Icons.lock_outline, color: AppConstants.primaryRed),
+            const Icon(Icons.lock_outline, color: Color(0xFFEF4444)),
             const SizedBox(width: 10),
             Text('Guest Login Unavailable',
               style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontWeight: FontWeight.w900,
                 fontSize: 16,
               ),
             ),
@@ -165,15 +151,23 @@ class _LoginScreenState extends State<LoginScreen> {
           '3. Enable "Anonymous" provider\n\n'
           'Alternatively, you can register as a Citizen or use Google Sign-In.',
           style: TextStyle(
-            color: isDark ? Colors.white70 : Colors.black87,
+            color: isDark ? Colors.white70 : const Color(0xFF4B5563),
             fontSize: 13,
             height: 1.5,
           ),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.retroMint,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
+              ),
+            ),
             onPressed: () => Navigator.pop(context),
-            child: const Text('CLOSE', style: TextStyle(color: AppConstants.primaryRed)),
+            child: const Text('CLOSE', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -184,133 +178,291 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               Center(
-                child: Image.asset(
-                  AppConstants.logoAsset,
-                  height: 120,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.security_rounded,
-                    size: 80,
-                    color: AppConstants.primaryRed,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.retroDarkBorder,
+                      width: 2.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black45 : AppColors.retroMintDark,
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      AppConstants.logoAsset,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.shield_rounded,
+                        size: 50,
+                        color: AppColors.retroMint,
+                      ),
+                    ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               Text(
-                'GIS',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  letterSpacing: 4,
+                'GIS CATANDUANES',
+                style: TextStyle(
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
                 ),
                 textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Catanduanes Emergency & Disaster Management',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 1),
-              ),
-              const SizedBox(height: 48),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email_outlined, color: AppConstants.primaryRed),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline, color: AppConstants.primaryRed),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: _isLoading 
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      ) 
-                    : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1))),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('OR', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1))),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Text(
-                'Not an Admin or Responder?',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
               ),
               const SizedBox(height: 4),
               Text(
-                'Register as a Citizen',
+                'Incident Mapping & Predictive Logic System',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                  color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Form Box
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.8,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                      offset: const Offset(3, 3),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        labelStyle: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontSize: 13),
+                        prefixIcon: const Icon(Icons.email_rounded, color: AppColors.retroMint, size: 20),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF262C38) : const Color(0xFFF9FAFB),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                            width: 1.4,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.retroMint, width: 2.0),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontSize: 13),
+                        prefixIcon: const Icon(Icons.lock_rounded, color: AppColors.retroMint, size: 20),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF262C38) : const Color(0xFFF9FAFB),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                            width: 1.4,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.retroMint, width: 2.0),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.retroMint,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
+                        ),
+                      ),
+                      child: _isLoading 
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            ) 
+                          : const Text('LOGIN TO GIS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: isDark ? Colors.white24 : AppColors.retroDarkBorder.withOpacity(0.2))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'OR CONTINUE WITH',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: isDark ? Colors.white24 : AppColors.retroDarkBorder.withOpacity(0.2))),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Retro Social / Secondary Buttons
+              GestureDetector(
+                onTap: _isLoading ? null : _guestLogin,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'CONTINUE AS GUEST',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _isLoading ? null : _googleLogin,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.network(
+                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_"G"_logo.svg/1200px-Google_"G"_logo.svg.png',
+                        height: 18,
+                        errorBuilder: (_, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 22),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                'Don\'t want to use Google? Continue as Guest.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Need a citizen account? ',
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                      fontSize: 12,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                      );
+                    },
+                    child: const Text(
+                      'Register Here',
+                      style: TextStyle(
+                        color: AppColors.retroMint,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: _isLoading ? null : _guestLogin,
-                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text('LOGIN AS GUEST', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _isLoading ? null : _googleLogin,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                icon: Image.network(
-                  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_\"G\"_logo.svg/1200px-Google_\"G\"_logo.svg.png',
-                  height: 20,
-                ),
-                label: Text('Continue with Google', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -318,5 +470,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
