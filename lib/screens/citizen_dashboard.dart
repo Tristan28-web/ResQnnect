@@ -11,6 +11,7 @@ import '../models/alert_model.dart';
 import '../services/firestore_service.dart';
 import 'package:intl/intl.dart';
 import '../services/alert_notification_service.dart';
+import '../services/location_service.dart';
 
 class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
@@ -24,6 +25,24 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
   final Set<String> _notifiedIncidentIds = {};
   String _searchQuery = '';
   String _selectedCategory = 'All';
+  String _selectedLgu = 'All';
+  String _selectedSeverity = 'All';
+  String _selectedStatus = 'All';
+
+  bool get _hasActiveFilters =>
+      _selectedCategory != 'All' ||
+      _selectedLgu != 'All' ||
+      _selectedSeverity != 'All' ||
+      _selectedStatus != 'All';
+
+  void _resetFilters() {
+    setState(() {
+      _selectedCategory = 'All';
+      _selectedLgu = 'All';
+      _selectedSeverity = 'All';
+      _selectedStatus = 'All';
+    });
+  }
 
   @override
   void initState() {
@@ -142,25 +161,25 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.retroMint,
+              color: _hasActiveFilters ? AppColors.retroMintDark : AppColors.retroMint,
               shape: BoxShape.circle,
               border: Border.all(
                 color: AppColors.retroDarkBorder,
                 width: 1.6,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.retroDarkBorder,
+                  offset: Offset(2, 2),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Filter options: Catanduanes LGUs & Hazards'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
+                onTap: () => _showFilterBottomSheet(context),
                 child: const Icon(
                   Icons.tune_rounded,
                   color: Colors.white,
@@ -373,12 +392,41 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                 color: isDark ? Colors.white60 : const Color(0xFF6B7280),
               ),
             ),
-            Text(
-              'Filter view',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.retroMint,
+            GestureDetector(
+              onTap: () => _showFilterBottomSheet(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _hasActiveFilters ? AppColors.retroMint : AppColors.retroMintLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.retroDarkBorder,
+                      offset: Offset(1.5, 1.5),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.tune_rounded,
+                      size: 12,
+                      color: _hasActiveFilters ? Colors.white : AppColors.retroDarkBorder,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Filter view',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: _hasActiveFilters ? Colors.white : AppColors.retroDarkBorder,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -461,6 +509,54 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             },
           ),
         ),
+        if (_hasActiveFilters) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.filter_list_rounded, size: 15, color: AppColors.retroMintDark),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Active: '
+                    '${_selectedCategory != 'All' ? 'Cat: $_selectedCategory • ' : ''}'
+                    '${_selectedLgu != 'All' ? 'LGU: $_selectedLgu • ' : ''}'
+                    '${_selectedSeverity != 'All' ? 'Sev: $_selectedSeverity • ' : ''}'
+                    '${_selectedStatus != 'All' ? 'Status: $_selectedStatus' : ''}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _resetFilters,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white12 : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                    ),
+                    child: const Icon(Icons.close_rounded, size: 12, color: AppColors.retroDarkBorder),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -665,6 +761,26 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             if (_selectedCategory != 'All' && _selectedCategory != 'Hotspot') {
               myReports = myReports
                   .where((i) => i.incidentType.toLowerCase().contains(_selectedCategory.toLowerCase()))
+                  .toList();
+            }
+
+            if (_selectedLgu != 'All') {
+              myReports = myReports
+                  .where((i) =>
+                      i.barangay.toLowerCase().contains(_selectedLgu.toLowerCase()) ||
+                      i.location.toLowerCase().contains(_selectedLgu.toLowerCase()))
+                  .toList();
+            }
+
+            if (_selectedSeverity != 'All') {
+              myReports = myReports
+                  .where((i) => i.severity.toLowerCase() == _selectedSeverity.toLowerCase())
+                  .toList();
+            }
+
+            if (_selectedStatus != 'All') {
+              myReports = myReports
+                  .where((i) => i.status.toLowerCase() == _selectedStatus.toLowerCase())
                   .toList();
             }
 
@@ -1076,6 +1192,394 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             child: const Text('UNDERSTOOD', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locationService = Provider.of<LocationService>(context, listen: false);
+    final userLocation = locationService.currentLocationName;
+
+    final Set<String> lguOptions = {'All'};
+    if (userLocation.contains(',')) {
+      final localCity = userLocation.split(',')[0].trim();
+      if (localCity.isNotEmpty && !localCity.startsWith('GPS') && !localCity.startsWith('Locating')) {
+        lguOptions.add(localCity);
+      }
+    }
+    lguOptions.addAll([
+      'Virac',
+      'San Andres',
+      'Bato',
+      'Baras',
+      'Gigmoto',
+      'Pandan',
+      'Caramoran',
+      'Bagamanoc',
+      'Panganiban',
+      'Viga',
+      'San Miguel',
+    ]);
+
+    final categories = ['All', 'Fire', 'Flood', 'Medical', 'Accident', 'Crime'];
+    final severities = ['All', 'Critical', 'High', 'Moderate', 'Low'];
+    final statuses = ['All', 'Pending', 'Dispatched', 'Resolved'];
+
+    String tempCategory = _selectedCategory;
+    String tempLgu = _selectedLgu;
+    String tempSeverity = _selectedSeverity;
+    String tempStatus = _selectedStatus;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.78,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E222D) : AppColors.retroCream,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                  width: 2.0,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: AppColors.retroDarkBorder,
+                    offset: Offset(0, -3),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white30 : AppColors.retroDarkBorder,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.retroPeach,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.retroDarkBorder, width: 1.5),
+                              ),
+                              child: const Icon(Icons.tune_rounded, size: 18, color: AppColors.retroDarkBorder),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'INCIDENT & GIS FILTERS',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                Text(
+                                  'Filter by LGU, category & severity',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(ctx),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white12 : Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                            ),
+                            child: Icon(Icons.close_rounded, size: 16, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1, thickness: 1.4, color: AppColors.retroDarkBorder),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFilterSectionTitle('1. MUNICIPALITY / LGU AREA', isDark),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: lguOptions.map((lgu) {
+                              final isSelected = tempLgu.toLowerCase() == lgu.toLowerCase();
+                              return _buildRetroFilterPill(
+                                label: lgu,
+                                isSelected: isSelected,
+                                activeColor: AppColors.retroMintLight,
+                                isDark: isDark,
+                                onTap: () => setModalState(() => tempLgu = lgu),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFilterSectionTitle('2. HAZARD / INCIDENT CATEGORY', isDark),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: categories.map((cat) {
+                              final isSelected = tempCategory.toLowerCase() == cat.toLowerCase();
+                              return _buildRetroFilterPill(
+                                label: cat,
+                                isSelected: isSelected,
+                                activeColor: AppColors.retroPeach,
+                                isDark: isDark,
+                                onTap: () => setModalState(() => tempCategory = cat),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFilterSectionTitle('3. SEVERITY / THREAT LEVEL', isDark),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: severities.map((sev) {
+                              final isSelected = tempSeverity.toLowerCase() == sev.toLowerCase();
+                              return _buildRetroFilterPill(
+                                label: sev,
+                                isSelected: isSelected,
+                                activeColor: AppColors.retroLilac,
+                                isDark: isDark,
+                                onTap: () => setModalState(() => tempSeverity = sev),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFilterSectionTitle('4. DISPATCH STATUS', isDark),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: statuses.map((st) {
+                              final isSelected = tempStatus.toLowerCase() == st.toLowerCase();
+                              return _buildRetroFilterPill(
+                                label: st,
+                                isSelected: isSelected,
+                                activeColor: const Color(0xFFDCFCE7),
+                                isDark: isDark,
+                                onTap: () => setModalState(() => tempStatus = st),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF191D26) : Colors.white,
+                      border: const Border(top: BorderSide(color: AppColors.retroDarkBorder, width: 1.6)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    tempCategory = 'All';
+                                    tempLgu = 'All';
+                                    tempSeverity = 'All';
+                                    tempStatus = 'All';
+                                  });
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                                  side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                child: const Text('RESET', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 3,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.retroDarkBorder,
+                                      offset: Offset(2.5, 2.5),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedCategory = tempCategory;
+                                      _selectedLgu = tempLgu;
+                                      _selectedSeverity = tempSeverity;
+                                      _selectedStatus = tempStatus;
+                                    });
+                                    Navigator.pop(ctx);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.retroMint,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.8),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: const Text('APPLY FILTERS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => IncidentMappingScreen(
+                                    initialCategory: tempCategory == 'All' ? null : tempCategory,
+                                    initialLgu: tempLgu == 'All' ? null : tempLgu,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.retroLilac,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.retroDarkBorder, width: 1.5),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppColors.retroDarkBorder,
+                                    offset: Offset(2, 2),
+                                    blurRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.map_rounded, size: 16, color: AppColors.retroDarkBorder),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'VIEW ON GIS INCIDENT MAP',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                      color: AppColors.retroDarkBorder,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterSectionTitle(String title, bool isDark) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1.0,
+        color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+      ),
+    );
+  }
+
+  Widget _buildRetroFilterPill({
+    required String label,
+    required bool isSelected,
+    required Color activeColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : (isDark ? const Color(0xFF262C38) : Colors.white),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.retroDarkBorder : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+            width: isSelected ? 1.8 : 1.2,
+          ),
+          boxShadow: isSelected
+              ? const [
+                  BoxShadow(
+                    color: AppColors.retroDarkBorder,
+                    offset: Offset(1.8, 1.8),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+            color: isSelected
+                ? AppColors.retroDarkBorder
+                : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+          ),
+        ),
       ),
     );
   }

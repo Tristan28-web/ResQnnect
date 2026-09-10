@@ -4,11 +4,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
+import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
 
 class IncidentMappingScreen extends StatefulWidget {
-  const IncidentMappingScreen({super.key});
+  final String? initialCategory;
+  final String? initialLgu;
+  const IncidentMappingScreen({super.key, this.initialCategory, this.initialLgu});
 
   @override
   State<IncidentMappingScreen> createState() => _IncidentMappingScreenState();
@@ -16,10 +19,16 @@ class IncidentMappingScreen extends StatefulWidget {
 
 class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
   GoogleMapController? _mapController;
-  String _selectedFilter = 'All';
+  late String _selectedFilter;
   IncidentModel? _selectedIncident;
 
   static const LatLng _catanduanesCenter = LatLng(13.5840, 124.2330);
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedFilter = widget.initialCategory ?? 'All';
+  }
 
   double _getMarkerHue(String type) {
     switch (type.toLowerCase()) {
@@ -69,7 +78,12 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
   @override
   Widget build(BuildContext context) {
     final firestore = Provider.of<FirestoreService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final userPos = locationService.currentPosition;
+    final LatLng initialTarget = userPos != null
+        ? LatLng(userPos.latitude, userPos.longitude)
+        : _catanduanesCenter;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -80,7 +94,17 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh Location & Pins',
+            onPressed: () {
+              locationService.refreshLocation();
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<IncidentModel>>(
         stream: firestore.getIncidents(),
@@ -115,13 +139,26 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
           return Stack(
             children: [
               GoogleMap(
-                initialCameraPosition: const CameraPosition(
-                  target: _catanduanesCenter,
-                  zoom: 12.5,
+                initialCameraPosition: CameraPosition(
+                  target: initialTarget,
+                  zoom: userPos != null ? 14.5 : 12.5,
                 ),
-                onMapCreated: (controller) => _mapController = controller,
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  if (userPos != null) {
+                    _mapController?.animateCamera(
+                      CameraUpdate.newCameraPosition(
+                        CameraPosition(
+                          target: LatLng(userPos.latitude, userPos.longitude),
+                          zoom: 14.5,
+                        ),
+                      ),
+                    );
+                  }
+                },
                 markers: markers,
-                myLocationEnabled: false,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
               ),
 
@@ -149,13 +186,60 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                 ),
               ),
 
+              // Floating Retro "Center My Location" FAB
+              Positioned(
+                bottom: 96,
+                right: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    heroTag: 'gis_my_location_fab',
+                    mini: true,
+                    backgroundColor: AppColors.retroMint,
+                    foregroundColor: Colors.white,
+                    shape: const CircleBorder(
+                      side: BorderSide(
+                        color: AppColors.retroDarkBorder,
+                        width: 1.8,
+                      ),
+                    ),
+                    elevation: 0,
+                    onPressed: () {
+                      final pos = locationService.currentPosition;
+                      if (pos != null) {
+                        _mapController?.animateCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(
+                              target: LatLng(pos.latitude, pos.longitude),
+                              zoom: 15.0,
+                            ),
+                          ),
+                        );
+                      } else {
+                        locationService.refreshLocation();
+                      }
+                    },
+                    child: const Icon(Icons.my_location_rounded, size: 20),
+                  ),
+                ),
+              ),
+
               // Bottom Incident Count Badge
               Positioned(
                 bottom: 24,
                 left: 20,
                 right: 20,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF262C38) : AppColors.retroPeach,
                     borderRadius: BorderRadius.circular(20),
@@ -174,28 +258,56 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF22C55E),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF22C55E),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.0),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Active Incidents: ${filteredIncidents.length}',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Active GIS Incidents: ${filteredIncidents.length}',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 13,
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(Icons.near_me_rounded, size: 12, color: AppColors.retroMintDark),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    locationService.currentLocationName,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(

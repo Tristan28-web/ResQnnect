@@ -103,6 +103,7 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
         actions: [

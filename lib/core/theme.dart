@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = "isDarkMode";
-  bool _isDarkMode = true;
+  bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;
 
   ThemeProvider() {
@@ -16,7 +16,7 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool(_themeKey) ?? true;
+    _isDarkMode = prefs.getBool(_themeKey) ?? false;
     notifyListeners();
   }
 
@@ -32,51 +32,54 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: AppConstants.primaryRed,
-      scaffoldBackgroundColor: AppConstants.backgroundWhite,
+      primaryColor: AppConstants.retroMint,
+      scaffoldBackgroundColor: AppConstants.retroCream,
       colorScheme: const ColorScheme.light(
-        primary: AppConstants.primaryRed,
-        secondary: AppConstants.accentBlue,
-        surface: AppConstants.surfaceLight,
+        primary: AppConstants.retroMint,
+        secondary: AppConstants.retroPeach,
+        surface: AppConstants.retroCream,
         error: AppConstants.emergencyRed,
+        surfaceTint: Colors.transparent,
       ),
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme).copyWith(
         displayLarge: GoogleFonts.outfit(
           fontWeight: FontWeight.bold,
           fontSize: 32,
-          color: Colors.black87,
+          color: AppConstants.retroDarkBorder,
         ),
         titleLarge: GoogleFonts.outfit(
           fontWeight: FontWeight.bold,
           fontSize: 22,
-          color: Colors.black87,
+          color: AppConstants.retroDarkBorder,
         ),
         bodyLarge: GoogleFonts.outfit(
           fontWeight: FontWeight.normal,
           fontSize: 16,
-          color: Colors.black54,
+          color: Colors.black87,
         ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: AppConstants.retroDarkBorder),
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: AppConstants.retroDarkBorder,
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppConstants.surfaceLight,
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 4,
         shadowColor: Colors.black12,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.primaryRed,
+          backgroundColor: AppConstants.retroMint,
           foregroundColor: Colors.white,
           minimumSize: const Size(64, 48),
           shape: RoundedRectangleBorder(
@@ -94,13 +97,14 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: AppConstants.primaryRed,
+      primaryColor: AppConstants.retroMint,
       scaffoldBackgroundColor: AppConstants.backgroundBlack,
       colorScheme: const ColorScheme.dark(
-        primary: AppConstants.primaryRed,
-        secondary: AppConstants.accentBlue,
+        primary: AppConstants.retroMint,
+        secondary: AppConstants.retroPeach,
         surface: AppConstants.surfaceDark,
         error: AppConstants.emergencyRed,
+        surfaceTint: Colors.transparent,
       ),
       textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
         displayLarge: GoogleFonts.outfit(
@@ -121,6 +125,7 @@ class AppTheme {
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: Colors.white),
@@ -132,12 +137,13 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppConstants.surfaceDark,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 0,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.primaryRed,
+          backgroundColor: AppConstants.retroMint,
           foregroundColor: Colors.white,
           minimumSize: const Size(64, 48),
           shape: RoundedRectangleBorder(
