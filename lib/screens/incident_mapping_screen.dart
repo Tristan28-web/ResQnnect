@@ -98,8 +98,18 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Refresh Location & Pins',
-            onPressed: () {
-              locationService.refreshLocation();
+            onPressed: () async {
+              final pos = await locationService.refreshLocation();
+              if (pos != null && _mapController != null) {
+                _mapController?.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                      target: LatLng(pos.latitude, pos.longitude),
+                      zoom: 15.0,
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -185,50 +195,40 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                 ),
               ),
 
-              // Floating Retro "Center My Location" FAB
+              // Floating Retro "Center My Location" FAB (Clean border, zero offset shadow)
               Positioned(
                 bottom: 96,
                 right: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
-                        offset: const Offset(3, 3),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: FloatingActionButton(
-                    heroTag: 'gis_my_location_fab',
-                    mini: true,
-                    backgroundColor: AppColors.retroMint,
-                    foregroundColor: Colors.white,
-                    shape: const CircleBorder(
-                      side: BorderSide(
-                        color: AppColors.retroDarkBorder,
-                        width: 1.8,
-                      ),
+                child: FloatingActionButton(
+                  heroTag: 'gis_my_location_fab',
+                  mini: true,
+                  backgroundColor: AppColors.retroMint,
+                  foregroundColor: Colors.white,
+                  shape: const CircleBorder(
+                    side: BorderSide(
+                      color: AppColors.retroDarkBorder,
+                      width: 1.8,
                     ),
-                    elevation: 0,
-                    onPressed: () {
-                      final pos = locationService.currentPosition;
-                      if (pos != null) {
-                        _mapController?.animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            CameraPosition(
-                              target: LatLng(pos.latitude, pos.longitude),
-                              zoom: 15.0,
-                            ),
-                          ),
-                        );
-                      } else {
-                        locationService.refreshLocation();
-                      }
-                    },
-                    child: const Icon(Icons.my_location_rounded, size: 20),
                   ),
+                  elevation: 0,
+                  highlightElevation: 0,
+                  onPressed: () async {
+                    var pos = locationService.currentPosition;
+                    if (pos == null) {
+                      pos = await locationService.refreshLocation();
+                    }
+                    if (pos != null && _mapController != null) {
+                      _mapController?.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(pos.latitude, pos.longitude),
+                            zoom: 15.0,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Icon(Icons.my_location_rounded, size: 20),
                 ),
               ),
 
