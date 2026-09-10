@@ -55,13 +55,23 @@ class ProfileImage extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(bool isDark) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-      child: Icon(
-        placeholderIcon,
-        color: isDark ? Colors.white38 : Colors.black38,
-        size: radius * 1.2,
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF262C38) : const Color(0xFFFCEFEA),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : const Color(0xFF23272F),
+          width: 1.4,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.person_rounded,
+          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF23272F),
+          size: radius * 1.15,
+        ),
       ),
     );
   }

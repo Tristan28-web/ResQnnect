@@ -13,6 +13,7 @@ import 'predictive_analysis_screen.dart';
 import 'lgu_user_management_screen.dart';
 import '../core/theme.dart';
 import '../widgets/profile_image.dart';
+import '../services/location_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -111,19 +112,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_rounded, size: 12, color: AppConstants.retroMint),
-                      const SizedBox(width: 3),
-                      Text(
-                        'Virac, Catanduanes',
-                        style: TextStyle(
-                          color: isDark ? Colors.white60 : textColor.withOpacity(0.6),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                  Consumer<LocationService>(
+                    builder: (context, locService, _) {
+                      return GestureDetector(
+                        onTap: () => locService.refreshLocation(),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on_rounded, size: 12, color: AppConstants.retroMint),
+                            const SizedBox(width: 3),
+                            Text(
+                              locService.currentLocationName,
+                              style: TextStyle(
+                                color: isDark ? Colors.white60 : textColor.withOpacity(0.6),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ],
               ),

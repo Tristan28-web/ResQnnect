@@ -155,18 +155,21 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                 left: 20,
                 right: 20,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF1E2841) : Colors.white).withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(16),
+                    color: isDark ? const Color(0xFF262C38) : AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+                        color: isDark ? Colors.black54 : AppColors.retroMintDark,
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
                       ),
                     ],
-                    border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -176,29 +179,41 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                           Container(
                             width: 10,
                             height: 10,
-                            decoration: const BoxDecoration(
-                              color: Colors.greenAccent,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF22C55E),
                               shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                             ),
                           ),
                           const SizedBox(width: 10),
                           Text(
                             'Active GIS Incidents: ${filteredIncidents.length}',
                             style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                              fontWeight: FontWeight.w900,
                               fontSize: 13,
                             ),
                           ),
                         ],
                       ),
-                      Text(
-                        _selectedFilter.toUpperCase(),
-                        style: TextStyle(
-                          color: _getTypeColor(_selectedFilter),
-                          fontWeight: FontWeight.w900,
-                          fontSize: 11,
-                          letterSpacing: 1.0,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E222D) : AppColors.retroLilac,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Text(
+                          _selectedFilter.toUpperCase(),
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
                     ],
@@ -216,33 +231,54 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
     final isSelected = _selectedFilter.toLowerCase() == label.toLowerCase();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    Color activeFill = AppColors.retroMint;
+    if (label == 'Fire') activeFill = const Color(0xFFFEE2E2);
+    if (label == 'Flood') activeFill = const Color(0xFFDBEAFE);
+    if (label == 'Crime') activeFill = AppColors.retroLilac;
+    if (label == 'Accident') activeFill = AppColors.retroPeach;
+
+    Color activeTextColor = AppColors.retroDarkBorder;
+    if (label == 'All') {
+      activeFill = AppColors.retroMint;
+      activeTextColor = Colors.white;
+    }
+
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (color == Colors.white ? AppConstants.primaryRed : color)
-              : (isDark ? const Color(0xFF1E2841) : Colors.white).withOpacity(0.9),
-          borderRadius: BorderRadius.circular(14),
+              ? activeFill
+              : (isDark ? AppColors.retroDarkCard : Colors.white),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
             ),
           ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: isSelected ? Colors.white : color),
+            Icon(
+              icon,
+              size: 15,
+              color: isSelected ? activeTextColor : (isDark ? Colors.white70 : color),
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+                color: isSelected ? activeTextColor : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.3,
               ),
             ),
           ],
@@ -257,82 +293,138 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        side: BorderSide(color: AppColors.retroDarkBorder, width: 2),
+      ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : AppColors.retroDarkBorder.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.retroPeach,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
                     ),
                     child: Row(
                       children: [
-                        Icon(_getTypeIcon(incident.incidentType), color: color, size: 14),
+                        Icon(_getTypeIcon(incident.incidentType), color: AppColors.retroDarkBorder, size: 14),
                         const SizedBox(width: 6),
                         Text(
                           incident.incidentType.toUpperCase(),
-                          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+                          style: const TextStyle(
+                            color: AppColors.retroDarkBorder,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Text(
-                    incident.referenceId,
-                    style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 13),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroLilac,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                    ),
+                    child: Text(
+                      incident.referenceId,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
+                        fontSize: 11,
+                        color: AppColors.retroDarkBorder,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                incident.barangay,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_rounded, size: 14, color: AppColors.retroMint),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      incident.location,
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
               Text(
-                incident.barangay,
+                incident.description,
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                incident.location,
-                style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                incident.description,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white38 : Colors.black38),
+                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white38 : const Color(0xFF9CA3AF)),
                   const SizedBox(width: 6),
                   Text(
                     DateFormat('yyyy-MM-dd • hh:mm a').format(incident.timestamp),
-                    style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (incident.status == 'resolved' ? Colors.green : Colors.orange).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
+                      color: incident.status == 'resolved' ? const Color(0xFFDCFCE7) : AppColors.retroYellow,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                     ),
                     child: Text(
                       incident.status.toUpperCase(),
                       style: TextStyle(
-                        color: incident.status == 'resolved' ? Colors.greenAccent : Colors.orange,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                        color: incident.status == 'resolved' ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),

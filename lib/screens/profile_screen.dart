@@ -123,9 +123,9 @@ class ProfileScreen extends StatelessWidget {
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF262C38) : Colors.white,
                   border: Border.all(
-                    color: AppColors.retroDarkBorder,
+                    color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
                     width: 2.2,
                   ),
                 ),
@@ -133,7 +133,7 @@ class ProfileScreen extends StatelessWidget {
                   child: ProfileImage(
                     source: user?.profileImage,
                     radius: 46,
-                    placeholderIcon: Icons.person,
+                    placeholderIcon: Icons.person_rounded,
                   ),
                 ),
               ),

@@ -115,7 +115,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
         Provider<WeatherService>(create: (_) => WeatherService()),
-        Provider<LocationService>(create: (_) => LocationService()),
+        ChangeNotifierProvider<LocationService>(create: (_) => LocationService()),
         // Provide the Firebase User stream globally
         StreamProvider<User?>(
           create: (context) => Provider.of<AuthService>(context, listen: false).userStream,
