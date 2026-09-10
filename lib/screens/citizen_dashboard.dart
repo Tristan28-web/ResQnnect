@@ -88,10 +88,10 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
               const SizedBox(height: 20),
               _buildLguHeroCard(context),
               const SizedBox(height: 24),
-              _buildRetroCategoryDiscs(context),
-              const SizedBox(height: 28),
               _buildActionGrid(context),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
+              _buildRetroCategoryDiscs(context),
+              const SizedBox(height: 16),
               _buildMyReports(context),
               const SizedBox(height: 32),
               _buildLiveUpdates(context),
@@ -197,6 +197,9 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
   Widget _buildLguHeroCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final firestore = Provider.of<FirestoreService>(context, listen: false);
+    final locationService = Provider.of<LocationService>(context);
+    final locName = locationService.currentLocationName;
+    final currentArea = locName.contains(',') ? locName.split(',')[0].trim() : locName;
 
     return Container(
       width: double.infinity,
@@ -246,7 +249,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'CATANDUANES GIS LIVE',
+                        currentArea.isNotEmpty ? '${currentArea.toUpperCase()} GIS LIVE' : 'GIS LIVE',
                         style: TextStyle(
                           color: isDark ? Colors.white : AppColors.retroDarkBorder,
                           fontSize: 10,
@@ -267,13 +270,20 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                       width: 1.4,
                     ),
                   ),
-                  child: const Text(
-                    '11 LGUs',
-                    style: TextStyle(
-                      color: AppColors.retroDarkBorder,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.place_rounded, size: 11, color: AppColors.retroDarkBorder),
+                      const SizedBox(width: 4),
+                      Text(
+                        currentArea.isNotEmpty ? currentArea : 'Detected',
+                        style: const TextStyle(
+                          color: AppColors.retroDarkBorder,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -291,7 +301,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Real-time geo-pinned incident reporting, hazard alerts, and emergency response across Catanduanes island.',
+              'Real-time geo-pinned incident reporting, hazard alerts, and emergency response in $currentArea.',
               style: TextStyle(
                 color: isDark ? Colors.white70 : const Color(0xFF555B66),
                 fontSize: 12,

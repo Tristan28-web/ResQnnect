@@ -10,6 +10,7 @@ import 'incident_mapping_screen.dart';
 import 'incident_monitoring_screen.dart';
 import 'hotspot_identification_screen.dart';
 import 'responder_tasks_screen.dart';
+import '../models/incident_model.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -21,6 +22,7 @@ class ResponderDashboard extends StatefulWidget {
 }
 
 class _ResponderDashboardState extends State<ResponderDashboard> with SingleTickerProviderStateMixin {
+  String _selectedCategory = 'All';
   late AnimationController _pulseController;
   Timer? _shiftTimer;
   
@@ -98,6 +100,10 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
                   _buildStatusControl(context, firestoreService, userId, isActive, mission),
                   const SizedBox(height: 28),
                   _buildActionGrid(context),
+                  const SizedBox(height: 28),
+                  _buildRetroCategoryDiscs(context),
+                  const SizedBox(height: 16),
+                  _buildAssignedIncidents(context, userId),
                   const SizedBox(height: 110),
                 ],
               ),
@@ -644,5 +650,341 @@ class _ResponderDashboardState extends State<ResponderDashboard> with SingleTick
         ),
       ),
     );
+  }
+
+  // --- RETRO CIRCULAR CATEGORY BADGES ---
+  Widget _buildRetroCategoryDiscs(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = [
+      {'name': 'All', 'icon': Icons.apps_rounded, 'color': AppColors.retroMint},
+      {'name': 'Fire', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
+      {'name': 'Flood', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF3B82F6)},
+      {'name': 'Medical', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFF10B981)},
+      {'name': 'Accident', 'icon': Icons.car_crash_rounded, 'color': const Color(0xFFF97316)},
+      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': const Color(0xFF8B5CF6)},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'INCIDENT CATEGORIES',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.3,
+                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+              ),
+            ),
+            if (_selectedCategory != 'All')
+              GestureDetector(
+                onTap: () => setState(() => _selectedCategory = 'All'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                  ),
+                  child: const Text(
+                    'Clear filter',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.retroDarkBorder,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 82,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: categories.length,
+            separatorBuilder: (_, index) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final name = cat['name'] as String;
+              final icon = cat['icon'] as IconData;
+              final iconColor = cat['color'] as Color;
+              final isSelected = _selectedCategory == name;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = name;
+                  });
+                  if (name == 'Hotspot') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HotspotIdentificationScreen()),
+                    );
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? AppColors.retroDarkCard : Colors.white),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.retroDarkBorder
+                              : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                            offset: const Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          icon,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white : iconColor),
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- RETRO ASSIGNED INCIDENTS ---
+  Widget _buildAssignedIncidents(BuildContext context, String userId) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _selectedCategory == 'All' ? 'Assigned Incidents' : '$_selectedCategory Incidents',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResponderTasksScreen())),
+              child: const Text(
+                'View All Tasks',
+                style: TextStyle(
+                  color: AppColors.retroMint,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<IncidentModel>>(
+          stream: firestoreService.getIncidents(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'No active incidents recorded',
+                    style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 13),
+                  ),
+                ),
+              );
+            }
+
+            final allIncidents = snapshot.data!;
+            final myIncidents = allIncidents
+                .where((i) => i.assignedTo == userId || i.status == 'reported' || i.status == 'dispatched')
+                .where((i) => _selectedCategory == 'All' || i.incidentType.toLowerCase() == _selectedCategory.toLowerCase())
+                .take(5)
+                .toList();
+
+            if (myIncidents.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'No $_selectedCategory incidents found',
+                    style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 13),
+                  ),
+                ),
+              );
+            }
+
+            return Column(
+              children: myIncidents.map((incident) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2C3240) : AppColors.retroPeach,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isDark ? Colors.white12 : AppColors.retroDarkBorder,
+                            width: 1.4,
+                          ),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(incident.incidentType),
+                          color: _getCategoryColor(incident.incidentType),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              incident.description,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_rounded, size: 12, color: isDark ? Colors.white38 : const Color(0xFF9CA3AF)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    incident.location,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: incident.status == 'dispatched'
+                              ? const Color(0xFFFEF3C7)
+                              : const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isDark ? Colors.transparent : AppColors.retroDarkBorder,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Text(
+                          incident.status.toUpperCase(),
+                          style: TextStyle(
+                            color: incident.status == 'dispatched'
+                                ? const Color(0xFFD97706)
+                                : const Color(0xFF16A34A),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  IconData _getCategoryIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'fire':
+        return Icons.local_fire_department_rounded;
+      case 'flood':
+        return Icons.water_drop_rounded;
+      case 'medical':
+        return Icons.medical_services_rounded;
+      case 'accident':
+        return Icons.car_crash_rounded;
+      default:
+        return Icons.warning_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'fire':
+        return const Color(0xFFEF4444);
+      case 'flood':
+        return const Color(0xFF3B82F6);
+      case 'medical':
+        return const Color(0xFF10B981);
+      case 'accident':
+        return const Color(0xFFF97316);
+      default:
+        return AppColors.retroMint;
+    }
   }
 }

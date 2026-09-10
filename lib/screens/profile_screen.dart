@@ -6,6 +6,7 @@ import '../core/constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import '../widgets/profile_image.dart';
+import '../services/location_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -225,6 +226,7 @@ class ProfileScreen extends StatelessWidget {
   // --- RETRO ACCOUNT INFO CARD ---
   Widget _buildAccountInfoCard(BuildContext context, UserModel? user, String email, String role) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final locationService = Provider.of<LocationService>(context);
 
     return Container(
       width: double.infinity,
@@ -272,9 +274,9 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildInfoRow(
-            icon: Icons.location_city_rounded,
-            label: 'Jurisdiction',
-            value: 'Province of Catanduanes (11 LGUs)',
+            icon: Icons.place_rounded,
+            label: 'Current Location',
+            value: locationService.currentLocationName,
             isDark: isDark,
           ),
           const SizedBox(height: 12),

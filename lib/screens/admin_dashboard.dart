@@ -14,9 +14,17 @@ import 'predictive_analysis_screen.dart';
 import 'report_generation_screen.dart';
 import 'lgu_user_management_screen.dart';
 import 'report_screen.dart';
+import '../services/location_service.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  String _selectedCategory = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +43,8 @@ class AdminDashboard extends StatelessWidget {
           const SizedBox(height: 28),
           _buildActionGrid(context),
           const SizedBox(height: 28),
+          _buildRetroCategoryDiscs(context),
+          const SizedBox(height: 16),
           _buildRecentActivity(context),
           const SizedBox(height: 110),
         ],
@@ -46,6 +56,11 @@ class AdminDashboard extends StatelessWidget {
   Widget _buildSystemStatusCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final firestore = Provider.of<FirestoreService>(context);
+    final locationService = Provider.of<LocationService>(context);
+    final rawLoc = locationService.currentLocationName;
+    final currentArea = (rawLoc.isNotEmpty && !rawLoc.toLowerCase().contains('disabled') && !rawLoc.toLowerCase().contains('standby') && !rawLoc.toLowerCase().contains('locating'))
+        ? rawLoc.split(',')[0].trim().toUpperCase()
+        : 'LOCAL';
 
     return Container(
       width: double.infinity,
@@ -118,7 +133,7 @@ class AdminDashboard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'CATANDUANES REAL-TIME LOGIC',
+                          '$currentArea REAL-TIME LOGIC',
                           style: TextStyle(
                             color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D),
                             fontSize: 10,
@@ -779,6 +794,137 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  // --- RETRO CIRCULAR CATEGORY BADGES ---
+  Widget _buildRetroCategoryDiscs(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = [
+      {'name': 'All', 'icon': Icons.apps_rounded, 'color': AppColors.retroMint},
+      {'name': 'Fire', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
+      {'name': 'Flood', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF3B82F6)},
+      {'name': 'Medical', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFF10B981)},
+      {'name': 'Accident', 'icon': Icons.car_crash_rounded, 'color': const Color(0xFFF97316)},
+      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': const Color(0xFF8B5CF6)},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'INCIDENT CATEGORIES',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.3,
+                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+              ),
+            ),
+            if (_selectedCategory != 'All')
+              GestureDetector(
+                onTap: () => setState(() => _selectedCategory = 'All'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                  ),
+                  child: const Text(
+                    'Clear filter',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.retroDarkBorder,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 82,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: categories.length,
+            separatorBuilder: (_, index) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final name = cat['name'] as String;
+              final icon = cat['icon'] as IconData;
+              final iconColor = cat['color'] as Color;
+              final isSelected = _selectedCategory == name;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = name;
+                  });
+                  if (name == 'Hotspot') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HotspotIdentificationScreen()),
+                    );
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? AppColors.retroDarkCard : Colors.white),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.retroDarkBorder
+                              : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                            offset: const Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          icon,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white : iconColor),
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   // --- RETRO RECENT ACTIVITY ---
   Widget _buildRecentActivity(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -788,7 +934,7 @@ class AdminDashboard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Incidents',
+              _selectedCategory == 'All' ? 'Recent Incidents' : '$_selectedCategory Incidents',
               style: TextStyle(
                 color: isDark ? Colors.white : AppColors.retroDarkBorder,
                 fontSize: 18,
@@ -825,8 +971,22 @@ class AdminDashboard extends StatelessWidget {
             }
             final incidents = snapshot.data!
                 .where((i) => i.status != 'resolved')
-                .take(3)
+                .where((i) => _selectedCategory == 'All' || i.incidentType.toLowerCase() == _selectedCategory.toLowerCase())
+                .take(5)
                 .toList();
+
+            if (incidents.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'No $_selectedCategory incidents recorded',
+                    style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 13),
+                  ),
+                ),
+              );
+            }
+
             return Column(
               children: incidents.map((i) => _buildIncidentActivityTile(context, i)).toList(),
             );

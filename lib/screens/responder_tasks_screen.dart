@@ -7,8 +7,15 @@ import '../models/sos_model.dart';
 import '../core/constants.dart';
 import 'package:intl/intl.dart';
 
-class ResponderTasksScreen extends StatelessWidget {
+class ResponderTasksScreen extends StatefulWidget {
   const ResponderTasksScreen({super.key});
+
+  @override
+  State<ResponderTasksScreen> createState() => _ResponderTasksScreenState();
+}
+
+class _ResponderTasksScreenState extends State<ResponderTasksScreen> {
+  String _selectedCategory = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -57,64 +64,127 @@ class ResponderTasksScreen extends StatelessWidget {
   }
 
   Widget _buildIncidentsTab(FirestoreService firestoreService, String userId, bool isDark) {
-    return StreamBuilder<List<IncidentModel>>(
-      stream: firestoreService.getIncidents(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.retroMint));
-        }
+    return Column(
+      children: [
+        _buildCategoryFilterBar(isDark),
+        Expanded(
+          child: StreamBuilder<List<IncidentModel>>(
+            stream: firestoreService.getIncidents(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: AppColors.retroMint));
+              }
 
-        final allIncidents = snapshot.data ?? [];
-        final myIncidents = allIncidents.where((i) => i.assignedTo == userId).toList();
+              final allIncidents = snapshot.data ?? [];
+              final myIncidents = allIncidents
+                  .where((i) => i.assignedTo == userId)
+                  .where((i) => _selectedCategory == 'All' || i.incidentType.toLowerCase() == _selectedCategory.toLowerCase())
+                  .toList();
 
-        if (myIncidents.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    color: AppColors.retroPeach,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+              if (myIncidents.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 68,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          color: AppColors.retroPeach,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+                        ),
+                        child: const Icon(Icons.checklist_rounded, size: 32, color: AppColors.retroDarkBorder),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        _selectedCategory == 'All'
+                            ? 'No assigned incidents'
+                            : 'No $_selectedCategory incidents assigned',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.checklist_rounded, size: 32, color: AppColors.retroDarkBorder),
+                );
+              }
+
+              return ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                itemCount: myIncidents.length,
+                itemBuilder: (context, index) {
+                  final incident = myIncidents[index];
+                  return _buildRetroTaskTile(
+                    context,
+                    title: incident.description,
+                    location: incident.location,
+                    status: incident.status,
+                    timestamp: incident.timestamp,
+                    onStatusChange: (newStatus) => firestoreService.updateIncidentStatus(incident.incidentId, newStatus),
+                    type: 'INCIDENT',
+                    isDark: isDark,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryFilterBar(bool isDark) {
+    final categories = ['All', 'Fire', 'Flood', 'Medical', 'Accident', 'Hotspot'];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      height: 52,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final cat = categories[index];
+          final isSelected = _selectedCategory == cat;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedCategory = cat),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.retroMint
+                    : (isDark ? AppColors.retroDarkCard : Colors.white),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.retroDarkBorder : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+                  width: 1.4,
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  'No assigned incidents',
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  cat,
                   style: TextStyle(
-                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
                   ),
                 ),
-              ],
+              ),
             ),
           );
-        }
-
-        return ListView.builder(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          itemCount: myIncidents.length,
-          itemBuilder: (context, index) {
-            final incident = myIncidents[index];
-            return _buildRetroTaskTile(
-              context,
-              title: incident.description,
-              location: incident.location,
-              status: incident.status,
-              timestamp: incident.timestamp,
-              onStatusChange: (newStatus) => firestoreService.updateIncidentStatus(incident.incidentId, newStatus),
-              type: 'INCIDENT',
-              isDark: isDark,
-            );
-          },
-        );
-      },
+        },
+      ),
     );
   }
 

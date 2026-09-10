@@ -71,7 +71,7 @@ class LocationService extends ChangeNotifier {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _currentLocationName = 'GPS Off (Catanduanes)';
+        _currentLocationName = 'GPS Disabled';
         _isLoading = false;
         notifyListeners();
         return null;
@@ -113,11 +113,11 @@ class LocationService extends ChangeNotifier {
         _currentPosition = position;
         _currentLocationName = await _resolveLocationName(position.latitude, position.longitude);
       } else {
-        _currentLocationName = 'Catanduanes (GPS Standby)';
+        _currentLocationName = 'Locating User...';
       }
     } catch (e) {
       debugPrint('Location detection error: $e');
-      _currentLocationName = 'Catanduanes, PH';
+      _currentLocationName = 'Location Standby';
     } finally {
       _isLoading = false;
       notifyListeners();

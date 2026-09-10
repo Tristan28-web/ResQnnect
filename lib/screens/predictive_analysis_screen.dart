@@ -172,6 +172,11 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
   // --- RETRO HERO GEMINI BANNER ---
   Widget _buildHeroGeminiBanner(bool isDark) {
     final threat = _analysis?.overallThreatLevel ?? 'MODERATE';
+    final locationService = Provider.of<LocationService>(context, listen: false);
+    final rawLoc = locationService.currentLocationName;
+    final areaName = (rawLoc.isNotEmpty && !rawLoc.toLowerCase().contains('disabled') && !rawLoc.toLowerCase().contains('standby') && !rawLoc.toLowerCase().contains('locating'))
+        ? rawLoc.split(',')[0].trim()
+        : 'Local Operations';
     Color threatBg = const Color(0xFFDCFCE7);
     Color threatText = const Color(0xFF16A34A);
 
@@ -236,7 +241,7 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
                         ),
                       ),
                       Text(
-                        'PDRRMO Catanduanes',
+                        '$areaName Operations',
                         style: TextStyle(
                           color: isDark ? Colors.white60 : const Color(0xFF6B7280),
                           fontSize: 10,
@@ -288,9 +293,9 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
           // Real AI Executive Summary
           Text(
             _isAnalyzing
-                ? 'Synthesizing Catanduanes ground data, live rainfall telemetry, and incident history using Google Gemini Flash Lite...'
+                ? 'Synthesizing ground data, live rainfall telemetry, and incident history using Google Gemini Flash Lite...'
                 : (_analysis?.executiveSummary ??
-                    'Continuous telemetry analysis active across all 11 Catanduanes municipal jurisdictions.'),
+                    'Continuous telemetry analysis active across $areaName and surrounding operational zones.'),
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.retroDarkBorder,
               fontSize: 13,
