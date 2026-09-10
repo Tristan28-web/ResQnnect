@@ -358,25 +358,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
         // Calculate distribution by type (Module 7: Incidents by Type)
         final typeCounts = <String, int>{
-          'Flood': 0,
           'Fire': 0,
-          'Crime': 0,
+          'Flood': 0,
+          'Medical': 0,
           'Accident': 0,
-          'Other': 0,
+          'Crime': 0,
         };
 
         for (var inc in incidents) {
           final desc = '${inc.description} ${inc.incidentType}'.toLowerCase();
-          if (desc.contains('flood') || desc.contains('typhoon') || desc.contains('rain')) {
-            typeCounts['Flood'] = (typeCounts['Flood'] ?? 0) + 1;
-          } else if (desc.contains('fire')) {
+          if (desc.contains('fire') || desc.contains('blaze') || desc.contains('burning')) {
             typeCounts['Fire'] = (typeCounts['Fire'] ?? 0) + 1;
-          } else if (desc.contains('crime') || desc.contains('theft') || desc.contains('robbery') || desc.contains('assault')) {
-            typeCounts['Crime'] = (typeCounts['Crime'] ?? 0) + 1;
+          } else if (desc.contains('flood') || desc.contains('typhoon') || desc.contains('rain') || desc.contains('water')) {
+            typeCounts['Flood'] = (typeCounts['Flood'] ?? 0) + 1;
+          } else if (desc.contains('medical') || desc.contains('injury') || desc.contains('wounded') || desc.contains('health') || desc.contains('ambulance')) {
+            typeCounts['Medical'] = (typeCounts['Medical'] ?? 0) + 1;
           } else if (desc.contains('accident') || desc.contains('crash') || desc.contains('vehicular') || desc.contains('collision')) {
             typeCounts['Accident'] = (typeCounts['Accident'] ?? 0) + 1;
           } else {
-            typeCounts['Other'] = (typeCounts['Other'] ?? 0) + 1;
+            typeCounts['Crime'] = (typeCounts['Crime'] ?? 0) + 1;
           }
         }
 
@@ -597,16 +597,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Color _getTypeColor(String type) {
     switch (type) {
-      case 'Flood':
-        return const Color(0xFF3B82F6);
       case 'Fire':
         return const Color(0xFFEF4444);
-      case 'Crime':
-        return const Color(0xFF8B5CF6);
+      case 'Flood':
+        return const Color(0xFF3B82F6);
+      case 'Medical':
+        return const Color(0xFF10B981);
       case 'Accident':
         return const Color(0xFFF59E0B);
+      case 'Crime':
+        return const Color(0xFF8B5CF6);
       default:
-        return const Color(0xFF10B981);
+        return AppColors.retroMint;
     }
   }
 
@@ -1251,18 +1253,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEF4444),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
-                    ),
-                  ),
-                  onPressed: () async {
+                GestureDetector(
+                  onTap: () async {
                     if (titleController.text.isEmpty) return;
                     final alert = AlertModel(
                       alertId: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1274,7 +1266,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     await Provider.of<FirestoreService>(context, listen: false).sendAlert(alert);
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('INITIATE BROADCAST', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroMint,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: AppColors.retroDarkBorder,
+                          offset: Offset(3, 3),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'INITIATE BROADCAST',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Center(

@@ -38,15 +38,17 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
   Color _getTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'fire':
-        return AppConstants.primaryRed;
+        return const Color(0xFFEF4444);
       case 'flood':
-        return const Color(0xFF2563EB);
-      case 'crime':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFF3B82F6);
+      case 'medical':
+        return const Color(0xFF10B981);
       case 'accident':
         return const Color(0xFFEA580C);
+      case 'crime':
+        return const Color(0xFF8B5CF6);
       default:
-        return const Color(0xFF10B981);
+        return AppColors.retroMint;
     }
   }
 

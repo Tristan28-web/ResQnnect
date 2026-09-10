@@ -45,16 +45,16 @@ class AppConstants {
   // Blueprint Incident Types
   static const String incidentTypeFire = 'Fire';
   static const String incidentTypeFlood = 'Flood';
-  static const String incidentTypeCrime = 'Crime';
+  static const String incidentTypeMedical = 'Medical';
   static const String incidentTypeAccident = 'Accident';
-  static const String incidentTypeOther = 'Other';
+  static const String incidentTypeCrime = 'Crime';
 
   static const List<String> incidentTypes = [
     incidentTypeFire,
     incidentTypeFlood,
-    incidentTypeCrime,
+    incidentTypeMedical,
     incidentTypeAccident,
-    incidentTypeOther,
+    incidentTypeCrime,
   ];
 
   // Default national fallback coordinates (only used if GPS permission is completely disabled)

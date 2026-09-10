@@ -517,43 +517,50 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.retroPeach,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                  // Hazard chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroPeach,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                    ),
+                    child: Text(
+                      zone.hazardType.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.retroDarkBorder,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Zone name + RISK label stacked
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          zone.name,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          softWrap: true,
                         ),
-                        child: Text(
-                          zone.hazardType.toUpperCase(),
-                          style: const TextStyle(
-                            color: AppColors.retroDarkBorder,
-                            fontSize: 9,
+                        const SizedBox(height: 2),
+                        Text(
+                          '${pct.toStringAsFixed(0)}% RISK',
+                          style: TextStyle(
+                            color: barColor,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        zone.name,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '${pct.toStringAsFixed(0)}% RISK',
-                    style: TextStyle(
-                      color: barColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
+                      ],
                     ),
                   ),
                 ],

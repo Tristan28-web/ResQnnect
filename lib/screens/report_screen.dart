@@ -160,7 +160,7 @@ class _ReportScreenState extends State<ReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please provide incident description and location'),
-          backgroundColor: AppConstants.primaryRed,
+          backgroundColor: AppColors.retroMint,
         ),
       );
       return;
@@ -472,7 +472,7 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildSectionHeader(String title, IconData icon, bool isDark) {
     return Row(
       children: [
-        Icon(icon, color: AppConstants.primaryRed, size: 16),
+        Icon(icon, color: AppColors.retroMint, size: 16),
         const SizedBox(width: 8),
         Text(
           title.toUpperCase(),
@@ -511,17 +511,17 @@ class _ReportScreenState extends State<ReportScreen> {
           isExpanded: true,
           dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
           items: AppConstants.incidentTypes.map((type) {
-            IconData icon = Icons.warning_rounded;
-            Color iconColor = Colors.amber;
+            IconData icon = Icons.shield_rounded;
+            Color iconColor = const Color(0xFF8B5CF6);
             if (type == AppConstants.incidentTypeFire) {
               icon = Icons.local_fire_department_rounded;
-              iconColor = AppConstants.primaryRed;
+              iconColor = const Color(0xFFEF4444);
             } else if (type == AppConstants.incidentTypeFlood) {
-              icon = Icons.waves_rounded;
-              iconColor = const Color(0xFF2563EB);
-            } else if (type == AppConstants.incidentTypeCrime) {
-              icon = Icons.shield_rounded;
-              iconColor = const Color(0xFF7C3AED);
+              icon = Icons.water_drop_rounded;
+              iconColor = const Color(0xFF3B82F6);
+            } else if (type == AppConstants.incidentTypeMedical) {
+              icon = Icons.medical_services_rounded;
+              iconColor = const Color(0xFF10B981);
             } else if (type == AppConstants.incidentTypeAccident) {
               icon = Icons.car_crash_rounded;
               iconColor = const Color(0xFFEA580C);
@@ -632,7 +632,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 child: Icon(
                   Icons.my_location_rounded,
-                  color: _isLocationVerified ? const Color(0xFF16A34A) : AppColors.primaryRed,
+                  color: _isLocationVerified ? const Color(0xFF16A34A) : AppColors.retroMint,
                   size: 20,
                 ),
               ),
@@ -713,7 +713,7 @@ class _ReportScreenState extends State<ReportScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, color: AppConstants.primaryRed, size: 18),
+            const Icon(Icons.calendar_today_rounded, color: AppColors.retroMint, size: 18),
             const SizedBox(width: 12),
             Text(
               formatted,
@@ -809,7 +809,7 @@ class _ReportScreenState extends State<ReportScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: _isReporting ? Colors.grey : AppColors.primaryRed,
+          color: _isReporting ? Colors.grey.shade400 : AppColors.retroMint,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
           boxShadow: [
