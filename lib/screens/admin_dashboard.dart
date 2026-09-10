@@ -2,19 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants.dart';
 import '../services/firestore_service.dart';
-import '../models/user_model.dart';
 import '../models/incident_model.dart';
 import 'package:intl/intl.dart';
 import 'admin_verification_screen.dart';
-import 'manage_responders_screen.dart';
 import 'alerts_screen.dart';
-import 'global_map_screen.dart';
-import 'config_screen.dart';
 import '../models/alert_model.dart';
-import 'admin_incidents_screen.dart';
-import 'admin_sos_screen.dart';
-import 'safety_heatmap_screen.dart';
-import '../models/safety_check_model.dart';
 import 'incident_mapping_screen.dart';
 import 'incident_monitoring_screen.dart';
 import 'hotspot_identification_screen.dart';
@@ -32,14 +24,15 @@ class AdminDashboard extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
           _buildSystemStatusCard(context),
           const SizedBox(height: 24),
           _buildIncidentKpiSummary(context),
-          const SizedBox(height: 36),
-          _buildEmergencyControl(context),
-          const SizedBox(height: 36),
+          const SizedBox(height: 28),
+          _buildBroadcastBanner(context),
+          const SizedBox(height: 32),
           _buildActionGrid(context),
           const SizedBox(height: 32),
           _buildRecentActivity(context),
@@ -51,8 +44,10 @@ class AdminDashboard extends StatelessWidget {
 
   Widget _buildSystemStatusCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firestore = Provider.of<FirestoreService>(context);
+
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -61,12 +56,13 @@ class AdminDashboard extends StatelessWidget {
               ? [const Color(0xFF1E2841), const Color(0xFF161E31)]
               : [const Color(0xFFE8F0FE), const Color(0xFFF0F4FF)],
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.07),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -79,49 +75,74 @@ class AdminDashboard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('COMMAND CENTER', style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                  const SizedBox(height: 8),
-                  Text('Operational', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -1)),
-                  const SizedBox(height: 8),
+                  Text(
+                    'LGU COMMAND CENTER',
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'GIS Operational',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.greenAccent.withOpacity(0.1),
+                      color: Colors.greenAccent.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
                           width: 6, height: 6,
                           decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
                         ),
-                        const SizedBox(width: 8),
-                        Text('LIVE MONITORING', style: TextStyle(color: isDark ? Colors.greenAccent : Colors.green[700], fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'CATANDUANES REAL-TIME LOGIC',
+                          style: TextStyle(
+                            color: isDark ? Colors.greenAccent : Colors.green[700],
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.04),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.security_rounded, color: isDark ? Colors.white70 : Colors.black54, size: 40),
+                child: Icon(Icons.hub_rounded, color: isDark ? Colors.white70 : Colors.black54, size: 36),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
           const SizedBox(height: 24),
+          Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+          const SizedBox(height: 18),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItemStream(context, 'RESPONDERS', Provider.of<FirestoreService>(context).getResponderCount(), Icons.people_rounded),
-              _buildStatItemStream(context, 'PENDING', Provider.of<FirestoreService>(context).getUnverifiedCitizenCount(), Icons.verified_user_rounded, isAlert: true),
-              _buildStatItemStream(context, 'ZONES', Provider.of<FirestoreService>(context).getMapLocationCount(), Icons.map_rounded),
-              _buildStatItemStream(context, 'ACTIVE SOS', Provider.of<FirestoreService>(context).getSOSRequests().map((l) => l.length), Icons.emergency_rounded, isEmergency: true),
+              _buildStatItemStream(context, 'RESPONDERS', firestore.getResponderCount(), Icons.shield_rounded),
+              _buildStatItemStream(context, 'VERIFY QUEUE', firestore.getUnverifiedCitizenCount(), Icons.verified_user_rounded, isAlert: true),
+              _buildStatItemStream(context, 'LGU ALERTS', firestore.getAlertCount(), Icons.campaign_rounded),
+              _buildStatItemStream(context, 'HOTSPOTS', firestore.getMapLocationCount(), Icons.whatshot_rounded),
             ],
           ),
         ],
@@ -129,24 +150,22 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItemStream(BuildContext context, String label, Stream<int> stream, IconData icon, {bool isAlert = false, bool isEmergency = false}) {
+  Widget _buildStatItemStream(BuildContext context, String label, Stream<int> stream, IconData icon, {bool isAlert = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<int>(
       stream: stream,
       builder: (context, snapshot) {
         final val = snapshot.data ?? 0;
-        final color = isEmergency
-            ? AppConstants.primaryRed
-            : (isAlert && val > 0
-                ? Colors.orangeAccent
-                : (isDark ? Colors.white : Colors.black87));
+        final color = (isAlert && val > 0)
+            ? Colors.orangeAccent
+            : (isDark ? Colors.white : Colors.black87);
         
         return Column(
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color.withOpacity(0.5), size: 18),
+                Icon(icon, color: color.withOpacity(0.55), size: 18),
                 if (isAlert && val > 0)
                   Positioned(
                     top: -2, right: -2,
@@ -154,83 +173,73 @@ class AdminDashboard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               val.toString(),
               style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(color: isDark ? Colors.white24 : Colors.black54, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+            Text(
+              label,
+              style: TextStyle(color: isDark ? Colors.white24 : Colors.black45, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.white30, fontSize: 10)),
-        const SizedBox(height: 8),
-        Icon(icon, color: Colors.white, size: 22),
-        const SizedBox(height: 8),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-
-  Widget _buildEmergencyControl(BuildContext context) {
-    return Column(
-      children: [
-        Center(
-          child: InkWell(
-            onTap: () => _showBroadcastDialog(context),
-            borderRadius: BorderRadius.circular(100),
-            child: Container(
-              width: 180,
-              height: 180,
+  Widget _buildBroadcastBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: () => _showBroadcastDialog(context),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppConstants.primaryRed.withOpacity(0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
-                color: AppConstants.primaryRed.withOpacity(0.05),
               ),
-              child: Center(
-                child: InkWell(
-                  onLongPress: () => _showTriggerCheckInDialog(context),
-                  onTap: () => _showBroadcastDialog(context),
-                  borderRadius: BorderRadius.circular(100),
-                  child: Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(color: AppConstants.primaryRed.withOpacity(0.4), blurRadius: 40, spreadRadius: 5),
-                      ],
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.radar_rounded, color: Colors.white, size: 44),
-                        Text('ALERT', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2)),
-                        Text('TAP TO BROADCAST', style: TextStyle(color: Colors.white60, fontSize: 8, fontWeight: FontWeight.w900)),
-                      ],
-                    ),
+              child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'BROADCAST LGU ADVISORY',
+                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
                   ),
-                ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Issue city-wide warning or emergency alert to citizens',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ],
               ),
             ),
-          ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+          ],
         ),
-        const SizedBox(height: 20),
-        Text(
-          'TAP TO BROADCAST | LONG PRESS TO TRIGGER CHECK-IN',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-        ),
-      ],
+      ),
     );
   }
 
@@ -247,11 +256,35 @@ class AdminDashboard extends StatelessWidget {
         final resolved = incidents.where((i) => i.status == 'resolved').length;
         final closed = incidents.where((i) => i.status == 'closed').length;
 
+        // Calculate distribution by type (Module 7: Incidents by Type)
+        final typeCounts = <String, int>{
+          'Flood': 0,
+          'Fire': 0,
+          'Crime': 0,
+          'Accident': 0,
+          'Other': 0,
+        };
+
+        for (var inc in incidents) {
+          final desc = '${inc.description} ${inc.incidentType}'.toLowerCase();
+          if (desc.contains('flood') || desc.contains('typhoon') || desc.contains('rain')) {
+            typeCounts['Flood'] = (typeCounts['Flood'] ?? 0) + 1;
+          } else if (desc.contains('fire')) {
+            typeCounts['Fire'] = (typeCounts['Fire'] ?? 0) + 1;
+          } else if (desc.contains('crime') || desc.contains('theft') || desc.contains('robbery') || desc.contains('assault')) {
+            typeCounts['Crime'] = (typeCounts['Crime'] ?? 0) + 1;
+          } else if (desc.contains('accident') || desc.contains('crash') || desc.contains('vehicular') || desc.contains('collision')) {
+            typeCounts['Accident'] = (typeCounts['Accident'] ?? 0) + 1;
+          } else {
+            typeCounts['Other'] = (typeCounts['Other'] ?? 0) + 1;
+          }
+        }
+
         return Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E2841) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(26),
             border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
             boxShadow: [
               BoxShadow(
@@ -272,11 +305,11 @@ class AdminDashboard extends StatelessWidget {
                       const Icon(Icons.dashboard_rounded, color: AppConstants.primaryRed, size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        'LGU INCIDENT SUMMARY',
+                        '07. DASHBOARD KPI & INCIDENT SUMMARY',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.1,
                           color: isDark ? Colors.white70 : Colors.black87,
                         ),
                       ),
@@ -294,7 +327,7 @@ class AdminDashboard extends StatelessWidget {
               ),
               const SizedBox(height: 18),
 
-              // KPI Counters (Total, Ongoing, Resolved, Closed from Blueprint Module 7)
+              // KPI Boxes: Total, Ongoing, Resolved, Closed
               Row(
                 children: [
                   Expanded(child: _buildKpiBox('TOTAL', '$total', isDark ? Colors.white : Colors.black87, isDark)),
@@ -306,11 +339,71 @@ class AdminDashboard extends StatelessWidget {
                   Expanded(child: _buildKpiBox('CLOSED', '$closed', Colors.blueGrey, isDark)),
                 ],
               ),
+              const SizedBox(height: 20),
+              Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
+              const SizedBox(height: 16),
+
+              // Incidents by Type (Visual representation matching blueprint Module 7)
+              Text(
+                'INCIDENTS BY TYPE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                  color: isDark ? Colors.white38 : Colors.black45,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...typeCounts.entries.map((entry) {
+                final count = entry.value;
+                final percentage = total > 0 ? (count / total) : 0.0;
+                final barColor = _getTypeColor(entry.key);
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(entry.key, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text('$count (${(percentage * 100).toStringAsFixed(0)}%)', style: TextStyle(color: barColor, fontSize: 11, fontWeight: FontWeight.w900)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: percentage,
+                          minHeight: 6,
+                          backgroundColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06),
+                          valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
         );
       },
     );
+  }
+
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'Flood':
+        return Colors.blueAccent;
+      case 'Fire':
+        return Colors.deepOrangeAccent;
+      case 'Crime':
+        return Colors.purpleAccent;
+      case 'Accident':
+        return Colors.amber;
+      default:
+        return Colors.tealAccent;
+    }
   }
 
   Widget _buildKpiBox(String label, String val, Color color, bool isDark) {
@@ -360,18 +453,16 @@ class AdminDashboard extends StatelessWidget {
           mainAxisSpacing: 14,
           childAspectRatio: 1.15,
           children: [
-            _buildActionCard(context, 'Report Incident', 'GIS Pinning (1 & 3)', Icons.add_location_alt_rounded, AppConstants.primaryRed, const ReportScreen()),
-            _buildActionCard(context, 'Incident Mapping', 'GIS Pins (2)', Icons.map_rounded, const Color(0xFF1E88E5), const IncidentMappingScreen()),
-            _buildActionCard(context, 'Incident Monitor', 'LGU Feed (4)', Icons.dvr_rounded, const Color(0xFF3949AB), const IncidentMonitoringScreen()),
-            _buildActionCard(context, 'Hotspot Heatmap', 'GIS Density (5)', Icons.whatshot_rounded, const Color(0xFFE65100), const HotspotIdentificationScreen()),
-            _buildActionCard(context, 'Predictive AI', 'Trends & Risk (6)', Icons.auto_awesome_rounded, const Color(0xFF7B1FA2), const PredictiveAnalysisScreen()),
-            _buildActionCard(context, 'Report Gen', 'Audit & KPIs (9)', Icons.assessment_rounded, const Color(0xFF00897B), const ReportGenerationScreen()),
-            _buildActionCard(context, 'User Accounts', 'LGU RBAC (10)', Icons.admin_panel_settings_rounded, const Color(0xFF5E35B1), const LGUUserManagementScreen()),
-            _buildActionCard(context, 'SOS Requests', 'Citizen SOS', Icons.emergency_share_rounded, AppConstants.primaryRed, const AdminSOSScreen()),
-            _buildActionCard(context, 'Responders', 'Manage fleet', Icons.people_alt_rounded, const Color(0xFF43A047), const ManageRespondersScreen()),
+            _buildActionCard(context, '01. Reporting', 'Evidence submission', Icons.add_location_alt_rounded, AppConstants.primaryRed, const ReportScreen()),
+            _buildActionCard(context, '02. Mapping', 'Interactive GIS pins', Icons.map_rounded, const Color(0xFF1E88E5), const IncidentMappingScreen()),
+            _buildActionCard(context, '03. Pinning', 'Coordinate picker', Icons.pin_drop_rounded, const Color(0xFF00ACC1), const ReportScreen()),
+            _buildActionCard(context, '04. Monitoring', 'Live incident tracker', Icons.dvr_rounded, const Color(0xFF3949AB), const IncidentMonitoringScreen()),
+            _buildActionCard(context, '05. Hotspots', 'High-risk clusters', Icons.whatshot_rounded, const Color(0xFFE65100), const HotspotIdentificationScreen()),
+            _buildActionCard(context, '06. Predictive AI', '7-day logic & risk', Icons.auto_awesome_rounded, const Color(0xFF7B1FA2), const PredictiveAnalysisScreen()),
+            _buildActionCard(context, '08. Alerts', 'Broadcast advisory', Icons.notifications_active_rounded, const Color(0xFFD81B60), const AlertsScreen()),
+            _buildActionCard(context, '09. Report Gen', 'Audit & KPI export', Icons.assessment_rounded, const Color(0xFF00897B), const ReportGenerationScreen()),
+            _buildActionCard(context, '10. Users', 'LGU roles & access', Icons.admin_panel_settings_rounded, const Color(0xFF5E35B1), const LGUUserManagementScreen()),
             _buildVerifyCard(context),
-            _buildActionCard(context, 'Safety Map', 'Check-in Heatmap', Icons.query_stats_rounded, Colors.greenAccent, const SafetyHeatmapScreen()),
-            _buildActionCard(context, 'Config', 'System settings', Icons.settings_suggest_rounded, const Color(0xFF8E24AA), const ConfigScreen()),
           ],
         ),
       ],
@@ -386,8 +477,9 @@ class AdminDashboard extends StatelessWidget {
         final pendingCount = snapshot.data ?? 0;
         return InkWell(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminVerificationScreen())),
+          borderRadius: BorderRadius.circular(24),
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: isDark ? const LinearGradient(
                 begin: Alignment.topLeft,
@@ -396,10 +488,14 @@ class AdminDashboard extends StatelessWidget {
               ) : null,
               color: isDark ? null : Colors.white,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: pendingCount > 0 ? Colors.orangeAccent.withOpacity(0.4) : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05))),
-              boxShadow: isDark
-                  ? [const BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4))]
-                  : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+              border: Border.all(color: pendingCount > 0 ? Colors.orangeAccent.withOpacity(0.4) : (isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,12 +505,12 @@ class AdminDashboard extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.orangeAccent.withOpacity(0.2),
+                        color: Colors.orangeAccent.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.verified_user_rounded, color: Colors.orangeAccent, size: 28),
+                      child: const Icon(Icons.verified_user_rounded, color: Colors.orangeAccent, size: 24),
                     ),
                     if (pendingCount > 0)
                       Positioned(
@@ -430,11 +526,13 @@ class AdminDashboard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Verify Citizens', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
+                    Text('Verify Citizens', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
                     Text(
-                      pendingCount > 0 ? '$pendingCount pending' : 'All verified',
-                      style: TextStyle(color: pendingCount > 0 ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black54), fontSize: 12),
+                      pendingCount > 0 ? '$pendingCount pending verification' : 'All accounts verified',
+                      style: TextStyle(color: pendingCount > 0 ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black54), fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -450,8 +548,9 @@ class AdminDashboard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: isDark ? const LinearGradient(
             begin: Alignment.topLeft,
@@ -460,29 +559,33 @@ class AdminDashboard extends StatelessWidget {
           ) : null,
           color: isDark ? null : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-          boxShadow: isDark
-              ? [const BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4))]
-              : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.2),
+                color: iconColor.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: iconColor, size: 28),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
+                Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(subtitle, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ],
@@ -498,19 +601,19 @@ class AdminDashboard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Recent Activity', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Recent Incidents', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
             TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminIncidentsScreen())), 
-              child: const Text('View all', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold))
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentMonitoringScreen())), 
+              child: const Text('Live Feed', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold))
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         StreamBuilder<List<IncidentModel>>(
           stream: Provider.of<FirestoreService>(context).getIncidents(),
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-               return Center(child: Text('No recent incidents', style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)));
+               return Center(child: Text('No recent incidents recorded', style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)));
             }
             final incidents = snapshot.data!
               .where((i) => i.status != 'resolved')
@@ -529,7 +632,7 @@ class AdminDashboard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: isDark ? const LinearGradient(
           begin: Alignment.topLeft,
@@ -537,34 +640,50 @@ class AdminDashboard extends StatelessWidget {
           colors: [Color(0xFF1E2841), Color(0xFF161E31)],
         ) : null,
         color: isDark ? null : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
-        boxShadow: isDark
-            ? [const BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 3))]
-            : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppConstants.primaryRed.withOpacity(0.1),
+              color: AppConstants.primaryRed.withOpacity(0.12),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.emergency_rounded, color: AppConstants.primaryRed, size: 24),
+            child: const Icon(Icons.report_problem_rounded, color: AppConstants.primaryRed, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(incident.description, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  incident.description,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.location_on, color: isDark ? Colors.white24 : Colors.black38, size: 12),
                     const SizedBox(width: 4),
-                    Text(incident.location, style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 11)),
+                    Expanded(
+                      child: Text(
+                        incident.location,
+                        style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -579,17 +698,18 @@ class AdminDashboard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (incident.status == 'dispatched' ? Colors.blue : Colors.orange).withOpacity(0.1), 
-                  borderRadius: BorderRadius.circular(4)
+                  color: (incident.status == 'dispatched' ? Colors.blue : Colors.orange).withOpacity(0.12), 
+                  borderRadius: BorderRadius.circular(6)
                 ),
                 child: Text(
                   incident.status == 'dispatched' ? 'DISPATCHED' : 'PENDING', 
                   style: TextStyle(
                     color: incident.status == 'dispatched' ? Colors.blueAccent : Colors.orangeAccent, 
                     fontSize: 8, 
-                    fontWeight: FontWeight.bold
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
                   )
                 ),
               ),
@@ -624,19 +744,22 @@ class AdminDashboard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: AppConstants.primaryRed.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.flash_on_rounded, color: AppConstants.primaryRed, size: 24),
+                      child: const Icon(Icons.campaign_rounded, color: AppConstants.primaryRed, size: 24),
                     ),
                     const SizedBox(width: 16),
-                    Text('LEVEL 1 BROADCAST', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: -0.5)),
+                    Text(
+                      'LGU BROADCAST ALERT',
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
                 _buildFieldLabel(context, 'ALERT TITLE'),
-                _buildGlassDialogField(context, titleController, 'e.g. Flood Warning - Brgy 1'),
-                const SizedBox(height: 24),
+                _buildGlassDialogField(context, titleController, 'e.g. Typhoon Alert - Signal No. 2'),
+                const SizedBox(height: 20),
                 _buildFieldLabel(context, 'DETAILED INSTRUCTIONS'),
                 _buildGlassDialogField(context, descriptionController, 'What should citizens do?', maxLines: 3),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 _buildFieldLabel(context, 'TYPE OF EMERGENCY'),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -658,11 +781,11 @@ class AdminDashboard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 36),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppConstants.primaryRed,
-                    minimumSize: const Size(double.infinity, 56),
+                    minimumSize: const Size(double.infinity, 54),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 10,
                     shadowColor: AppConstants.primaryRed.withOpacity(0.4),
@@ -679,13 +802,13 @@ class AdminDashboard extends StatelessWidget {
                     await Provider.of<FirestoreService>(context, listen: false).sendAlert(alert);
                     Navigator.pop(context);
                   },
-                  child: const Text('INITIATE BROADCAST', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  child: const Text('INITIATE BROADCAST', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
                 ),
                 const SizedBox(height: 12),
                 Center(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('CLOSE COMMAND', style: TextStyle(color: Colors.white24, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -699,8 +822,8 @@ class AdminDashboard extends StatelessWidget {
   Widget _buildFieldLabel(BuildContext context, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 10),
-      child: Text(label, style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(label, style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
     );
   }
 
@@ -712,61 +835,12 @@ class AdminDashboard extends StatelessWidget {
       style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: isDark ? Colors.white12 : Colors.black12, fontSize: 14),
+        hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26, fontSize: 13),
         filled: true,
         fillColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
-        contentPadding: const EdgeInsets.all(20),
+        contentPadding: const EdgeInsets.all(18),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppConstants.primaryRed)),
-      ),
-    );
-  }
-
-  void _showTriggerCheckInDialog(BuildContext context) {
-    final controller = TextEditingController(text: 'CITY-WIDE SAFETY CHECK-IN');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-        elevation: isDark ? 24 : 8,
-        shadowColor: isDark ? Colors.black : Colors.black26,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Initiate Check-in', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'This will send a high-priority popup to all citizens requesting their status.',
-              style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            _buildGlassDialogField(context, controller, 'Event Title'),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.end,
-        actionsPadding: const EdgeInsets.only(right: 24, bottom: 20, left: 24),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx), 
-            child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 0,
-            ),
-            onPressed: () async {
-              await Provider.of<FirestoreService>(context, listen: false).triggerSafetyCheck(controller.text.trim());
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('LAUNCH PROTOCOL', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
-          ),
-        ],
       ),
     );
   }

@@ -8,11 +8,10 @@ import 'citizen_dashboard.dart';
 import 'admin_dashboard.dart';
 import 'responder_dashboard.dart';
 import 'profile_screen.dart';
-import 'manage_responders_screen.dart';
 import 'alerts_screen.dart';
-import 'global_map_screen.dart';
-import 'config_screen.dart';
-import 'safe_zone_map_screen.dart';
+import 'incident_mapping_screen.dart';
+import 'predictive_analysis_screen.dart';
+import 'lgu_user_management_screen.dart';
 import '../core/localization.dart';
 import '../core/theme.dart';
 import 'login_screen.dart';
@@ -149,98 +148,93 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBody(String role) {
-    if (_selectedIndex != 0) {
-      if (role == AppConstants.roleAdmin) {
-        if (_selectedIndex == 1) return const ManageRespondersScreen();
-        if (_selectedIndex == 2) return const GlobalMapScreen();
-        if (_selectedIndex == 3) return const ConfigScreen();
-      } else {
-        if (_selectedIndex == 1) return const SafeZoneMapScreen();
-        if (_selectedIndex == 2) return const AlertsScreen();
-        if (_selectedIndex == 3) return const ProfileScreen();
-      }
-      return const ProfileScreen();
+    switch (_selectedIndex) {
+      case 1:
+        // Module 2 & 3: GIS Incident Mapping & Pinning
+        return const IncidentMappingScreen();
+      case 2:
+        // Module 6 & 9: Predictive Analysis & Forecasting
+        return const PredictiveAnalysisScreen();
+      case 3:
+        // Module 8: Notifications and Alerts
+        return const AlertsScreen();
+      case 4:
+        // Module 10: User Management / Profile
+        if (role == AppConstants.roleAdmin) {
+          return const LGUUserManagementScreen();
+        }
+        return const ProfileScreen();
+      case 0:
+      default:
+        // Module 7: Dashboard (Central LGU Command Overview)
+        if (role == AppConstants.roleAdmin) return const AdminDashboard();
+        if (role == AppConstants.roleResponder) return const ResponderDashboard();
+        return const CitizenDashboard();
     }
-
-    if (role == AppConstants.roleAdmin) return const AdminDashboard();
-    if (role == AppConstants.roleResponder) return const ResponderDashboard();
-    return const CitizenDashboard();
   }
-
 
   Widget _buildBottomNav(String role) {
-    if (role == AppConstants.roleAdmin) {
-      return _buildAdminNav();
-    }
-    // Responders can use a slightly different nav or the same, but let's ensure it's marked
-    return _buildCitizenNav();
-  }
-
-
-  Widget _buildCitizenNav() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isAdmin = role == AppConstants.roleAdmin;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: isDark ? const Color(0xFF1E2841) : Colors.white,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedItemColor: AppConstants.primaryRed,
-        unselectedItemColor: isDark ? Colors.white24 : Colors.black26,
-        selectedLabelStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 9),
-        iconSize: 20,
-        items: [
-          BottomNavigationBarItem(icon: const Icon(Icons.home_filled), label: 'Home'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.location_on), label: 'Safe Zone'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.forum), label: 'Broadcast'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.person), label: 'Profile'.tr(context)),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black12, width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildAdminNav() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
-        boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _selectedIndex > 3 ? 0 : _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedItemColor: AppConstants.primaryRed,
-        unselectedItemColor: isDark ? Colors.white24 : Colors.black26,
-        selectedLabelStyle: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 9),
-        iconSize: 20,
-        items: [
-          BottomNavigationBarItem(icon: const Icon(Icons.dashboard_rounded), label: 'Dashboard'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.people_alt_rounded), label: 'Responders'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.public_rounded), label: 'Global Map'.tr(context)),
-          BottomNavigationBarItem(icon: const Icon(Icons.settings_rounded), label: 'Config'.tr(context)),
-        ],
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex.clamp(0, 4),
+          onTap: (index) => setState(() => _selectedIndex = index),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedItemColor: AppConstants.primaryRed,
+          unselectedItemColor: isDark ? Colors.white38 : Colors.black38,
+          selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 10),
+          iconSize: 22,
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_rounded),
+              activeIcon: Icon(Icons.dashboard_rounded, color: AppConstants.primaryRed),
+              label: 'Dashboard',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.pin_drop_rounded),
+              activeIcon: Icon(Icons.pin_drop_rounded, color: AppConstants.primaryRed),
+              label: 'GIS Map',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.insights_rounded),
+              activeIcon: Icon(Icons.insights_rounded, color: AppConstants.primaryRed),
+              label: 'Predictive AI',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_active_rounded),
+              activeIcon: Icon(Icons.notifications_active_rounded, color: AppConstants.primaryRed),
+              label: 'Alerts',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded),
+              activeIcon: Icon(isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded, color: AppConstants.primaryRed),
+              label: isAdmin ? 'Users' : 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }

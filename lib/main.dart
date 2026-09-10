@@ -13,8 +13,8 @@ import 'screens/pending_verification_screen.dart';
 import 'firebase_options.dart';
 import 'core/localization.dart';
 import 'models/user_model.dart';
-import 'screens/sos_screen.dart';
 import 'package:flutter/services.dart';
+import 'screens/report_screen.dart';
 
 import 'services/location_service.dart';
 import 'services/weather_service.dart';
@@ -60,9 +60,9 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
   }
 
   void _dispatchSOS() {
-    // Force navigation to SOS Screen from ANYWHERE
+    // Navigate to Incident Report Screen on emergency trigger
     navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => const SOSScreen()),
+      MaterialPageRoute(builder: (_) => const ReportScreen()),
     );
   }
 
