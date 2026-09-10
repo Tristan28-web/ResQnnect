@@ -187,7 +187,7 @@ class AdminVerificationScreen extends StatelessWidget {
                     await firestoreService.updateUserVerification(user.userId, false);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Citizen rejected.'), backgroundColor: Colors.red),
+                        const SnackBar(content: Text('Citizen rejected and removed from pending queue.'), backgroundColor: Colors.red),
                       );
                     }
                   },

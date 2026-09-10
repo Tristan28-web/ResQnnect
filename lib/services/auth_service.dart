@@ -161,7 +161,7 @@ class AuthService {
               : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GIS Admin' : 'GIS User')),
           email: user.email ?? 'guest@gis.local',
           phone: '',
-          profileImage: user.photoURL ?? '',
+          profileImage: (targetRole == AppConstants.roleAdmin || targetRole == AppConstants.roleResponder) ? '' : (user.photoURL ?? ''),
           role: targetRole,
           isActive: true,
           isVerified: targetVerified, 
@@ -183,6 +183,16 @@ class AuthService {
           } catch (e) {
             print('Note: Could not auto-upgrade role in Firestore: $e');
           }
+        }
+
+        // Auto-clear admin & responder profile image if present to enforce empty profile
+        final isPrivileged = targetRole == AppConstants.roleAdmin || targetRole == AppConstants.roleResponder;
+        if (isPrivileged && (currentData['profile_image'] ?? '').toString().isNotEmpty) {
+          try {
+            await _db.collection(AppConstants.usersCollection).doc(user.uid).update({
+              'profile_image': '',
+            });
+          } catch (_) {}
         }
       }
     }

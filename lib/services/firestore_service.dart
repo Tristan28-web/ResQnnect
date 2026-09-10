@@ -119,12 +119,7 @@ class FirestoreService {
   }
 
   Stream<int> getUnverifiedCitizenCount() {
-    return _db
-        .collection(AppConstants.usersCollection)
-        .where('role', isEqualTo: AppConstants.roleCitizen)
-        .where('is_verified', isEqualTo: false)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    return getUnverifiedCitizens().map((list) => list.length);
   }
 
   Stream<List<UserModel>> getUnverifiedCitizens() {
@@ -133,19 +128,37 @@ class FirestoreService {
         .where('role', isEqualTo: AppConstants.roleCitizen)
         .where('is_verified', isEqualTo: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromMap(doc.data()))
+            .where((u) => u.isActive)
+            .toList());
   }
 
   Future<void> verifyUser(String userId) async {
     await _db.collection(AppConstants.usersCollection).doc(userId).update({
       'is_verified': true,
+      'is_active': true,
     });
   }
 
+  Future<void> rejectCitizen(String userId) async {
+    try {
+      await _db.collection(AppConstants.usersCollection).doc(userId).delete();
+    } catch (_) {
+      await _db.collection(AppConstants.usersCollection).doc(userId).update({
+        'is_active': false,
+        'is_verified': false,
+        'verification_status': 'rejected',
+      });
+    }
+  }
+
   Future<void> updateUserVerification(String userId, bool isVerified) async {
-    await _db.collection(AppConstants.usersCollection).doc(userId).update({
-      'is_verified': isVerified,
-    });
+    if (isVerified) {
+      await verifyUser(userId);
+    } else {
+      await rejectCitizen(userId);
+    }
   }
 
   Future<void> deleteUser(String userId) async {

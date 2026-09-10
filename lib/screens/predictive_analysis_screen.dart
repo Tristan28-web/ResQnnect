@@ -602,73 +602,78 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
       return const SizedBox.shrink();
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: forecast.map((f) {
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(right: 12, bottom: 4),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.retroDarkCard : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
-                  offset: const Offset(2, 2),
-                  blurRadius: 0,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: -20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: forecast.map((f) {
+            return Container(
+              width: 140,
+              margin: const EdgeInsets.only(right: 12, bottom: 4),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                  width: 1.5,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.retroLilac,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
                   ),
-                  child: Text(
-                    f.day.toUpperCase(),
-                    style: const TextStyle(
-                      color: AppColors.retroDarkBorder,
-                      fontSize: 9,
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.retroLilac,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.0),
+                    ),
+                    child: Text(
+                      f.day.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.retroDarkBorder,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '${f.projectedIncidents} Incidents',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '${f.projectedIncidents} Incidents',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                  const SizedBox(height: 4),
+                  Text(
+                    f.mainThreat,
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  f.mainThreat,
-                  style: TextStyle(
-                    color: isDark ? Colors.white60 : const Color(0xFF6B7280),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

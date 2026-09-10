@@ -158,24 +158,29 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Retro Role Filter Pills
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      _buildRoleFilterPill('All'),
-                      const SizedBox(width: 8),
-                      _buildRoleFilterPill('Administrator', value: 'admin'),
-                      const SizedBox(width: 8),
-                      _buildRoleFilterPill('PNP Personnel', value: 'pnp'),
-                      const SizedBox(width: 8),
-                      _buildRoleFilterPill('BFP Personnel', value: 'bfp'),
-                      const SizedBox(width: 8),
-                      _buildRoleFilterPill('Rescue Team', value: 'rescue'),
-                      const SizedBox(width: 8),
-                      _buildRoleFilterPill('Citizens', value: 'citizen'),
-                    ],
+                // Retro Role Filter Pills (Edge-to-Edge scrolling)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: -20),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    clipBehavior: Clip.none,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        _buildRoleFilterPill('All'),
+                        const SizedBox(width: 8),
+                        _buildRoleFilterPill('Administrator', value: 'admin'),
+                        const SizedBox(width: 8),
+                        _buildRoleFilterPill('PNP Personnel', value: 'pnp'),
+                        const SizedBox(width: 8),
+                        _buildRoleFilterPill('BFP Personnel', value: 'bfp'),
+                        const SizedBox(width: 8),
+                        _buildRoleFilterPill('Rescue Team', value: 'rescue'),
+                        const SizedBox(width: 8),
+                        _buildRoleFilterPill('Citizens', value: 'citizen'),
+                      ],
+                    ),
                   ),
                 ),
               ],

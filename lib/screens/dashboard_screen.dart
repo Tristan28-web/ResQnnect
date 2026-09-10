@@ -10,7 +10,6 @@ import 'profile_screen.dart';
 import 'alerts_screen.dart';
 import 'incident_mapping_screen.dart';
 import 'predictive_analysis_screen.dart';
-import 'lgu_user_management_screen.dart';
 import '../core/theme.dart';
 import '../widgets/profile_image.dart';
 import '../services/location_service.dart';
@@ -198,10 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Module 08: Notifications and Alerts
         return const AlertsScreen();
       case 4:
-        // Module 10: User Management / Profile
-        if (role == AppConstants.roleAdmin) {
-          return const LGUUserManagementScreen();
-        }
+        // Profile Screen for all roles (Admin, Responder, Citizen)
         return const ProfileScreen();
       case 0:
       default:
@@ -214,7 +210,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- Retro Pill Floating Navigation Bar (Safe from Android system buttons on any device) ---
   Widget _buildRetroBottomNav(BuildContext context, String role, bool isDark) {
-    final isAdmin = role == AppConstants.roleAdmin;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
     final navItems = [
@@ -222,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       {'icon': Icons.location_on_rounded, 'label': 'Map'},
       {'icon': Icons.auto_awesome_rounded, 'label': 'AI'},
       {'icon': Icons.notifications_rounded, 'label': 'Alerts'},
-      {'icon': isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded, 'label': 'Users'},
+      {'icon': Icons.person_rounded, 'label': 'Profile'},
     ];
 
     return SafeArea(
