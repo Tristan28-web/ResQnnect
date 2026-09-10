@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
     
     <application
-        android:label="ResQnnect"
+        android:label="GIS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

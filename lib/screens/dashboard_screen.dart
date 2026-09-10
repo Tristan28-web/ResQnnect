@@ -59,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPremiumHeader(BuildContext context, String role, UserModel? user, AuthService authService) {
-    String titleText = 'ResQnnect';
+    String titleText = AppConstants.appName;
     Color iconBgColor = AppConstants.primaryRed.withOpacity(0.15); // Dark Red Tint
     IconData statusIcon = Icons.security;
 

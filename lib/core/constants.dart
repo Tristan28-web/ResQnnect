@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppConstants {
-  static const String appName = 'ResQnnect';
+  static const String appName = 'GIS';
   static const String logoAsset = 'assets/images/logo.png';
   
   // Colors

@@ -1,11 +1,11 @@
 {
-    "name": "resqnnect",
-    "short_name": "resqnnect",
+    "name": "GIS",
+    "short_name": "GIS",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "GIS-Powered Incident Mapping and Predictive Logic System.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
