@@ -22,6 +22,8 @@ class CitizenDashboard extends StatefulWidget {
 class _CitizenDashboardState extends State<CitizenDashboard> {
   int _lastAlertCount = 0;
   final Set<String> _notifiedIncidentIds = {};
+  String _searchQuery = '';
+  String _selectedCategory = 'All';
 
   @override
   void initState() {
@@ -62,19 +64,922 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 16),
+              _buildRetroSearchBar(context),
               const SizedBox(height: 20),
               _buildLguHeroCard(context),
+              const SizedBox(height: 24),
+              _buildRetroCategoryDiscs(context),
               const SizedBox(height: 28),
               _buildActionGrid(context),
               const SizedBox(height: 32),
               _buildMyReports(context),
               const SizedBox(height: 32),
               _buildLiveUpdates(context),
-              const SizedBox(height: 100),
+              const SizedBox(height: 110),
             ],
           ),
         );
       },
+    );
+  }
+
+  // --- RETRO PILL SEARCH & FILTER BAR ---
+  Widget _buildRetroSearchBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.only(left: 16, right: 6),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search_rounded,
+            color: isDark ? Colors.white60 : AppColors.retroDarkBorder,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val.trim().toLowerCase();
+                });
+              },
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search incidents, hazards, alerts...',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.black38,
+                  fontSize: 13,
+                  fontWeight: FontWeight.normal,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.retroMint,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.retroDarkBorder,
+                width: 1.6,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Filter options: Catanduanes LGUs & Hazards'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: const Icon(
+                  Icons.tune_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- RETRO PEACH HERO BANNER WITH OFFSET SHADOW ---
+  Widget _buildLguHeroCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firestore = Provider.of<FirestoreService>(context, listen: false);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+          width: 2.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black45 : AppColors.retroMintDark,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black38 : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? Colors.white24 : AppColors.retroDarkBorder,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF22C55E),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'CATANDUANES GIS LIVE',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.retroLilac,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.retroDarkBorder,
+                      width: 1.4,
+                    ),
+                  ),
+                  child: const Text(
+                    '11 LGUs',
+                    style: TextStyle(
+                      color: AppColors.retroDarkBorder,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Incident Mapping &\nPredictive Logic',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 23,
+                fontWeight: FontWeight.w900,
+                height: 1.15,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Real-time geo-pinned incident reporting, hazard alerts, and emergency response across Catanduanes island.',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : const Color(0xFF555B66),
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const IncidentMappingScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.explore_rounded, size: 16),
+                  label: const Text(
+                    'Explore Live Map',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.retroLilac,
+                    foregroundColor: AppColors.retroDarkBorder,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                StreamBuilder<List<IncidentModel>>(
+                  stream: firestore.getIncidents(),
+                  builder: (context, snapshot) {
+                    final incidents = snapshot.data ?? [];
+                    final ongoing = incidents.where((i) => i.status != 'resolved' && i.status != 'closed').length;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black38 : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark ? Colors.white24 : AppColors.retroDarkBorder,
+                          width: 1.4,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.flash_on_rounded, color: Color(0xFFF59E0B), size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$ongoing Active',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- RETRO CIRCULAR CATEGORY BADGES ---
+  Widget _buildRetroCategoryDiscs(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = [
+      {'name': 'All', 'icon': Icons.apps_rounded, 'color': AppColors.retroMint},
+      {'name': 'Fire', 'icon': Icons.local_fire_department_rounded, 'color': const Color(0xFFEF4444)},
+      {'name': 'Flood', 'icon': Icons.water_drop_rounded, 'color': const Color(0xFF3B82F6)},
+      {'name': 'Medical', 'icon': Icons.medical_services_rounded, 'color': const Color(0xFF10B981)},
+      {'name': 'Accident', 'icon': Icons.car_crash_rounded, 'color': const Color(0xFFF97316)},
+      {'name': 'Hotspot', 'icon': Icons.whatshot_rounded, 'color': const Color(0xFF8B5CF6)},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'INCIDENT CATEGORIES',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.3,
+                color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+              ),
+            ),
+            Text(
+              'Filter view',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.retroMint,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 82,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: categories.length,
+            separatorBuilder: (_, index) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final name = cat['name'] as String;
+              final icon = cat['icon'] as IconData;
+              final iconColor = cat['color'] as Color;
+              final isSelected = _selectedCategory == name;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = name;
+                  });
+                  if (name == 'Hotspot') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HotspotIdentificationScreen()),
+                    );
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? AppColors.retroDarkCard : Colors.white),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.retroDarkBorder
+                              : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                            offset: const Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          icon,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white : iconColor),
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                        color: isSelected
+                            ? AppColors.retroMint
+                            : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- RETRO ACTION SERVICES GRID ---
+  Widget _buildActionGrid(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'GIS ACTION SERVICES',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.3,
+            color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+          ),
+        ),
+        const SizedBox(height: 14),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.15,
+          children: [
+            _buildRetroActionCard(
+              context: context,
+              title: 'Report Incident',
+              subtitle: 'Pin & submit evidence',
+              icon: Icons.add_location_alt_rounded,
+              accentColor: AppColors.retroPeach,
+              iconColor: const Color(0xFFE11D48),
+              screen: const ReportScreen(),
+            ),
+            _buildRetroActionCard(
+              context: context,
+              title: 'Incident Map',
+              subtitle: 'Live interactive pins',
+              icon: Icons.map_rounded,
+              accentColor: AppColors.retroLilac,
+              iconColor: const Color(0xFF2563EB),
+              screen: const IncidentMappingScreen(),
+            ),
+            _buildRetroActionCard(
+              context: context,
+              title: 'Hotspot Heatmap',
+              subtitle: 'High-risk hazard zones',
+              icon: Icons.whatshot_rounded,
+              accentColor: AppColors.retroPeach,
+              iconColor: const Color(0xFFEA580C),
+              screen: const HotspotIdentificationScreen(),
+            ),
+            _buildRetroActionCard(
+              context: context,
+              title: 'LGU Alerts',
+              subtitle: 'Public emergency feeds',
+              icon: Icons.notifications_active_rounded,
+              accentColor: AppColors.retroLilac,
+              iconColor: const Color(0xFF7C3AED),
+              screen: const AlertsScreen(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRetroActionCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accentColor,
+    required Color iconColor,
+    required Widget screen,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+              offset: const Offset(3, 3),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2C3240) : accentColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : AppColors.retroDarkBorder,
+                  width: 1.4,
+                ),
+              ),
+              child: Icon(icon, color: isDark ? Colors.white : iconColor, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- RETRO MY REPORTS ---
+  Widget _buildMyReports(BuildContext context) {
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'My Incident Reports',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportScreen()),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 14),
+              label: const Text('New Report', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.retroMint,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<IncidentModel>>(
+          stream: firestoreService.getIncidents(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+
+            var myReports = snapshot.data!
+                .where((i) => i.userId == userId)
+                .toList();
+
+            if (_selectedCategory != 'All' && _selectedCategory != 'Hotspot') {
+              myReports = myReports
+                  .where((i) => i.incidentType.toLowerCase().contains(_selectedCategory.toLowerCase()))
+                  .toList();
+            }
+
+            if (_searchQuery.isNotEmpty) {
+              myReports = myReports
+                  .where((i) =>
+                      i.description.toLowerCase().contains(_searchQuery) ||
+                      i.location.toLowerCase().contains(_searchQuery) ||
+                      i.incidentType.toLowerCase().contains(_searchQuery))
+                  .toList();
+            }
+
+            if (myReports.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.6,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.assignment_turned_in_outlined,
+                      color: isDark ? Colors.white24 : Colors.black26,
+                      size: 36,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No incident reports match your filter.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Column(
+              children: myReports.take(3).map((incident) => _buildMyReportItem(context, incident)).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMyReportItem(BuildContext context, IncidentModel incident) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Color statusBg = AppColors.retroPeach;
+    Color statusText = const Color(0xFFD97706);
+    String statusLabel = 'PENDING';
+
+    if (incident.status == 'dispatched') {
+      statusBg = AppColors.retroLilac;
+      statusText = const Color(0xFF2563EB);
+      statusLabel = 'DISPATCHED';
+    } else if (incident.status == 'resolved') {
+      statusBg = const Color(0xFFDCFCE7);
+      statusText = const Color(0xFF16A34A);
+      statusLabel = 'RESOLVED';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: statusBg,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
+            ),
+            child: Icon(
+              incident.status == 'dispatched'
+                  ? Icons.local_shipping_rounded
+                  : (incident.status == 'resolved' ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
+              color: statusText,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  incident.description,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(Icons.pin_drop_rounded, size: 12, color: isDark ? Colors.white38 : Colors.black45),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        incident.location,
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.retroDarkBorder,
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusText,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white30 : AppColors.retroDarkBorder),
+        ],
+      ),
+    );
+  }
+
+  // --- RETRO LGU ADVISORIES & ALERTS ---
+  Widget _buildLiveUpdates(BuildContext context) {
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'LGU Advisories & Alerts',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AlertsScreen()),
+              ),
+              child: Text(
+                'View all',
+                style: TextStyle(
+                  color: AppColors.retroMint,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<AlertModel>>(
+          stream: firestoreService.getAlerts(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    'No active advisories at this time.',
+                    style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final alerts = snapshot.data!.take(3).toList();
+            return Column(
+              children: alerts.map((alert) => _buildRetroAlertItem(context, alert)).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRetroAlertItem(BuildContext context, AlertModel alert) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCritical = alert.disasterType == 'Critical';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isCritical ? AppColors.retroPeach : AppColors.retroLilac,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.retroDarkBorder,
+                width: 1.4,
+              ),
+            ),
+            child: Icon(
+              isCritical ? Icons.warning_rounded : Icons.campaign_rounded,
+              color: isCritical ? const Color(0xFFEF4444) : const Color(0xFF7C3AED),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alert.title,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  alert.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : const Color(0xFF555B66),
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat('h:mm a').format(alert.createdAt),
+            style: TextStyle(
+              color: isDark ? Colors.white30 : const Color(0xFF888E99),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -96,37 +1001,59 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppConstants.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Row(
+        backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
+        ),
+        title: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 28),
-            SizedBox(width: 12),
-            Text('Report Accepted', style: TextStyle(fontWeight: FontWeight.bold)),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFDCFCE7),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Report Accepted',
+              style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your incident report has been verified by LGU Catanduanes and emergency responders are dispatched to your pinned location.', 
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-            const SizedBox(height: 24),
+            Text(
+              'Your incident report has been verified by LGU Catanduanes and emergency responders are dispatched to your pinned location.',
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4),
+            ),
+            const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: AppColors.retroPeach,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.timer_outlined, color: Colors.green),
+                  Icon(Icons.timer_outlined, color: AppColors.retroDarkBorder),
                   SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('EST. RESPONSE TIME', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green)),
-                      Text('5 - 12 Minutes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.green)),
+                      Text(
+                        'EST. RESPONSE TIME',
+                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
+                      ),
+                      Text(
+                        '5 - 12 Minutes',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
+                      ),
                     ],
                   ),
                 ],
@@ -138,508 +1065,15 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.retroMint,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('UNDERSTOOD'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLguHeroCard(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final firestore = Provider.of<FirestoreService>(context, listen: false);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E2841), const Color(0xFF161E31)]
-              : [const Color(0xFFF0F4FF), const Color(0xFFE5EDFF)],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppConstants.primaryRed.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'LGU CATANDUANES',
-                  style: TextStyle(color: AppConstants.primaryRed, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-                ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: 7, height: 7,
-                    decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'GIS LIVE',
-                    style: TextStyle(color: isDark ? Colors.greenAccent : Colors.green[700], fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Incident Mapping & Predictive Logic',
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Centralized portal for incident reporting, geolocation pinning, and community risk monitoring.',
-            style: TextStyle(
-              color: isDark ? Colors.white60 : Colors.black54,
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
-          const SizedBox(height: 16),
-          StreamBuilder<List<IncidentModel>>(
-            stream: firestore.getIncidents(),
-            builder: (context, snapshot) {
-              final incidents = snapshot.data ?? [];
-              final ongoing = incidents.where((i) => i.status != 'resolved' && i.status != 'closed').length;
-              final resolved = incidents.where((i) => i.status == 'resolved').length;
-
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildHeroStat('ACTIVE INCIDENTS', '$ongoing', Colors.orangeAccent, isDark),
-                  Container(width: 1, height: 24, color: isDark ? Colors.white10 : Colors.black12),
-                  _buildHeroStat('RESOLVED', '$resolved', Colors.greenAccent, isDark),
-                  Container(width: 1, height: 24, color: isDark ? Colors.white10 : Colors.black12),
-                  _buildHeroStat('COVERAGE', '11 LGUs', Colors.lightBlueAccent, isDark),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroStat(String label, String value, Color color, bool isDark) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.6),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionGrid(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'GIS ACTION SERVICES',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
-            color: isDark ? Colors.white54 : Colors.black54,
-          ),
-        ),
-        const SizedBox(height: 14),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.15,
-          children: [
-            _buildActionCard(
-              context,
-              'Report Incident',
-              'Pin & submit evidence',
-              Icons.add_location_alt_rounded,
-              AppConstants.primaryRed,
-              const ReportScreen(),
-            ),
-            _buildActionCard(
-              context,
-              'Incident Map',
-              'Live interactive GIS pins',
-              Icons.map_rounded,
-              const Color(0xFF1E88E5),
-              const IncidentMappingScreen(),
-            ),
-            _buildActionCard(
-              context,
-              'Hotspot Heatmap',
-              'High-risk hazard zones',
-              Icons.whatshot_rounded,
-              const Color(0xFFE65100),
-              const HotspotIdentificationScreen(),
-            ),
-            _buildActionCard(
-              context,
-              'LGU Alerts',
-              'Public emergency advisories',
-              Icons.notifications_active_rounded,
-              const Color(0xFF7B1FA2),
-              const AlertsScreen(),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard(BuildContext context, String title, String subtitle, IconData icon, Color iconColor, Widget screen) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: isDark ? const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-          ) : null,
-          color: isDark ? null : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title, 
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle, 
-                    style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 11),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMyReports(BuildContext context) {
-    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'My Incident Reports',
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportScreen())),
-              icon: const Icon(Icons.add, size: 16, color: AppConstants.primaryRed),
-              label: const Text('New Report', style: TextStyle(color: AppConstants.primaryRed, fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        StreamBuilder<List<IncidentModel>>(
-          stream: firestoreService.getIncidents(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return const SizedBox.shrink();
-            
-            final myReports = snapshot.data!
-                .where((i) => i.userId == userId)
-                .toList();
-
-            if (myReports.isEmpty) {
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: isDark ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-                  ) : null,
-                  color: isDark ? null : Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.assignment_turned_in_outlined, color: isDark ? Colors.white24 : Colors.black26, size: 36),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No incident reports submitted yet.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return Column(
-              children: myReports.take(3).map((incident) => _buildMyReportItem(context, incident)).toList(),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMyReportItem(BuildContext context, IncidentModel incident) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    Color statusColor = Colors.orange;
-    String statusText = 'PENDING LGU REVIEW';
-
-    if (incident.status == 'dispatched') {
-      statusColor = Colors.blueAccent;
-      statusText = 'RESPONDERS DISPATCHED';
-    } else if (incident.status == 'resolved') {
-      statusColor = Colors.greenAccent;
-      statusText = 'RESOLVED & VERIFIED';
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: isDark ? const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-        ) : null,
-        color: isDark ? null : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
-        boxShadow: isDark ? [const BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4))] : [],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              incident.status == 'dispatched'
-                  ? Icons.local_shipping_rounded
-                  : (incident.status == 'resolved' ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
-              color: statusColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  incident.description,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.pin_drop, size: 11, color: isDark ? Colors.white38 : Colors.black38),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        incident.location,
-                        style: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  statusText,
-                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: isDark ? Colors.white24 : Colors.black26),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLiveUpdates(BuildContext context) {
-    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('LGU Advisories & Alerts', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
-            TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen())), 
-              child: const Text('View all', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold))
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        StreamBuilder<List<AlertModel>>(
-          stream: firestoreService.getAlerts(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Text('No active advisories at this time.', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 14)),
-                ),
-              );
-            }
-
-            final alerts = snapshot.data!.take(3).toList();
-            return Column(
-              children: alerts.map((alert) => _buildAlertItem(context, alert)).toList(),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAlertItem(BuildContext context, AlertModel alert) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: isDark ? const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-        ) : null,
-        color: isDark ? null : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-        boxShadow: isDark 
-            ? [const BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))] 
-            : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: (alert.disasterType == 'Critical' ? AppConstants.primaryRed : Colors.orange).withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              alert.disasterType == 'Critical' ? Icons.warning_rounded : Icons.campaign_rounded,
-              color: alert.disasterType == 'Critical' ? AppConstants.primaryRed : Colors.orange,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(alert.title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(
-                  alert.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            DateFormat('h:mm a').format(alert.createdAt),
-            style: TextStyle(color: isDark ? Colors.white30 : Colors.black38, fontSize: 10),
+            child: const Text('UNDERSTOOD', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
       ),

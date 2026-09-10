@@ -26,126 +26,155 @@ class AdminDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _buildSystemStatusCard(context),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           _buildIncidentKpiSummary(context),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
           _buildBroadcastBanner(context),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           _buildActionGrid(context),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           _buildRecentActivity(context),
-          const SizedBox(height: 100),
+          const SizedBox(height: 110),
         ],
       ),
     );
   }
 
+  // --- RETRO PEACH COMMAND CENTER CARD ---
   Widget _buildSystemStatusCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final firestore = Provider.of<FirestoreService>(context);
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E2841), const Color(0xFF161E31)]
-              : [const Color(0xFFE8F0FE), const Color(0xFFF0F4FF)],
+        color: isDark ? const Color(0xFF2B2421) : AppColors.retroPeach,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: isDark ? const Color(0xFF4A3C38) : AppColors.retroDarkBorder,
+          width: 2.0,
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: isDark ? Colors.black45 : AppColors.retroMintDark,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'LGU COMMAND CENTER',
-                    style: TextStyle(
-                      color: isDark ? Colors.white38 : Colors.black54,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black38 : Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDark ? Colors.white24 : AppColors.retroDarkBorder,
+                          width: 1.4,
+                        ),
+                      ),
+                      child: Text(
+                        'LGU COMMAND CENTER',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'GIS Operational',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
+                    const SizedBox(height: 10),
+                    Text(
+                      'GIS Operational',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.greenAccent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: 6),
+                    Row(
                       children: [
                         Container(
-                          width: 6, height: 6,
-                          decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF22C55E),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'CATANDUANES REAL-TIME LOGIC',
                           style: TextStyle(
-                            color: isDark ? Colors.greenAccent : Colors.green[700],
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.04),
-                  shape: BoxShape.circle,
+                  ],
                 ),
-                child: Icon(Icons.hub_rounded, color: isDark ? Colors.white70 : Colors.black54, size: 36),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatItemStream(context, 'RESPONDERS', firestore.getResponderCount(), Icons.shield_rounded),
-              _buildStatItemStream(context, 'VERIFY QUEUE', firestore.getUnverifiedCitizenCount(), Icons.verified_user_rounded, isAlert: true),
-              _buildStatItemStream(context, 'LGU ALERTS', firestore.getAlertCount(), Icons.campaign_rounded),
-              _buildStatItemStream(context, 'HOTSPOTS', firestore.getMapLocationCount(), Icons.whatshot_rounded),
-            ],
-          ),
-        ],
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.12),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.hub_rounded,
+                      color: isDark ? Colors.white : AppColors.retroMintDark,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Divider(
+              color: isDark ? Colors.white24 : AppColors.retroDarkBorder.withOpacity(0.2),
+              height: 1,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatItemStream(context, 'RESPONDERS', firestore.getResponderCount(), Icons.shield_rounded),
+                _buildStatItemStream(context, 'VERIFY QUEUE', firestore.getUnverifiedCitizenCount(), Icons.verified_user_rounded, isAlert: true),
+                _buildStatItemStream(context, 'LGU ALERTS', firestore.getAlertCount(), Icons.campaign_rounded),
+                _buildStatItemStream(context, 'HOTSPOTS', firestore.getMapLocationCount(), Icons.whatshot_rounded),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -157,31 +186,58 @@ class AdminDashboard extends StatelessWidget {
       builder: (context, snapshot) {
         final val = snapshot.data ?? 0;
         final color = (isAlert && val > 0)
-            ? Colors.orangeAccent
-            : (isDark ? Colors.white : Colors.black87);
-        
+            ? const Color(0xFFEA580C)
+            : (isDark ? Colors.white : AppColors.retroDarkBorder);
+
         return Column(
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color.withOpacity(0.55), size: 18),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.4,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: color, size: 18),
+                  ),
+                ),
                 if (isAlert && val > 0)
                   Positioned(
-                    top: -2, right: -2,
-                    child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.orangeAccent, shape: BoxShape.circle)),
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEA580C),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               val.toString(),
-              style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w900),
+              style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(color: isDark ? Colors.white24 : Colors.black45, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+              style: TextStyle(
+                color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
             ),
           ],
         );
@@ -189,60 +245,88 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  // --- RETRO BROADCAST BANNER ---
   Widget _buildBroadcastBanner(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
+    return GestureDetector(
       onTap: () => _showBroadcastDialog(context),
-      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFB71C1C), Color(0xFFD32F2F)],
+          color: isDark ? const Color(0xFF351F22) : const Color(0xFFFEE2E2),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isDark ? const Color(0xFF7F1D1D) : AppColors.retroDarkBorder,
+            width: 1.8,
           ),
-          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppConstants.primaryRed.withOpacity(0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+              offset: const Offset(3, 3),
+              blurRadius: 0,
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xFFEF4444),
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.retroDarkBorder, width: 1.6),
               ),
-              child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 24),
+              child: const Center(
+                child: Icon(Icons.campaign_rounded, color: Colors.white, size: 22),
+              ),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
+            const SizedBox(width: 14),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'BROADCAST LGU ADVISORY',
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Issue city-wide warning or emergency alert to citizens',
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                    'Issue island-wide warning or emergency alert to citizens',
+                    style: TextStyle(
+                      color: isDark ? Colors.white60 : const Color(0xFF555B66),
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+              ),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                size: 16,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
+  // --- RETRO INCIDENT KPI SUMMARY ---
   Widget _buildIncidentKpiSummary(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final firestore = Provider.of<FirestoreService>(context, listen: false);
@@ -281,16 +365,19 @@ class AdminDashboard extends StatelessWidget {
         }
 
         return Container(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2841) : Colors.white,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+            color: isDark ? AppColors.retroDarkCard : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+              width: 1.8,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                offset: const Offset(3, 3),
+                blurRadius: 0,
               ),
             ],
           ),
@@ -302,15 +389,23 @@ class AdminDashboard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.dashboard_rounded, color: AppConstants.primaryRed, size: 18),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.retroLilac,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                        ),
+                        child: const Icon(Icons.dashboard_rounded, color: AppColors.retroDarkBorder, size: 16),
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        '07. DASHBOARD KPI & INCIDENT SUMMARY',
+                        '07. DASHBOARD KPI SUMMARY',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.1,
-                          color: isDark ? Colors.white70 : Colors.black87,
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
                         ),
                       ),
                     ],
@@ -318,10 +413,18 @@ class AdminDashboard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.greenAccent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(6),
+                      color: const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                     ),
-                    child: const Text('GIS ACTIVE', style: TextStyle(color: Colors.greenAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'GIS ACTIVE',
+                      style: TextStyle(
+                        color: Color(0xFF16A34A),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -330,27 +433,27 @@ class AdminDashboard extends StatelessWidget {
               // KPI Boxes: Total, Ongoing, Resolved, Closed
               Row(
                 children: [
-                  Expanded(child: _buildKpiBox('TOTAL', '$total', isDark ? Colors.white : Colors.black87, isDark)),
+                  Expanded(child: _buildRetroKpiBox('TOTAL', '$total', AppColors.retroLilac, isDark ? Colors.white : AppColors.retroDarkBorder, isDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildKpiBox('ONGOING', '$ongoing', Colors.orangeAccent, isDark)),
+                  Expanded(child: _buildRetroKpiBox('ONGOING', '$ongoing', AppColors.retroPeach, const Color(0xFFD97706), isDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildKpiBox('RESOLVED', '$resolved', Colors.greenAccent, isDark)),
+                  Expanded(child: _buildRetroKpiBox('RESOLVED', '$resolved', const Color(0xFFDCFCE7), const Color(0xFF16A34A), isDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildKpiBox('CLOSED', '$closed', Colors.blueGrey, isDark)),
+                  Expanded(child: _buildRetroKpiBox('CLOSED', '$closed', const Color(0xFFF1F5F9), const Color(0xFF64748B), isDark)),
                 ],
               ),
               const SizedBox(height: 20),
-              Divider(color: isDark ? Colors.white10 : Colors.black12, height: 1),
+              Divider(color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.15), height: 1),
               const SizedBox(height: 16),
 
-              // Incidents by Type (Visual representation matching blueprint Module 7)
+              // Incidents by Type (Module 7)
               Text(
                 'INCIDENTS BY TYPE',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                  color: isDark ? Colors.white38 : Colors.black45,
+                  letterSpacing: 1.2,
+                  color: isDark ? Colors.white38 : const Color(0xFF6B7280),
                 ),
               ),
               const SizedBox(height: 12),
@@ -366,18 +469,44 @@ class AdminDashboard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(entry.key, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 11, fontWeight: FontWeight.bold)),
-                          Text('$count (${(percentage * 100).toStringAsFixed(0)}%)', style: TextStyle(color: barColor, fontSize: 11, fontWeight: FontWeight.w900)),
+                          Text(
+                            entry.key,
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '$count (${(percentage * 100).toStringAsFixed(0)}%)',
+                            style: TextStyle(
+                              color: barColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: percentage,
-                          minHeight: 6,
-                          backgroundColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06),
-                          valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: isDark ? Colors.white12 : AppColors.retroDarkBorder.withOpacity(0.25),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: percentage.clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: barColor,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -394,42 +523,53 @@ class AdminDashboard extends StatelessWidget {
   Color _getTypeColor(String type) {
     switch (type) {
       case 'Flood':
-        return Colors.blueAccent;
+        return const Color(0xFF3B82F6);
       case 'Fire':
-        return Colors.deepOrangeAccent;
+        return const Color(0xFFEF4444);
       case 'Crime':
-        return Colors.purpleAccent;
+        return const Color(0xFF8B5CF6);
       case 'Accident':
-        return Colors.amber;
+        return const Color(0xFFF59E0B);
       default:
-        return Colors.tealAccent;
+        return const Color(0xFF10B981);
     }
   }
 
-  Widget _buildKpiBox(String label, String val, Color color, bool isDark) {
+  Widget _buildRetroKpiBox(String label, String val, Color fill, Color textColor, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: BoxDecoration(
-        color: (isDark ? const Color(0xFF161E31) : const Color(0xFFF5F7FB)),
+        color: isDark ? const Color(0xFF262C38) : fill,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.4,
+        ),
       ),
       child: Column(
         children: [
           Text(
             val,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: textColor),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: isDark ? Colors.white38 : Colors.black45, letterSpacing: 0.5),
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white54 : AppColors.retroDarkBorder,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),
     );
   }
 
+  // --- RETRO 10-MODULE ACTION GRID ---
   Widget _buildActionGrid(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -440,8 +580,8 @@ class AdminDashboard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54,
+              letterSpacing: 1.3,
+              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
             ),
           ),
         ),
@@ -453,48 +593,45 @@ class AdminDashboard extends StatelessWidget {
           mainAxisSpacing: 14,
           childAspectRatio: 1.15,
           children: [
-            _buildActionCard(context, '01. Reporting', 'Evidence submission', Icons.add_location_alt_rounded, AppConstants.primaryRed, const ReportScreen()),
-            _buildActionCard(context, '02. Mapping', 'Interactive GIS pins', Icons.map_rounded, const Color(0xFF1E88E5), const IncidentMappingScreen()),
-            _buildActionCard(context, '03. Pinning', 'Coordinate picker', Icons.pin_drop_rounded, const Color(0xFF00ACC1), const ReportScreen()),
-            _buildActionCard(context, '04. Monitoring', 'Live incident tracker', Icons.dvr_rounded, const Color(0xFF3949AB), const IncidentMonitoringScreen()),
-            _buildActionCard(context, '05. Hotspots', 'High-risk clusters', Icons.whatshot_rounded, const Color(0xFFE65100), const HotspotIdentificationScreen()),
-            _buildActionCard(context, '06. Predictive AI', '7-day logic & risk', Icons.auto_awesome_rounded, const Color(0xFF7B1FA2), const PredictiveAnalysisScreen()),
-            _buildActionCard(context, '08. Alerts', 'Broadcast advisory', Icons.notifications_active_rounded, const Color(0xFFD81B60), const AlertsScreen()),
-            _buildActionCard(context, '09. Report Gen', 'Audit & KPI export', Icons.assessment_rounded, const Color(0xFF00897B), const ReportGenerationScreen()),
-            _buildActionCard(context, '10. Users', 'LGU roles & access', Icons.admin_panel_settings_rounded, const Color(0xFF5E35B1), const LGUUserManagementScreen()),
-            _buildVerifyCard(context),
+            _buildRetroActionCard(context, '01. Reporting', 'Evidence submission', Icons.add_location_alt_rounded, AppColors.retroPeach, const Color(0xFFE11D48), const ReportScreen()),
+            _buildRetroActionCard(context, '02. Mapping', 'Interactive GIS pins', Icons.map_rounded, AppColors.retroLilac, const Color(0xFF2563EB), const IncidentMappingScreen()),
+            _buildRetroActionCard(context, '03. Pinning', 'Coordinate picker', Icons.pin_drop_rounded, AppColors.retroPeach, const Color(0xFF0891B2), const ReportScreen()),
+            _buildRetroActionCard(context, '04. Monitoring', 'Live incident tracker', Icons.dvr_rounded, AppColors.retroLilac, const Color(0xFF4F46E5), const IncidentMonitoringScreen()),
+            _buildRetroActionCard(context, '05. Hotspots', 'High-risk clusters', Icons.whatshot_rounded, AppColors.retroPeach, const Color(0xFFEA580C), const HotspotIdentificationScreen()),
+            _buildRetroActionCard(context, '06. Predictive AI', '7-day logic & risk', Icons.auto_awesome_rounded, AppColors.retroLilac, const Color(0xFF7C3AED), const PredictiveAnalysisScreen()),
+            _buildRetroActionCard(context, '08. Alerts', 'Broadcast advisory', Icons.notifications_active_rounded, AppColors.retroPeach, const Color(0xFFDB2777), const AlertsScreen()),
+            _buildRetroActionCard(context, '09. Report Gen', 'Audit & KPI export', Icons.assessment_rounded, AppColors.retroLilac, const Color(0xFF059669), const ReportGenerationScreen()),
+            _buildRetroActionCard(context, '10. Users', 'LGU roles & access', Icons.admin_panel_settings_rounded, AppColors.retroPeach, const Color(0xFF6D28D9), const LGUUserManagementScreen()),
+            _buildRetroVerifyCard(context),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildVerifyCard(BuildContext context) {
+  Widget _buildRetroVerifyCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<int>(
       stream: Provider.of<FirestoreService>(context).getUnverifiedCitizenCount(),
       builder: (context, snapshot) {
         final pendingCount = snapshot.data ?? 0;
-        return InkWell(
+        return GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminVerificationScreen())),
-          borderRadius: BorderRadius.circular(24),
           child: Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: isDark ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-              ) : null,
-              color: isDark ? null : Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: pendingCount > 0 ? Colors.orangeAccent.withOpacity(0.4) : (isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))),
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.8,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
+                  color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                  offset: const Offset(3, 3),
+                  blurRadius: 0,
+                ),
               ],
             ),
             child: Column(
@@ -507,34 +644,59 @@ class AdminDashboard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.orangeAccent.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppColors.retroPeach,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
                       ),
-                      child: const Icon(Icons.verified_user_rounded, color: Colors.orangeAccent, size: 24),
+                      child: const Icon(Icons.verified_user_rounded, color: Color(0xFFEA580C), size: 22),
                     ),
                     if (pendingCount > 0)
                       Positioned(
-                        top: -4, right: -4,
+                        top: -4,
+                        right: -4,
                         child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: const BoxDecoration(color: Colors.orangeAccent, shape: BoxShape.circle),
-                          child: Text('$pendingCount', style: const TextStyle(color: Colors.black, fontSize: 9, fontWeight: FontWeight.bold)),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEA580C),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                          ),
+                          child: Text(
+                            '$pendingCount',
+                            style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                          ),
                         ),
                       ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Verify Citizens', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 2),
-                    Text(
-                      pendingCount > 0 ? '$pendingCount pending verification' : 'All accounts verified',
-                      style: TextStyle(color: pendingCount > 0 ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black54), fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Verify Citizens',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        pendingCount > 0 ? '$pendingCount pending' : 'All accounts verified',
+                        style: TextStyle(
+                          color: pendingCount > 0 ? const Color(0xFFEA580C) : (isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -544,28 +706,25 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, String title, String subtitle, IconData icon, Color iconColor, Widget screen) {
+  Widget _buildRetroActionCard(BuildContext context, String title, String subtitle, IconData icon, Color accentColor, Color iconColor, Widget screen) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
+    return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
-      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: isDark ? const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-          ) : null,
-          color: isDark ? null : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.8,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
+              color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+              offset: const Offset(3, 3),
+              blurRadius: 0,
+            ),
           ],
         ),
         child: Column(
@@ -575,18 +734,44 @@ class AdminDashboard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(16),
+                color: isDark ? const Color(0xFF2C3240) : accentColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : AppColors.retroDarkBorder,
+                  width: 1.4,
+                ),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: Icon(icon, color: isDark ? Colors.white : iconColor, size: 22),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
+            const SizedBox(height: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -594,6 +779,7 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  // --- RETRO RECENT ACTIVITY ---
   Widget _buildRecentActivity(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
@@ -601,10 +787,24 @@ class AdminDashboard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Recent Incidents', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Recent Incidents',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentMonitoringScreen())), 
-              child: const Text('Live Feed', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold))
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IncidentMonitoringScreen())),
+              child: Text(
+                'Live Feed',
+                style: TextStyle(
+                  color: AppColors.retroMint,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ],
         ),
@@ -613,12 +813,20 @@ class AdminDashboard extends StatelessWidget {
           stream: Provider.of<FirestoreService>(context).getIncidents(),
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-               return Center(child: Text('No recent incidents recorded', style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)));
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'No recent incidents recorded',
+                    style: TextStyle(color: isDark ? Colors.white24 : Colors.black38, fontSize: 13),
+                  ),
+                ),
+              );
             }
             final incidents = snapshot.data!
-              .where((i) => i.status != 'resolved')
-              .take(3)
-              .toList();
+                .where((i) => i.status != 'resolved')
+                .take(3)
+                .toList();
             return Column(
               children: incidents.map((i) => _buildIncidentActivityTile(context, i)).toList(),
             );
@@ -630,24 +838,24 @@ class AdminDashboard extends StatelessWidget {
 
   Widget _buildIncidentActivityTile(BuildContext context, IncidentModel incident) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDispatched = incident.status == 'dispatched';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: isDark ? const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E2841), Color(0xFF161E31)],
-        ) : null,
-        color: isDark ? null : Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.05)),
+        color: isDark ? AppColors.retroDarkCard : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+          width: 1.6,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+            offset: const Offset(2, 2),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Row(
@@ -655,31 +863,44 @@ class AdminDashboard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppConstants.primaryRed.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(16),
+              color: isDispatched ? AppColors.retroLilac : AppColors.retroPeach,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
             ),
-            child: const Icon(Icons.report_problem_rounded, color: AppConstants.primaryRed, size: 22),
+            child: Icon(
+              isDispatched ? Icons.local_shipping_rounded : Icons.report_problem_rounded,
+              color: isDispatched ? const Color(0xFF2563EB) : const Color(0xFFE11D48),
+              size: 20,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   incident.description,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Row(
                   children: [
-                    Icon(Icons.location_on, color: isDark ? Colors.white24 : Colors.black38, size: 12),
+                    Icon(Icons.location_on_rounded, color: isDark ? Colors.white38 : Colors.black45, size: 12),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         incident.location,
-                        style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 11),
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -689,28 +910,34 @@ class AdminDashboard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 DateFormat('hh:mm a').format(incident.timestamp),
-                style: TextStyle(color: isDark ? Colors.white38 : Colors.black54, fontSize: 10, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: isDark ? Colors.white38 : const Color(0xFF888E99),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (incident.status == 'dispatched' ? Colors.blue : Colors.orange).withOpacity(0.12), 
-                  borderRadius: BorderRadius.circular(6)
+                  color: isDispatched ? AppColors.retroLilac : AppColors.retroPeach,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                 ),
                 child: Text(
-                  incident.status == 'dispatched' ? 'DISPATCHED' : 'PENDING', 
+                  isDispatched ? 'DISPATCHED' : 'PENDING',
                   style: TextStyle(
-                    color: incident.status == 'dispatched' ? Colors.blueAccent : Colors.orangeAccent, 
-                    fontSize: 8, 
+                    color: isDispatched ? const Color(0xFF2563EB) : const Color(0xFFD97706),
+                    fontSize: 8,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
-                  )
+                  ),
                 ),
               ),
             ],
@@ -725,16 +952,18 @@ class AdminDashboard extends StatelessWidget {
     final descriptionController = TextEditingController();
     String selectedDisaster = 'General';
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Dialog(
-          backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
-          elevation: isDark ? 24 : 8,
-          shadowColor: isDark ? Colors.black : Colors.black26,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
+          ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(28),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -742,53 +971,70 @@ class AdminDashboard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppConstants.primaryRed.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.campaign_rounded, color: AppConstants.primaryRed, size: 24),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.retroPeach,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                      ),
+                      child: const Icon(Icons.campaign_rounded, color: Color(0xFFEF4444), size: 22),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
                     Text(
                       'LGU BROADCAST ALERT',
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 _buildFieldLabel(context, 'ALERT TITLE'),
-                _buildGlassDialogField(context, titleController, 'e.g. Typhoon Alert - Signal No. 2'),
-                const SizedBox(height: 20),
+                _buildRetroDialogField(context, titleController, 'e.g. Typhoon Alert - Signal No. 2'),
+                const SizedBox(height: 18),
                 _buildFieldLabel(context, 'DETAILED INSTRUCTIONS'),
-                _buildGlassDialogField(context, descriptionController, 'What should citizens do?', maxLines: 3),
-                const SizedBox(height: 20),
+                _buildRetroDialogField(context, descriptionController, 'What should citizens do?', maxLines: 3),
+                const SizedBox(height: 18),
                 _buildFieldLabel(context, 'TYPE OF EMERGENCY'),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
+                    color: isDark ? Colors.white.withOpacity(0.04) : const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.4,
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedDisaster,
-                      dropdownColor: isDark ? AppConstants.surfaceDark : Colors.white,
+                      dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
                       isExpanded: true,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                        fontWeight: FontWeight.w700,
+                      ),
                       items: ['General', 'Flood', 'Fire', 'Typhoon', 'Earthquake', 'Critical Advisory']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e, style: TextStyle(color: isDark ? Colors.white : Colors.black87))))
+                          .map((e) => DropdownMenuItem(value: e, child: Text(e, style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder))))
                           .toList(),
                       onChanged: (val) => setModalState(() => selectedDisaster = val!),
                     ),
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 28),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.primaryRed,
-                    minimumSize: const Size(double.infinity, 54),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 10,
-                    shadowColor: AppConstants.primaryRed.withOpacity(0.4),
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
+                    ),
                   ),
                   onPressed: () async {
                     if (titleController.text.isEmpty) return;
@@ -800,15 +1046,22 @@ class AdminDashboard extends StatelessWidget {
                       createdAt: DateTime.now(),
                     );
                     await Provider.of<FirestoreService>(context, listen: false).sendAlert(alert);
-                    Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('INITIATE BROADCAST', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                  child: const Text('INITIATE BROADCAST', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Center(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'CANCEL',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -822,25 +1075,42 @@ class AdminDashboard extends StatelessWidget {
   Widget _buildFieldLabel(BuildContext context, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(label, style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+      padding: const EdgeInsets.only(left: 4, bottom: 6),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isDark ? Colors.white60 : const Color(0xFF4B5563),
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.1,
+        ),
+      ),
     );
   }
 
-  Widget _buildGlassDialogField(BuildContext context, TextEditingController ctrl, String hint, {int maxLines = 1}) {
+  Widget _buildRetroDialogField(BuildContext context, TextEditingController ctrl, String hint, {int maxLines = 1}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: ctrl,
       maxLines: maxLines,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+      style: TextStyle(color: isDark ? Colors.white : AppColors.retroDarkBorder, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26, fontSize: 13),
         filled: true,
-        fillColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
-        contentPadding: const EdgeInsets.all(18),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppConstants.primaryRed)),
+        fillColor: isDark ? Colors.white.withOpacity(0.04) : const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.all(16),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.4,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.retroMint, width: 2.0),
+        ),
       ),
     );
   }

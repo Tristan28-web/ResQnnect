@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants.dart';
 import '../models/user_model.dart';
-import 'dart:convert';
 import 'citizen_dashboard.dart';
 import 'admin_dashboard.dart';
 import 'responder_dashboard.dart';
@@ -12,9 +11,7 @@ import 'alerts_screen.dart';
 import 'incident_mapping_screen.dart';
 import 'predictive_analysis_screen.dart';
 import 'lgu_user_management_screen.dart';
-import '../core/localization.dart';
 import '../core/theme.dart';
-import 'login_screen.dart';
 import '../widgets/profile_image.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -31,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final user = Provider.of<UserModel?>(context);
     final authService = Provider.of<AuthService>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     String role = user?.role ?? AppConstants.roleCitizen;
     final email = authService.currentUserEmail?.toLowerCase() ?? '';
@@ -42,67 +40,150 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? AppConstants.backgroundBlack : AppConstants.retroCream,
       body: SafeArea(
         child: Column(
           children: [
-            _buildPremiumHeader(context, role, user, authService),
+            _buildRetroHeader(context, role, user, authService, isDark),
             Expanded(
               child: _buildBody(role),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(role),
+      bottomNavigationBar: _buildRetroBottomNav(role, isDark),
     );
   }
 
-  Widget _buildPremiumHeader(BuildContext context, String role, UserModel? user, AuthService authService) {
-    String titleText = AppConstants.appName;
-    Color iconBgColor = AppConstants.primaryRed.withOpacity(0.15); // Dark Red Tint
-    IconData statusIcon = Icons.security;
+  Widget _buildRetroHeader(BuildContext context, String role, UserModel? user, AuthService authService, bool isDark) {
+    final textColor = isDark ? Colors.white : AppConstants.retroDarkBorder;
+    final borderColor = isDark ? Colors.white.withOpacity(0.15) : AppConstants.retroDarkBorder;
+    final surfaceColor = isDark ? AppConstants.retroDarkCard : Colors.white;
 
-    if (role == AppConstants.roleAdmin) {
-      statusIcon = Icons.admin_panel_settings_rounded;
-    }
+    String displayName = user?.name.isNotEmpty == true 
+        ? user!.name 
+        : (role == AppConstants.roleAdmin ? 'Catanduanes Admin' : (role == AppConstants.roleResponder ? 'Field Responder' : 'Citizen'));
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Left: Avatar + Name + Location Subtitle (Matching Retro UI Header)
           Row(
             children: [
-              Image.asset(
-                AppConstants.logoAsset,
-                height: 48, // Increased size
-                width: 48,  // Increased size
-                errorBuilder: (context, error, stackTrace) => Icon(statusIcon, color: AppConstants.primaryRed, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                titleText,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.titleLarge?.color,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: borderColor, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black26 : borderColor.withOpacity(0.12),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      )
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: ProfileImage(
+                      source: user?.profileImage,
+                      radius: 23,
+                    ),
+                  ),
                 ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded, size: 12, color: AppConstants.retroMint),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Virac, Catanduanes',
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : textColor.withOpacity(0.6),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
+
+          // Right: Theme Toggle & Logo Crest
           Row(
             children: [
               Consumer<ThemeProvider>(
                 builder: (context, themeProvider, child) {
-                  return _buildHeaderButton(
-                    themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                  return GestureDetector(
                     onTap: () => themeProvider.toggleTheme(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: surfaceColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: borderColor, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black26 : borderColor.withOpacity(0.1),
+                            offset: const Offset(2, 2),
+                            blurRadius: 0,
+                          )
+                        ],
+                      ),
+                      child: Icon(
+                        themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                        color: textColor,
+                        size: 20,
+                      ),
+                    ),
                   );
                 },
               ),
-              const SizedBox(width: 12),
-              _buildProfileButton(context, user, role),
+              const SizedBox(width: 10),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: borderColor, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black26 : borderColor.withOpacity(0.1),
+                      offset: const Offset(2, 2),
+                      blurRadius: 0,
+                    )
+                  ],
+                ),
+                padding: const EdgeInsets.all(6),
+                child: Image.asset(
+                  AppConstants.logoAsset,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.shield_rounded, color: AppConstants.primaryRed, size: 18),
+                ),
+              ),
             ],
           ),
         ],
@@ -110,53 +191,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHeaderButton(IconData icon, {required VoidCallback onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: isDark ? Colors.white : Colors.black87, size: 24),
-      ),
-    );
-  }
-
-  Widget _buildProfileButton(BuildContext context, UserModel? user, String role) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isAdmin = role == AppConstants.roleAdmin;
-    
-    return GestureDetector(
-      onTap: isAdmin ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())) : null,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-          shape: BoxShape.circle,
-          border: Border.all(color: isDark ? Colors.white10 : Colors.black12, width: 1),
-        ),
-        child: ProfileImage(
-          source: user?.profileImage,
-          radius: 22,
-        ),
-      ),
-    );
-  }
-
   Widget _buildBody(String role) {
     switch (_selectedIndex) {
       case 1:
-        // Module 2 & 3: GIS Incident Mapping & Pinning
+        // Module 02 & 03: GIS Incident Mapping & Pinning
         return const IncidentMappingScreen();
       case 2:
-        // Module 6 & 9: Predictive Analysis & Forecasting
+        // Module 06 & 09: Predictive Analysis & Forecasting
         return const PredictiveAnalysisScreen();
       case 3:
-        // Module 8: Notifications and Alerts
+        // Module 08: Notifications and Alerts
         return const AlertsScreen();
       case 4:
         // Module 10: User Management / Profile
@@ -166,120 +210,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return const ProfileScreen();
       case 0:
       default:
-        // Module 7: Dashboard (Central LGU Command Overview)
+        // Module 07: Dashboard (Central LGU Command Overview)
         if (role == AppConstants.roleAdmin) return const AdminDashboard();
         if (role == AppConstants.roleResponder) return const ResponderDashboard();
         return const CitizenDashboard();
     }
   }
 
-  Widget _buildBottomNav(String role) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+  // --- Retro Pill Floating Navigation Bar (Reverse Engineered from Attached Image) ---
+  Widget _buildRetroBottomNav(String role, bool isDark) {
     final isAdmin = role == AppConstants.roleAdmin;
 
+    final navItems = [
+      {'icon': Icons.home_rounded, 'label': 'Home'},
+      {'icon': Icons.location_on_rounded, 'label': 'Map'},
+      {'icon': Icons.auto_awesome_rounded, 'label': 'AI'},
+      {'icon': Icons.notifications_rounded, 'label': 'Alerts'},
+      {'icon': isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded, 'label': 'Users'},
+    ];
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      height: 64,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2841) : Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black12, width: 0.8),
+        color: AppConstants.retroMint, // Solid Signature Mint/Teal
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppConstants.retroDarkBorder, width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: isDark ? Colors.black45 : AppConstants.retroDarkBorder.withOpacity(0.25),
+            offset: const Offset(3, 4),
+            blurRadius: 0, // Crisp neo-brutalist offset shadow
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex.clamp(0, 4),
-          onTap: (index) => setState(() => _selectedIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          selectedItemColor: AppConstants.primaryRed,
-          unselectedItemColor: isDark ? Colors.white38 : Colors.black38,
-          selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontSize: 10),
-          iconSize: 22,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              activeIcon: Icon(Icons.dashboard_rounded, color: AppConstants.primaryRed),
-              label: 'Dashboard',
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(navItems.length, (index) {
+          final isSelected = _selectedIndex == index;
+          final item = navItems[index];
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedIndex = index),
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: isSelected 
+                  ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
+                  : const EdgeInsets.all(8),
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: isDark ? const Color(0xFF1E222D) : Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: AppConstants.retroDarkBorder, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppConstants.retroDarkBorder.withOpacity(0.2),
+                          offset: const Offset(2, 2),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    )
+                  : null,
+              child: Icon(
+                item['icon'] as IconData,
+                size: 22,
+                color: isSelected 
+                    ? (isDark ? Colors.white : AppConstants.retroDarkBorder)
+                    : Colors.white.withOpacity(0.95),
+              ),
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.pin_drop_rounded),
-              activeIcon: Icon(Icons.pin_drop_rounded, color: AppConstants.primaryRed),
-              label: 'GIS Map',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.insights_rounded),
-              activeIcon: Icon(Icons.insights_rounded, color: AppConstants.primaryRed),
-              label: 'Predictive AI',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.notifications_active_rounded),
-              activeIcon: Icon(Icons.notifications_active_rounded, color: AppConstants.primaryRed),
-              label: 'Alerts',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded),
-              activeIcon: Icon(isAdmin ? Icons.admin_panel_settings_rounded : Icons.person_rounded, color: AppConstants.primaryRed),
-              label: isAdmin ? 'Users' : 'Profile',
-            ),
-          ],
-        ),
+          );
+        }),
       ),
     );
-  }
-
-  void _showLogoutDialog(BuildContext context, AuthService authService) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        title: Text('Sign Out', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
-        content: Text('Are you sure you want to log out of GIS?', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('LOGOUT', style: TextStyle(color: AppConstants.primaryRed, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await authService.logout();
-        if (context.mounted) {
-          // Force immediate redirection and clear navigation stack
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => LoginScreen()),
-            (route) => false,
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Logout failed: $e')),
-          );
-        }
-      }
-    }
   }
 }
-
-

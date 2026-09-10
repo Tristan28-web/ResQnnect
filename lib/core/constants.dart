@@ -8,12 +8,25 @@ class AppConstants {
   static const Color primaryRed = Color(0xFFFF3B41); // Vibrant Red from image
   static const Color darkRed = Color(0xFF8B0000);   // Keep for dark accents
   static const Color emergencyRed = Color(0xFFD32F2F);
-  static const Color backgroundBlack = Color(0xFF121212);
+  static const Color backgroundBlack = Color(0xFF14171F);
   static const Color surfaceDark = Color(0xFF1E2333); // Premium Dark Blue-Grey
-  static const Color backgroundWhite = Color(0xFFF8F9FA);
+  static const Color backgroundWhite = Color(0xFFFDFBF7); // Warm Retro Cream
   static const Color surfaceLight = Colors.white;
   static const Color accentBlue = Color(0xFF2196F3);
   static const Color warningAmber = Color(0xFFFFC107);
+  
+  // Retro UI Style Palette (Reverse Engineered from Figma Reference)
+  static const Color retroMint = Color(0xFF52B7B0);         // Signature Mint/Teal
+  static const Color retroMintDark = Color(0xFF3B9B94);     // Deep Mint for active states
+  static const Color retroMintLight = Color(0xFFE2F4F2);    // Pastel Mint fill
+  static const Color retroPeach = Color(0xFFFCEFEA);        // Warm Peach card fill
+  static const Color retroPeachBorder = Color(0xFFF6CEBE);  // Soft Peach border
+  static const Color retroLilac = Color(0xFFE5E0F8);        // Soft Lilac for tags & CTAs
+  static const Color retroLilacBorder = Color(0xFFC8BFF0);  // Lilac border
+  static const Color retroYellow = Color(0xFFFFF7D6);       // Pastel Yellow highlight
+  static const Color retroCream = Color(0xFFFDFBF7);        // Warm off-white canvas
+  static const Color retroDarkBorder = Color(0xFF23272F);   // Crisp 1.5px Dark Border
+  static const Color retroDarkCard = Color(0xFF1E222D);     // Dark mode card surface
   
   // API Keys (Placeholders)
   static const String weatherApiKey = 'YOUR_WEATHER_API_KEY';
@@ -77,3 +90,5 @@ class AppConstants {
     'Baras - Puraran',
   ];
 }
+
+typedef AppColors = AppConstants;
