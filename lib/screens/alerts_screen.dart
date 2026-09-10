@@ -67,7 +67,22 @@ class _AlertsScreenState extends State<AlertsScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: FutureBuilder<SharedPreferences>(
         future: SharedPreferences.getInstance(),

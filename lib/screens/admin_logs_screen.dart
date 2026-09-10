@@ -50,8 +50,35 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('ADMINISTRATIVE LOGS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'ADMINISTRATIVE LOGS',
+          style: TextStyle(
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
       ),
       body: Center(
         child: Text(

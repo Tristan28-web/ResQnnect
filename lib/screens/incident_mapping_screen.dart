@@ -86,31 +86,66 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'GIS INCIDENT MAPPING',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'GIS INCIDENT MAPPING',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh Location & Pins',
-            onPressed: () async {
-              final pos = await locationService.refreshLocation();
-              if (pos != null && _mapController != null) {
-                _mapController?.animateCamera(
-                  CameraUpdate.newCameraPosition(
-                    CameraPosition(
-                      target: LatLng(pos.latitude, pos.longitude),
-                      zoom: 15.0,
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () async {
+                final pos = await locationService.refreshLocation();
+                if (pos != null && _mapController != null) {
+                  _mapController?.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                        target: LatLng(pos.latitude, pos.longitude),
+                        zoom: 15.0,
+                      ),
                     ),
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.5,
                   ),
-                );
-              }
-            },
+                ),
+                child: Icon(Icons.refresh_rounded, size: 16,
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder),
+              ),
+            ),
           ),
         ],
       ),

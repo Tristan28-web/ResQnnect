@@ -196,21 +196,62 @@ class _SafeZoneMapScreenState extends State<SafeZoneMapScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('NEAREST SAFE ZONES', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        title: Text(
+          'NEAREST SAFE ZONES',
+          style: TextStyle(
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.my_location, color: isDark ? Colors.white70 : Colors.black54),
-            onPressed: () {
-              if (_currentPosition != null) {
-                _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_currentPosition!, 15.0));
-              } else {
-                _initLocation();
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () {
+                if (_currentPosition != null) {
+                  _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_currentPosition!, 15.0));
+                } else {
+                  _initLocation();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(Icons.my_location_rounded, size: 16,
+                    color: isDark ? Colors.white : AppColors.retroDarkBorder),
+              ),
+            ),
           ),
         ],
-        iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
       ),
       body: StreamBuilder<List<MapLocationModel>>(
         stream: _locationsStream,

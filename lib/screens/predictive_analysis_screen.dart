@@ -109,15 +109,41 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.refresh_rounded,
-              color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
             ),
-            tooltip: 'Re-Analyze with Gemini AI',
-            onPressed: () => _runGeminiAnalysis(forceRefresh: true),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () => _runGeminiAnalysis(forceRefresh: true),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(Icons.refresh_rounded, size: 16,
+                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder),
+              ),
+            ),
           ),
         ],
       ),
