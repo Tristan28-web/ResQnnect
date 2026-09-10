@@ -230,16 +230,52 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildRetroHazardChip('All', isDark),
+                      _buildRetroHazardChip('All', Icons.apps_rounded, AppColors.retroMint, isDark),
                       const SizedBox(width: 8),
-                      _buildRetroHazardChip('Fire', isDark),
+                      _buildRetroHazardChip('Fire', Icons.local_fire_department_rounded, const Color(0xFFEF4444), isDark),
                       const SizedBox(width: 8),
-                      _buildRetroHazardChip('Flood', isDark),
+                      _buildRetroHazardChip('Flood', Icons.water_drop_rounded, const Color(0xFF3B82F6), isDark),
                       const SizedBox(width: 8),
-                      _buildRetroHazardChip('Crime', isDark),
+                      _buildRetroHazardChip('Crime', Icons.shield_rounded, const Color(0xFF8B5CF6), isDark),
                       const SizedBox(width: 8),
-                      _buildRetroHazardChip('Accident', isDark),
+                      _buildRetroHazardChip('Accident', Icons.car_crash_rounded, const Color(0xFFF97316), isDark),
                     ],
+                  ),
+                ),
+              ),
+
+              // Retro Mint GPS FAB (matches GIS Mapping screen reference)
+              Positioned(
+                bottom: 200,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () async {
+                    final pos = Provider.of<LocationService>(context, listen: false).currentPosition;
+                    if (pos != null && _mapController != null) {
+                      _mapController?.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(target: LatLng(pos.latitude, pos.longitude), zoom: 15.0),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: AppColors.retroMint,
+                      shape: BoxShape.circle,
+                      border: Border.fromBorderSide(
+                        BorderSide(color: AppColors.retroDarkBorder, width: 1.8),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.retroDarkBorder,
+                          offset: Offset(3, 3),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.my_location_rounded, color: Colors.white, size: 20),
                   ),
                 ),
               ),
@@ -427,40 +463,59 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
     );
   }
 
-  Widget _buildRetroHazardChip(String hazard, bool isDark) {
+  Widget _buildRetroHazardChip(String hazard, IconData icon, Color typeColor, bool isDark) {
     final isSelected = _selectedHazardFilter.toLowerCase() == hazard.toLowerCase();
+
+    Color activeFill = AppColors.retroMint;
+    Color activeTextColor = Colors.white;
+    if (hazard == 'Fire') activeFill = const Color(0xFFFEE2E2);
+    if (hazard == 'Flood') activeFill = const Color(0xFFDBEAFE);
+    if (hazard == 'Crime') activeFill = AppColors.retroLilac;
+    if (hazard == 'Accident') activeFill = AppColors.retroPeach;
+    if (hazard != 'All') activeTextColor = AppColors.retroDarkBorder;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedHazardFilter = hazard),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.retroLilac
+              ? activeFill
               : (isDark ? AppColors.retroDarkCard : Colors.white),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected
-                ? AppColors.retroDarkBorder
-                : (isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder.withValues(alpha: 0.4)),
-            width: isSelected ? 1.8 : 1.2,
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: isSelected ? 1.8 : 1.4,
           ),
           boxShadow: [
             BoxShadow(
               color: isDark ? Colors.black45 : AppColors.retroDarkBorder,
-              offset: isSelected ? const Offset(2, 2) : const Offset(1.5, 1.5),
+              offset: isSelected ? const Offset(2.5, 2.5) : const Offset(1.5, 1.5),
               blurRadius: 0,
             ),
           ],
         ),
-        child: Text(
-          hazard.toUpperCase(),
-          style: TextStyle(
-            color: isDark ? (isSelected ? AppColors.retroDarkBorder : Colors.white70) : AppColors.retroDarkBorder,
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? activeTextColor : (isDark ? Colors.white70 : typeColor),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              hazard.toUpperCase(),
+              style: TextStyle(
+                color: isSelected
+                    ? activeTextColor
+                    : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
         ),
       ),
     );

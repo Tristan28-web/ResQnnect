@@ -53,28 +53,48 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: isDark ? const Color(0xFF1E2841) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppColors.retroDarkBorder, width: 2.0),
+      ),
+      backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         child: SizedBox(
           width: double.maxFinite,
           height: MediaQuery.of(context).size.height * 0.75,
           child: Column(
             children: [
-              // Header
+              // ── Retro Header ──
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                color: isDark ? const Color(0xFF161E31) : const Color(0xFFF0F4FF),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkBorder : AppColors.retroMintLight,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
                 child: Row(
                   children: [
+                    // Retro Mint Icon Badge
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppConstants.primaryRed.withOpacity(0.15),
-                        shape: BoxShape.circle,
+                        color: AppColors.retroMint,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.retroDarkBorder,
+                            offset: Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.pin_drop_rounded, color: AppConstants.primaryRed, size: 22),
+                      child: const Icon(Icons.pin_drop_rounded, color: Colors.white, size: 18),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -82,28 +102,41 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'INCIDENT PINNING',
+                            'GIS INCIDENT PINNING',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.2,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: isDark ? Colors.white : AppColors.retroDarkBorder,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Tap or drag to mark exact GIS location',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? Colors.white60 : Colors.black54,
+                              fontSize: 10,
+                              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.of(context).pop(),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2A2F3E) : const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Icon(Icons.close_rounded, size: 16,
+                            color: isDark ? Colors.white70 : AppColors.retroDarkBorder),
+                      ),
                     ),
                   ],
                 ),
@@ -137,25 +170,28 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                         ),
                       },
                     ),
-                    // Coordinate banner overlay
+                    // Retro Coordinate Banner Overlay
                     Positioned(
                       top: 12,
-                      left: 16,
-                      right: 16,
+                      left: 14,
+                      right: 14,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.75),
+                          color: AppColors.retroDarkBorder,
                           borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black38, offset: Offset(2, 2), blurRadius: 0),
+                          ],
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.gps_fixed_rounded, color: Colors.greenAccent, size: 14),
-                            const SizedBox(width: 8),
+                            const Icon(Icons.gps_fixed_rounded, color: AppColors.retroMint, size: 13),
+                            const SizedBox(width: 7),
                             Text(
                               'Lat: ${_selectedPin.latitude.toStringAsFixed(5)}, Lng: ${_selectedPin.longitude.toStringAsFixed(5)}',
-                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
@@ -165,10 +201,18 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                 ),
               ),
 
-              // Bottom Barangay Selector & Confirm
+              // ── Retro Bottom: Barangay + Confirm ──
               Container(
-                padding: const EdgeInsets.all(18),
-                color: isDark ? const Color(0xFF161E31) : Colors.white,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.8,
+                    ),
+                  ),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -176,51 +220,54 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                     Text(
                       'DESIGNATED AREA / BARANGAY',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                        color: isDark ? Colors.white38 : Colors.black45,
+                        letterSpacing: 1.1,
+                        color: isDark ? Colors.white38 : const Color(0xFF6B7280),
                       ),
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E2841) : const Color(0xFFF5F7FB),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                        color: isDark ? const Color(0xFF1E2841) : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.1),
+                            offset: const Offset(2.5, 2.5),
+                            blurRadius: 0,
+                          ),
+                        ],
                       ),
                       child: TextField(
                         controller: _barangayController,
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: isDark ? Colors.white : AppColors.retroDarkBorder,
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Enter area or barangay name...',
+                          hintStyle: TextStyle(
+                            color: isDark ? Colors.white30 : const Color(0xFF9CA3AF),
+                            fontSize: 12,
+                          ),
                           border: InputBorder.none,
                           isDense: true,
-                          prefixIcon: Icon(Icons.location_city_rounded, size: 18, color: AppConstants.primaryRed),
-                          prefixIconConstraints: BoxConstraints(minWidth: 28, minHeight: 28),
+                          prefixIcon: const Icon(Icons.location_city_rounded, size: 18, color: AppColors.retroMint),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConstants.primaryRed,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
-                      ),
-                      icon: const Icon(Icons.check_circle_rounded, size: 18),
-                      label: const Text(
-                        'CONFIRM PIN LOCATION',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                      ),
-                      onPressed: () {
+                    const SizedBox(height: 12),
+                    // Retro CONFIRM PIN LOCATION Button
+                    GestureDetector(
+                      onTap: () {
                         Navigator.of(context).pop({
                           'position': _selectedPin,
                           'barangay': _barangayController.text.trim().isNotEmpty
@@ -228,6 +275,38 @@ class _IncidentPinPickerDialogState extends State<IncidentPinPickerDialog> {
                               : 'Pin Area',
                         });
                       },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.retroMint,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: AppColors.retroDarkBorder,
+                              offset: Offset(4, 4),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'CONFIRM PIN LOCATION',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

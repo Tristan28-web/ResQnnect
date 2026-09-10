@@ -144,14 +144,14 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
                 const Icon(
                   Icons.location_on_rounded,
                   size: 46,
-                  color: AppConstants.primaryRed,
+                  color: AppColors.retroMint,
                 ),
                 const SizedBox(height: 38), // Center offset for pin tip
               ],
             ),
           ),
 
-          // GPS Snap Button
+          // GPS Snap Button — Mint FAB (matches mapping screen reference)
           Positioned(
             right: 16,
             bottom: 220,
@@ -159,22 +159,21 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
               onTap: _snapToGPS,
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                decoration: const BoxDecoration(
+                  color: AppColors.retroMint,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                    width: 1.8,
+                  border: Border.fromBorderSide(
+                    BorderSide(color: AppColors.retroDarkBorder, width: 1.8),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
-                      offset: const Offset(3, 3),
+                      color: AppColors.retroDarkBorder,
+                      offset: Offset(3, 3),
                       blurRadius: 0,
                     ),
                   ],
                 ),
-                child: const Icon(Icons.my_location_rounded, color: AppConstants.primaryRed, size: 22),
+                child: const Icon(Icons.my_location_rounded, color: Colors.white, size: 22),
               ),
             ),
           ),
@@ -262,7 +261,7 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
                   // Barangay / Address Name
                   Row(
                     children: [
-                      const Icon(Icons.place_rounded, size: 18, color: AppConstants.primaryRed),
+                      const Icon(Icons.place_rounded, size: 18, color: AppColors.retroMint),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -291,7 +290,7 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Action Button: Report Incident at this Pin
+                  // Action Button: Report Incident at this Pin — MINT
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -305,13 +304,13 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryRed,
+                        color: AppColors.retroMint,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
-                            offset: const Offset(3, 3),
+                            color: AppColors.retroDarkBorder,
+                            offset: Offset(3, 3),
                             blurRadius: 0,
                           ),
                         ],

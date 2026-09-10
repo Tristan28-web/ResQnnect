@@ -46,15 +46,15 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
   Color _getTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'fire':
-        return AppConstants.primaryRed;
+        return const Color(0xFFEF4444);
       case 'flood':
-        return Colors.blue;
+        return const Color(0xFF3B82F6);
       case 'crime':
-        return Colors.purpleAccent;
+        return const Color(0xFF8B5CF6);
       case 'accident':
-        return Colors.orange;
+        return const Color(0xFFF97316);
       default:
-        return Colors.amber;
+        return const Color(0xFF10B981);
     }
   }
 
@@ -181,15 +181,15 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildFilterChip('All', Icons.apps_rounded, Colors.white),
+                      _buildFilterChip('All', Icons.apps_rounded, AppColors.retroMint),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Fire', Icons.local_fire_department_rounded, AppConstants.primaryRed),
+                      _buildFilterChip('Fire', Icons.local_fire_department_rounded, const Color(0xFFEF4444)),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Flood', Icons.waves_rounded, Colors.blue),
+                      _buildFilterChip('Flood', Icons.water_drop_rounded, const Color(0xFF3B82F6)),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Crime', Icons.shield_rounded, Colors.purpleAccent),
+                      _buildFilterChip('Crime', Icons.shield_rounded, const Color(0xFF8B5CF6)),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Accident', Icons.car_crash_rounded, Colors.orange),
+                      _buildFilterChip('Accident', Icons.car_crash_rounded, const Color(0xFFF97316)),
                     ],
                   ),
                 ),

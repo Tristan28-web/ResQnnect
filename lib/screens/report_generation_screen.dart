@@ -399,7 +399,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.calendar_today_rounded, size: 13, color: AppConstants.primaryRed),
+                const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.retroMint),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
