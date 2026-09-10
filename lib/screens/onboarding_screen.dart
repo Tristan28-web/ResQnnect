@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'RESQNNECT GIS',
+                          'GIS',
                           style: TextStyle(
                             color: isDark ? Colors.white : AppColors.retroDarkBorder,
                             fontSize: 10,
@@ -196,7 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'ResQnnect GIS',
+                  'GIS',
                   style: TextStyle(
                     color: isDark ? Colors.white : AppColors.retroDarkBorder,
                     fontSize: 24,

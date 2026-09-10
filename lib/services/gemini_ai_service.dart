@@ -188,7 +188,7 @@ class GeminiAIService {
             .join('; ');
 
     return '''
-You are the GIS Disaster Predictive Intelligence AI for $currentLocation, Philippines (ResQnnect Emergency Command).
+You are the GIS Disaster Predictive Intelligence AI for $currentLocation, Philippines (GIS Emergency Command).
 Analyze the ground conditions and return predictive hazard forecasts for $currentLocation and its local operational sectors.
 
 CURRENT GROUND TELEMETRY:

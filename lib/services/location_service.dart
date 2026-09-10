@@ -114,7 +114,7 @@ class LocationService extends ChangeNotifier {
       );
       final response = await http.get(
         uri,
-        headers: {'User-Agent': 'ResQnnect-GIS/1.0'},
+        headers: {'User-Agent': 'GIS-App/1.0'},
       ).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
