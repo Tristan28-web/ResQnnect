@@ -83,115 +83,224 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? AppConstants.backgroundBlack : AppConstants.backgroundWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('JOIN GIS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        centerTitle: true,
-        elevation: 0,
         backgroundColor: Colors.transparent,
-      ),
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        decoration: isDark ? const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1E2841), Color(0xFF161E31)],
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 14,
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+            ),
           ),
-        ) : null,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'JOIN GIS',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+          ),
+        ),
+      ),
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 10),
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(20),
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
-                    color: AppConstants.primaryRed.withOpacity(0.1),
+                    color: AppColors.retroMint,
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 2.0,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.retroDarkBorder,
+                        offset: Offset(3, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.person_add_rounded, color: AppConstants.primaryRed, size: 48),
+                  child: const Icon(Icons.person_add_rounded, color: Colors.white, size: 34),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
               Text(
-                'Citizen Registration',
+                'CITIZEN REGISTRATION',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                'Help keep our community safe.',
+                'Create an official verified account for GIS reporting',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
-              ),
-              const SizedBox(height: 40),
-              _buildField(
-                controller: _nameController,
-                label: 'Full Name',
-                icon: Icons.person_outline_rounded,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 16),
-              _buildField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email_outlined,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 16),
-              _buildField(
-                controller: _phoneController,
-                label: 'Phone Number',
-                icon: Icons.phone_outlined,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 16),
-              _buildField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock_outline_rounded,
-                isDark: isDark,
-                isPassword: true,
-              ),
-              const SizedBox(height: 48),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _register,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppConstants.primaryRed,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 8,
-                  shadowColor: AppConstants.primaryRed.withOpacity(0.4),
+                style: TextStyle(
+                  color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
-                child: _isLoading 
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      ) 
-                    : const Text('CREATE ACCOUNT', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
               ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'ALREADY HAVE AN ACCOUNT? LOGIN',
-                  style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
+              const SizedBox(height: 28),
+
+              // Retro Form Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.retroDarkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                    width: 1.8,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                      offset: const Offset(3, 3),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildField(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      icon: Icons.person_rounded,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                      controller: _emailController,
+                      label: 'Email Address',
+                      icon: Icons.email_rounded,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                      controller: _phoneController,
+                      label: 'Phone Number',
+                      icon: Icons.phone_rounded,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      icon: Icons.lock_rounded,
+                      isDark: isDark,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 22),
+                    GestureDetector(
+                      onTap: _isLoading ? null : _register,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.retroMint,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.retroDarkBorder, width: 2.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: AppColors.retroDarkBorder,
+                              offset: Offset(3, 3),
+                              blurRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                )
+                              : const Text(
+                                  'CREATE ACCOUNT',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.retroDarkCard : AppColors.retroPeach,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                      width: 1.6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.1),
+                        offset: const Offset(2.5, 2.5),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.login_rounded, size: 16, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+                        const SizedBox(width: 8),
+                        Text(
+                          'ALREADY HAVE AN ACCOUNT? LOGIN',
+                          style: TextStyle(
+                            color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -209,22 +318,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextField(
       controller: controller,
       obscureText: isPassword,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      style: TextStyle(
+        color: isDark ? Colors.white : AppColors.retroDarkBorder,
+        fontWeight: FontWeight.w700,
+        fontSize: 13,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
-        prefixIcon: Icon(icon, color: AppConstants.primaryRed.withOpacity(0.7), size: 20),
+        labelStyle: TextStyle(
+          color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        prefixIcon: Icon(icon, color: AppColors.retroMint, size: 20),
         filled: true,
-        fillColor: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.02),
+        fillColor: isDark ? const Color(0xFF262C38) : const Color(0xFFF9FAFB),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+          borderSide: BorderSide(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.4,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppConstants.primaryRed, width: 2),
+          borderSide: const BorderSide(color: AppColors.retroMint, width: 2.0),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18),
       ),
     );
   }
