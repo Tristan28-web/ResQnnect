@@ -22,8 +22,13 @@ class ProfileScreen extends StatelessWidget {
       role = AppConstants.roleAdmin;
     }
 
-    String title = 'CITIZEN PROFILE';
-    if (role == AppConstants.roleAdmin) title = 'ADMIN CONSOLE';
+    final isAnonymous = authService.currentUser?.isAnonymous == true ||
+        user?.name == 'Guest Account' ||
+        user?.email == 'guest@gis.local';
+
+    String title = isAnonymous
+        ? 'GUEST PROFILE'
+        : (role == AppConstants.roleAdmin ? 'ADMIN CONSOLE' : 'CITIZEN PROFILE');
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -70,9 +75,11 @@ class ProfileScreen extends StatelessWidget {
   // --- RETRO PROFILE HEADER ---
   Widget _buildProfileHeader(BuildContext context, UserModel? user, String role) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    String roleLabel = 'VERIFIED CITIZEN';
-    Color roleBg = const Color(0xFFDCFCE7);
-    Color roleText = const Color(0xFF16A34A);
+    final isAnonymous = user?.name == 'Guest Account' || user?.email == 'guest@gis.local';
+
+    String roleLabel = isAnonymous ? 'GUEST CITIZEN' : 'VERIFIED CITIZEN';
+    Color roleBg = isAnonymous ? AppColors.retroPeach : const Color(0xFFDCFCE7);
+    Color roleText = isAnonymous ? const Color(0xFFEA580C) : const Color(0xFF16A34A);
 
     if (role == AppConstants.roleAdmin) {
       roleLabel = 'SYSTEM ADMINISTRATOR';
@@ -80,9 +87,11 @@ class ProfileScreen extends StatelessWidget {
       roleText = const Color(0xFF6D28D9);
     }
 
-    final idTag = role == AppConstants.roleAdmin 
-        ? 'GIS-ADMIN-001' 
-        : 'GIS-ID-9921';
+    final idTag = isAnonymous
+        ? 'GIS-GUEST'
+        : (role == AppConstants.roleAdmin 
+            ? 'GIS-ADMIN-001' 
+            : 'GIS-ID-9921');
 
     return Container(
       width: double.infinity,
@@ -146,11 +155,13 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            (user?.name != null && user!.name.isNotEmpty)
-                ? user.name
-                : (role == AppConstants.roleAdmin
-                      ? 'Admin User'
-                      : 'Citizen User'),
+            isAnonymous
+                ? 'Guest Account'
+                : ((user?.name != null && user!.name.isNotEmpty)
+                    ? user.name
+                    : (role == AppConstants.roleAdmin
+                          ? 'Admin User'
+                          : 'Citizen User')),
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.retroDarkBorder,
               fontSize: 22,

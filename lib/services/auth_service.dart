@@ -201,7 +201,9 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // Get current user email from Auth
+  // Get current user from Auth
+  User? get currentUser => _auth.currentUser;
+  bool get isAnonymous => _auth.currentUser?.isAnonymous == true;
   String? get currentUserEmail => _auth.currentUser?.email;
 
   // Get current user data

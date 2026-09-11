@@ -125,6 +125,47 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
       ],
       child: Consumer2<ThemeProvider, User?>(
         builder: (context, themeProvider, firebaseUser, child) {
+          UserModel? initialModel;
+          if (firebaseUser != null) {
+            final userEmail = firebaseUser.email?.toLowerCase();
+            if (firebaseUser.isAnonymous) {
+              initialModel = UserModel(
+                userId: firebaseUser.uid,
+                name: 'Guest Account',
+                email: 'guest@gis.local',
+                phone: '',
+                profileImage: '',
+                role: AppConstants.roleCitizen,
+                isVerified: true,
+                createdAt: DateTime.now(),
+              );
+            } else if (userEmail == 'admin@catanduanes.gov.ph' || 
+                       userEmail == 'admin@cadiz.gov.ph' || 
+                       userEmail?.contains('admin') == true) {
+              initialModel = UserModel(
+                userId: firebaseUser.uid,
+                name: firebaseUser.displayName ?? 'GIS Admin',
+                email: userEmail ?? 'admin@gis.gov.ph',
+                phone: '',
+                profileImage: '',
+                role: AppConstants.roleAdmin,
+                isVerified: true,
+                createdAt: DateTime.now(),
+              );
+            } else {
+              initialModel = UserModel(
+                userId: firebaseUser.uid,
+                name: firebaseUser.displayName ?? 'GIS User',
+                email: userEmail ?? '',
+                phone: '',
+                profileImage: firebaseUser.photoURL ?? '',
+                role: AppConstants.roleCitizen,
+                isVerified: true,
+                createdAt: DateTime.now(),
+              );
+            }
+          }
+
           return MultiProvider(
             providers: [
               // Identity Provider: Merges Firestore data with Admin Fallback logic
@@ -135,51 +176,6 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                   
                   final firestore = Provider.of<FirestoreService>(context, listen: false);
                   
-                  // Proactive Fallback System: 🌩️🛡️🚨✅
-                  // Instead of waiting for Firestore (which can take seconds during slow networks), 
-                  // we create a high-priority local model to ensure INSTANT dashboard entry.
-                  UserModel initialModel;
-                  
-                  final userEmail = firebaseUser.email?.toLowerCase();
-                  
-                  if (firebaseUser.isAnonymous) {
-                    initialModel = UserModel(
-                      userId: firebaseUser.uid,
-                      name: 'Guest Account',
-                      email: 'guest@gis.local',
-                      phone: '',
-                      profileImage: '',
-                      role: AppConstants.roleCitizen,
-                      isVerified: true,
-                      createdAt: DateTime.now(),
-                    );
-                  } else if (userEmail == 'admin@catanduanes.gov.ph' || 
-                             userEmail == 'admin@cadiz.gov.ph' || 
-                             userEmail?.contains('admin') == true) {
-                    initialModel = UserModel(
-                      userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'GIS Admin',
-                      email: userEmail ?? 'admin@gis.gov.ph',
-                      phone: '',
-                      profileImage: '',
-                      role: AppConstants.roleAdmin,
-                      isVerified: true,
-                      createdAt: DateTime.now(),
-                    );
-                  } else {
-                    // UNIVERSAL FALLBACK for Google and Registered Citizens
-                    initialModel = UserModel(
-                      userId: firebaseUser.uid,
-                      name: firebaseUser.displayName ?? 'GIS User',
-                      email: userEmail ?? '',
-                      phone: '',
-                      profileImage: firebaseUser.photoURL ?? '',
-                      role: AppConstants.roleCitizen, // Default to citizen for instant access
-                      isVerified: true, // Allow them to see dashboard while Firestore syncs
-                      createdAt: DateTime.now(),
-                    );
-                  }
-
                   // We wrap the stream to emit the initialModel immediately while Firestore is loading
                   return firestore.getUserStream(firebaseUser.uid).map((doc) {
                     // Update the model once the real Firestore document arrives (contains real role/verified status)
@@ -196,7 +192,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                     return initialModel; 
                   });
                 },
-                initialData: null,
+                initialData: initialModel,
                 catchError: (_, __) => null,
               ),
             ],

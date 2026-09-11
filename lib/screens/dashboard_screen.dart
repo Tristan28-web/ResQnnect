@@ -57,9 +57,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final borderColor = isDark ? Colors.white.withOpacity(0.15) : AppConstants.retroDarkBorder;
     final surfaceColor = isDark ? AppConstants.retroDarkCard : Colors.white;
 
-    String displayName = user?.name.isNotEmpty == true 
-        ? user!.name 
-        : (role == AppConstants.roleAdmin ? 'GIS Admin' : 'Citizen');
+    final isAnonymous = authService.currentUser?.isAnonymous == true ||
+        user?.name == 'Guest Account' ||
+        user?.email == 'guest@gis.local';
+
+    String displayName = isAnonymous
+        ? 'Guest Account'
+        : (user?.name.isNotEmpty == true 
+            ? user!.name 
+            : (role == AppConstants.roleAdmin ? 'GIS Admin' : 'Citizen'));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
