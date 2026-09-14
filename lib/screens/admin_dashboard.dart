@@ -1064,7 +1064,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildIncidentActivityTile(BuildContext context, IncidentModel incident) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isDispatched = incident.status == 'dispatched';
+    final isActive = incident.status == 'active' || incident.status == 'dispatched' || incident.status == 'verified';
+    final isResolved = incident.status == 'resolved';
+
+    Color statusBg = AppColors.retroPeach;
+    Color statusColor = const Color(0xFFD97706);
+    IconData statusIcon = Icons.report_problem_rounded;
+    String statusLabel = 'PENDING';
+
+    if (isResolved) {
+      statusBg = const Color(0xFFDCFCE7);
+      statusColor = const Color(0xFF16A34A);
+      statusIcon = Icons.check_circle_rounded;
+      statusLabel = 'RESOLVED';
+    } else if (isActive) {
+      statusBg = AppColors.retroLilac;
+      statusColor = const Color(0xFF2563EB);
+      statusIcon = Icons.radar_rounded;
+      statusLabel = 'ACTIVE';
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1089,13 +1107,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDispatched ? AppColors.retroLilac : AppColors.retroPeach,
+              color: statusBg,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
             ),
             child: Icon(
-              isDispatched ? Icons.local_shipping_rounded : Icons.report_problem_rounded,
-              color: isDispatched ? const Color(0xFF2563EB) : const Color(0xFFE11D48),
+              statusIcon,
+              color: statusColor,
               size: 20,
             ),
           ),
@@ -1152,14 +1170,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDispatched ? AppColors.retroLilac : AppColors.retroPeach,
+                  color: statusBg,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
                 ),
                 child: Text(
-                  isDispatched ? 'DISPATCHED' : 'PENDING',
+                  statusLabel,
                   style: TextStyle(
-                    color: isDispatched ? const Color(0xFF2563EB) : const Color(0xFFD97706),
+                    color: statusColor,
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,

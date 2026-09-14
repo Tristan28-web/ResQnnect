@@ -231,7 +231,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: _buildFeaturePill(
                   icon: Icons.shield_rounded,
-                  label: 'LGU Dispatch',
+                  label: 'LGU Command',
                   color: const Color(0xFFDCFCE7),
                   iconColor: const Color(0xFF16A34A),
                   isDark: isDark,

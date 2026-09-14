@@ -27,20 +27,17 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
   String _selectedCategory = 'All';
   String _selectedLgu = 'All';
   String _selectedSeverity = 'All';
-  String _selectedStatus = 'All';
 
   bool get _hasActiveFilters =>
       _selectedCategory != 'All' ||
       _selectedLgu != 'All' ||
-      _selectedSeverity != 'All' ||
-      _selectedStatus != 'All';
+      _selectedSeverity != 'All';
 
   void _resetFilters() {
     setState(() {
       _selectedCategory = 'All';
       _selectedLgu = 'All';
       _selectedSeverity = 'All';
-      _selectedStatus = 'All';
     });
   }
 
@@ -74,7 +71,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
         }
 
-        // Check for report status updates (e.g. dispatched)
+        // Check for report status updates (e.g. verified or active)
         _checkForAcceptedReports(context, firestoreService, userId);
 
         return SingleChildScrollView(
@@ -535,21 +532,25 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
               children: [
                 const Icon(Icons.filter_list_rounded, size: 15, color: AppColors.retroMintDark),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Active: '
-                    '${_selectedCategory != 'All' ? 'Cat: $_selectedCategory • ' : ''}'
-                    '${_selectedLgu != 'All' ? 'LGU: $_selectedLgu • ' : ''}'
-                    '${_selectedSeverity != 'All' ? 'Sev: $_selectedSeverity • ' : ''}'
-                    '${_selectedStatus != 'All' ? 'Status: $_selectedStatus' : ''}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final filters = <String>[];
+                    if (_selectedCategory != 'All') filters.add('Cat: $_selectedCategory');
+                    if (_selectedLgu != 'All') filters.add('LGU: $_selectedLgu');
+                    if (_selectedSeverity != 'All') filters.add('Sev: $_selectedSeverity');
+                    return Expanded(
+                      child: Text(
+                        'Active: ${filters.join(' • ')}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  },
                 ),
                 GestureDetector(
                   onTap: _resetFilters,
@@ -788,11 +789,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                   .toList();
             }
 
-            if (_selectedStatus != 'All') {
-              myReports = myReports
-                  .where((i) => i.status.toLowerCase() == _selectedStatus.toLowerCase())
-                  .toList();
-            }
 
             if (_searchQuery.isNotEmpty) {
               myReports = myReports
@@ -848,15 +844,18 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
 
   Widget _buildMyReportItem(BuildContext context, IncidentModel incident) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isActive = incident.status == 'dispatched' || incident.status == 'active' || incident.status == 'verified';
+    final isResolved = incident.status == 'resolved';
+
     Color statusBg = AppColors.retroPeach;
     Color statusText = const Color(0xFFD97706);
     String statusLabel = 'PENDING';
 
-    if (incident.status == 'dispatched') {
+    if (isActive) {
       statusBg = AppColors.retroLilac;
       statusText = const Color(0xFF2563EB);
-      statusLabel = 'DISPATCHED';
-    } else if (incident.status == 'resolved') {
+      statusLabel = 'ACTIVE';
+    } else if (isResolved) {
       statusBg = const Color(0xFFDCFCE7);
       statusText = const Color(0xFF16A34A);
       statusLabel = 'RESOLVED';
@@ -893,9 +892,9 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
               ),
             ),
             child: Icon(
-              incident.status == 'dispatched'
-                  ? Icons.local_shipping_rounded
-                  : (incident.status == 'resolved' ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
+              isActive
+                  ? Icons.radar_rounded
+                  : (isResolved ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
               color: statusText,
               size: 20,
             ),
@@ -1113,7 +1112,9 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
     firestore.getIncidents().listen((incidents) {
       if (!mounted) return;
       for (var inc in incidents) {
-        if (inc.userId == userId && inc.status == 'dispatched' && !_notifiedIncidentIds.contains(inc.incidentId)) {
+        if (inc.userId == userId &&
+            (inc.status == 'dispatched' || inc.status == 'active' || inc.status == 'verified') &&
+            !_notifiedIncidentIds.contains(inc.incidentId)) {
           _notifiedIncidentIds.add(inc.incidentId);
           _showReportAcceptedDialog(context, inc);
         }
@@ -1154,7 +1155,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your incident report has been verified by LGU Emergency Command and emergency response units are dispatched to your pinned location.',
+              'Your incident report has been verified and logged by LGU Emergency Command.',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: 20),
@@ -1221,12 +1222,10 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
 
     final categories = ['All', 'Fire', 'Flood', 'Crime', 'Accident', 'Other'];
     final severities = ['All', 'Critical', 'High', 'Moderate', 'Low'];
-    final statuses = ['All', 'Pending', 'Dispatched', 'Resolved'];
 
     String tempCategory = _selectedCategory;
     String tempLgu = _selectedLgu;
     String tempSeverity = _selectedSeverity;
-    String tempStatus = _selectedStatus;
 
     showModalBottomSheet(
       context: context,
@@ -1377,23 +1376,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                               );
                             }).toList(),
                           ),
-                          const SizedBox(height: 20),
-                          _buildFilterSectionTitle('4. DISPATCH STATUS', isDark),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: statuses.map((st) {
-                              final isSelected = tempStatus.toLowerCase() == st.toLowerCase();
-                              return _buildRetroFilterPill(
-                                label: st,
-                                isSelected: isSelected,
-                                activeColor: const Color(0xFFDCFCE7),
-                                isDark: isDark,
-                                onTap: () => setModalState(() => tempStatus = st),
-                              );
-                            }).toList(),
-                          ),
                         ],
                       ),
                     ),
@@ -1417,7 +1399,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                                     tempCategory = 'All';
                                     tempLgu = 'All';
                                     tempSeverity = 'All';
-                                    tempStatus = 'All';
                                   });
                                 },
                                 style: OutlinedButton.styleFrom(
@@ -1438,7 +1419,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                                     _selectedCategory = tempCategory;
                                     _selectedLgu = tempLgu;
                                     _selectedSeverity = tempSeverity;
-                                    _selectedStatus = tempStatus;
                                   });
                                   Navigator.pop(ctx);
                                 },

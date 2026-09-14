@@ -42,7 +42,7 @@ class _SOSScreenState extends State<SOSScreen> {
           content: Text(
             sosVerification == 'Strict'
                 ? 'Are you absolutely sure you want to broadcast a system-wide SOS? This will alert emergency authorities and LGU command immediately.'
-                : 'Send SOS alert now? Help will be dispatched to your location.',
+                : 'Send SOS alert now? Emergency responders will be alerted to your location.',
             style: const TextStyle(color: Colors.white70),
           ),
           actions: [

@@ -1152,10 +1152,10 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           onPressed: () {
                             firestore.updateSOSStatus(sos.sosId, 'dispatched');
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SOS marked as Dispatched')));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SOS marked as Responding')));
                           },
-                          icon: const Icon(Icons.local_shipping_outlined),
-                          label: const Text('DISPATCH HELP'),
+                          icon: const Icon(Icons.emergency_rounded),
+                          label: const Text('RESPOND'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             foregroundColor: Colors.white,
