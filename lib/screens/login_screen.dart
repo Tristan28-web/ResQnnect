@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 18),
               Text(
-                'GIS',
+                'GeoSafe',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -312,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                             ) 
-                          : const Text('LOGIN TO GIS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                          : const Text('LOGIN TO GEOSAFE', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
                     ),
                   ],
                 ),

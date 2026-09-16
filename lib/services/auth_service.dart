@@ -150,8 +150,8 @@ class AuthService {
           userId: user.uid,
           name: user.isAnonymous 
               ? 'Guest Account' 
-              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GIS Admin' : 'GIS User')),
-          email: user.email ?? 'guest@gis.local',
+              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GeoSafe Admin' : 'GeoSafe User')),
+          email: user.email ?? 'guest@geosafe.local',
           phone: '',
           profileImage: targetRole == AppConstants.roleAdmin ? '' : (user.photoURL ?? ''),
           role: targetRole,

@@ -144,8 +144,8 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                        userEmail?.contains('admin') == true) {
               initialModel = UserModel(
                 userId: firebaseUser.uid,
-                name: firebaseUser.displayName ?? 'GIS Admin',
-                email: userEmail ?? 'admin@gis.gov.ph',
+                name: firebaseUser.displayName ?? 'GeoSafe Admin',
+                email: userEmail ?? 'admin@geosafe.gov.ph',
                 phone: '',
                 profileImage: '',
                 role: AppConstants.roleAdmin,
@@ -155,7 +155,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
             } else {
               initialModel = UserModel(
                 userId: firebaseUser.uid,
-                name: firebaseUser.displayName ?? 'GIS User',
+                name: firebaseUser.displayName ?? 'GeoSafe User',
                 email: userEmail ?? '',
                 phone: '',
                 profileImage: firebaseUser.photoURL ?? '',
@@ -249,8 +249,8 @@ class AuthWrapper extends StatelessWidget {
     
     UserModel effectiveUser = userModel ?? UserModel(
       userId: firebaseUser.uid,
-      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'GIS Admin' : 'GIS User'),
-      email: userEmail ?? 'guest@gis.local',
+      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'GeoSafe Admin' : 'GeoSafe User'),
+      email: userEmail ?? 'guest@geosafe.local',
       role: userEmail == 'admin@catanduanes.gov.ph' || userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
           ? AppConstants.roleAdmin 
           : AppConstants.roleCitizen,

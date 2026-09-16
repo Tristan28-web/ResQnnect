@@ -59,13 +59,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final isAnonymous = authService.currentUser?.isAnonymous == true ||
         user?.name == 'Guest Account' ||
-        user?.email == 'guest@gis.local';
+        user?.email == 'guest@gis.local' ||
+        user?.email == 'guest@geosafe.local';
 
     String displayName = isAnonymous
         ? 'Guest Account'
         : (user?.name.isNotEmpty == true 
             ? user!.name 
-            : (role == AppConstants.roleAdmin ? 'GIS Admin' : 'Citizen'));
+            : (role == AppConstants.roleAdmin ? 'GeoSafe Admin' : 'Citizen'));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),

@@ -88,10 +88,10 @@ class ProfileScreen extends StatelessWidget {
     }
 
     final idTag = isAnonymous
-        ? 'GIS-GUEST'
+        ? 'GEOSAFE-GUEST'
         : (role == AppConstants.roleAdmin 
-            ? 'GIS-ADMIN-001' 
-            : 'GIS-ID-9921');
+            ? 'GEOSAFE-ADMIN-001' 
+            : 'GEOSAFE-ID-9921');
 
     return Container(
       width: double.infinity,
@@ -239,7 +239,7 @@ class ProfileScreen extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
             ),
             content: Text(
-              'Are you sure you want to log out of GIS?',
+              'Are you sure you want to log out of GeoSafe?',
               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13),
             ),
             actions: [

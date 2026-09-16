@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'GIS',
+                          'GeoSafe',
                           style: TextStyle(
                             color: isDark ? Colors.white : AppColors.retroDarkBorder,
                             fontSize: 10,
@@ -179,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'GIS',
+                  'GeoSafe',
                   style: TextStyle(
                     color: isDark ? Colors.white : AppColors.retroDarkBorder,
                     fontSize: 24,

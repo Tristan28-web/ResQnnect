@@ -22,14 +22,14 @@ class SeedService {
       {
         'email': 'admin@catanduanes.gov.ph',
         'password': 'password123',
-        'name': 'GIS Administrator',
+        'name': 'GeoSafe Administrator',
         'phone': '09123456789',
         'role': 'admin',
       },
       {
         'email': 'admin@cadiz.gov.ph',
         'password': 'password123',
-        'name': 'GIS Administrator',
+        'name': 'GeoSafe Administrator',
         'phone': '09123456789',
         'role': 'admin',
       },

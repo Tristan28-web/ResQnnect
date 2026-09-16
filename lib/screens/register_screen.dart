@@ -109,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'JOIN GIS',
+          'JOIN GEOSAFE',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w900,

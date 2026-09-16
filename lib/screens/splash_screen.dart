@@ -38,12 +38,12 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'GIS',
+              'GeoSafe',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 36,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 6,
+                letterSpacing: 4,
               ),
             ),
             const SizedBox(height: 10),
