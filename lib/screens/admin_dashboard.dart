@@ -19,6 +19,7 @@ import 'report_screen.dart';
 import 'incident_pinning_screen.dart';
 import 'lgu_user_management_screen.dart';
 import '../services/location_service.dart';
+import '../widgets/incident_detail_sheet.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -1084,109 +1085,112 @@ class _AdminDashboardState extends State<AdminDashboard> {
       statusLabel = 'ACTIVE';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.retroDarkCard : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-          width: 1.6,
+    return GestureDetector(
+      onTap: () => IncidentDetailSheet.show(context, incident: incident, isAdmin: true),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.6,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
-            offset: const Offset(2, 2),
-            blurRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: statusBg,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+              ),
+              child: Icon(
+                statusIcon,
+                color: statusColor,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              statusIcon,
-              color: statusColor,
-              size: 20,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    incident.description,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded, color: isDark ? Colors.white38 : Colors.black45, size: 12),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          incident.location,
+                          style: TextStyle(
+                            color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  incident.description,
+                  DateFormat('hh:mm a').format(incident.timestamp),
                   style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white38 : const Color(0xFF888E99),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_rounded, color: isDark ? Colors.white38 : Colors.black45, size: 12),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        incident.location,
-                        style: TextStyle(
-                          color: isDark ? Colors.white38 : const Color(0xFF6B7280),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                DateFormat('hh:mm a').format(incident.timestamp),
-                style: TextStyle(
-                  color: isDark ? Colors.white38 : const Color(0xFF888E99),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

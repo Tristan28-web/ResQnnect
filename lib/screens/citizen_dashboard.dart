@@ -12,6 +12,7 @@ import '../services/firestore_service.dart';
 import 'package:intl/intl.dart';
 import '../services/alert_notification_service.dart';
 import '../services/location_service.dart';
+import '../widgets/incident_detail_sheet.dart';
 
 class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
@@ -861,105 +862,108 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
       statusLabel = 'RESOLVED';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.retroDarkCard : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-          width: 1.6,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
-            offset: const Offset(2, 2),
-            blurRadius: 0,
+    return GestureDetector(
+      onTap: () => IncidentDetailSheet.show(context, incident: incident, isAdmin: false),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+            width: 1.6,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusBg,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.retroDarkBorder,
-                width: 1.4,
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: statusBg,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.retroDarkBorder,
+                  width: 1.4,
+                ),
+              ),
+              child: Icon(
+                isActive
+                    ? Icons.radar_rounded
+                    : (isResolved ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
+                color: statusText,
+                size: 20,
               ),
             ),
-            child: Icon(
-              isActive
-                  ? Icons.radar_rounded
-                  : (isResolved ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
-              color: statusText,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  incident.description,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    incident.description,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Icon(Icons.pin_drop_rounded, size: 12, color: isDark ? Colors.white38 : Colors.black45),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        incident.location,
-                        style: TextStyle(
-                          color: isDark ? Colors.white38 : const Color(0xFF6B7280),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Icon(Icons.pin_drop_rounded, size: 12, color: isDark ? Colors.white38 : Colors.black45),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          incident.location,
+                          style: TextStyle(
+                            color: isDark ? Colors.white38 : const Color(0xFF6B7280),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.retroDarkBorder,
+                        width: 1.2,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.retroDarkBorder,
-                      width: 1.2,
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: statusText,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusText,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white30 : AppColors.retroDarkBorder),
-        ],
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white30 : AppColors.retroDarkBorder),
+          ],
+        ),
       ),
     );
   }

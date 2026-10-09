@@ -5,6 +5,7 @@ import '../services/firestore_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
 import '../core/navigation_utils.dart';
+import '../widgets/incident_detail_sheet.dart';
 
 class IncidentMonitoringScreen extends StatefulWidget {
   const IncidentMonitoringScreen({super.key});
@@ -280,8 +281,10 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
     final typeColor = _getTypeColor(item.incidentType);
     final statusColor = _getStatusColor(item.status);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+    return GestureDetector(
+      onTap: () => IncidentDetailSheet.show(context, incident: item, isAdmin: true),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.retroDarkCard : Colors.white,
@@ -437,6 +440,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
