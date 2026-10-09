@@ -189,7 +189,7 @@ class GeminiAIService {
 
     return '''
 You are the GIS Disaster Predictive Intelligence AI for $currentLocation, Philippines (GIS Emergency Command).
-Analyze the ground conditions and return predictive hazard forecasts for $currentLocation and its local operational sectors.
+Analyze the ground conditions and return predictive hazard forecasts for $currentLocation and its local operational barangays.
 
 CURRENT GROUND TELEMETRY:
 - User Location: $currentLocation
@@ -197,16 +197,18 @@ CURRENT GROUND TELEMETRY:
 - Active Incidents (${incidents.length} total): $incidentsSummary
 - Active Emergency Broadcasts (${alerts.length} total): $alertsSummary
 
+IMPORTANT: In 'high_risk_zones', the 'name' MUST be the actual BARANGAY NAME (e.g., 'Brgy. Concepcion', 'Brgy. San Roque', 'Brgy. Rawis', 'Brgy. Cavinitan'), NEVER generic sector labels like 'Sector 1' or raw coordinates. Order the zones in descending order from HIGHEST risk percentage to lowest so the very first item is the #1 highest risk barangay.
+
 REQUIRED JSON OUTPUT FORMAT:
 {
   "executive_summary": "Comprehensive 2-sentence situational intelligence assessment for $currentLocation and local citizens.",
   "overall_threat_level": "HIGH or MODERATE or LOW",
   "high_risk_zones": [
     {
-      "name": "Local Sector / Barangay Name in $currentLocation",
-      "risk_score_percentage": 75.0,
+      "name": "Barangay Name (e.g. Brgy. Concepcion)",
+      "risk_score_percentage": 85.0,
       "hazard_type": "Flooding / Landslide / Storm Wind / Accident",
-      "recommended_action": "Targeted actionable directive for LGU command and citizens in this zone."
+      "recommended_action": "Targeted actionable directive for LGU command and citizens in this barangay."
     }
   ],
   "forecast_trend": [
@@ -278,37 +280,102 @@ Return ONLY valid raw JSON.
         ? 'HIGH'
         : (rainRisk ? 'MODERATE' : 'LOW');
 
-    final areaName = (currentLocation.isNotEmpty && !currentLocation.startsWith('GPS') && !currentLocation.startsWith('Locating'))
-        ? currentLocation.split(',')[0].trim()
-        : 'Operational Area';
+    String areaName = 'Virac, Catanduanes';
+    if (currentLocation.isNotEmpty &&
+        !currentLocation.startsWith('GPS') &&
+        !currentLocation.startsWith('Locating') &&
+        !currentLocation.contains('°')) {
+      areaName = currentLocation.split(',')[0].trim();
+    }
+
+    // Extract real barangays from incidents if available
+    final Map<String, int> bgyCounts = {};
+    final Map<String, String> bgyHazards = {};
+    for (var i in incidents) {
+      final b = i.barangay.trim();
+      if (b.isNotEmpty &&
+          !b.toLowerCase().contains('select') &&
+          !b.toLowerCase().contains('detecting') &&
+          !b.toLowerCase().contains('location')) {
+        bgyCounts[b] = (bgyCounts[b] ?? 0) + 1;
+        bgyHazards[b] = i.incidentType;
+      }
+    }
+
+    final defaultZones = [
+      GeminiRiskZone(
+        name: 'Brgy. Concepcion',
+        riskScorePercentage: 84.5,
+        hazardType: 'Flood & Severe Runoff',
+        recommendedAction:
+            'Preposition rescue boats along coastal lowlands and keep drainage channels completely clear.',
+      ),
+      GeminiRiskZone(
+        name: 'Brgy. San Roque',
+        riskScorePercentage: 76.0,
+        hazardType: 'Precipitation & Flash Runoff',
+        recommendedAction:
+            'Residents advised to secure loose structures and review local emergency bulletins.',
+      ),
+      GeminiRiskZone(
+        name: 'Brgy. Rawis',
+        riskScorePercentage: 62.0,
+        hazardType: 'Riverbank Swell Exposure',
+        recommendedAction:
+            'Maintain continuous water-level monitoring along low-lying river approaches.',
+      ),
+      GeminiRiskZone(
+        name: 'Brgy. Cavinitan',
+        riskScorePercentage: 48.0,
+        hazardType: 'Low-Lying Catchment Ponding',
+        recommendedAction:
+            'Local command automated telemetry sensors operating normally; clear secondary culverts.',
+      ),
+      GeminiRiskZone(
+        name: 'Brgy. Gogon Centro',
+        riskScorePercentage: 35.0,
+        hazardType: 'Baseline Surveillance Area',
+        recommendedAction:
+            'Routine community disaster preparedness logging active; storm drains clear.',
+      ),
+    ];
+
+    List<GeminiRiskZone> dynamicZones = [];
+    if (bgyCounts.isNotEmpty) {
+      final sortedBgys = bgyCounts.keys.toList()
+        ..sort((a, b) => (bgyCounts[b] ?? 0).compareTo(bgyCounts[a] ?? 0));
+
+      double currentScore = 88.0;
+      for (var bgy in sortedBgys) {
+        final count = bgyCounts[bgy] ?? 1;
+        final hazard = bgyHazards[bgy] ?? 'Flood & Runoff';
+        dynamicZones.add(GeminiRiskZone(
+          name: bgy.startsWith('Brgy') ? bgy : 'Brgy. $bgy',
+          riskScorePercentage: double.parse(currentScore.toStringAsFixed(1)),
+          hazardType: hazard,
+          recommendedAction:
+              'Prioritize rapid response prepositioning and emergency patrol in $bgy ($count active reports).',
+        ));
+        currentScore = (currentScore - 12.0).clamp(25.0, 95.0);
+        if (dynamicZones.length >= 5) break;
+      }
+
+      // Complement with default zones if fewer than 4
+      for (var def in defaultZones) {
+        if (dynamicZones.length >= 5) break;
+        if (!dynamicZones.any((z) => z.name.toLowerCase() == def.name.toLowerCase())) {
+          dynamicZones.add(def);
+        }
+      }
+    } else {
+      dynamicZones = defaultZones;
+    }
 
     return GeminiDisasterAnalysis(
       executiveSummary:
           '$areaName disaster surveillance indicates stable regional indicators. Soil saturation and meteorological telemetry remain within baseline thresholds, with emergency units standing by.',
       overallThreatLevel: threat,
-      highRiskZones: [
-        GeminiRiskZone(
-          name: '$areaName - Sector 1',
-          riskScorePercentage: 42.0,
-          hazardType: 'Urban Drainage & Surface Runoff',
-          recommendedAction:
-              'Maintain monitoring along primary channels and keep storm drain systems clear.',
-        ),
-        GeminiRiskZone(
-          name: '$areaName - Sector 2',
-          riskScorePercentage: 38.0,
-          hazardType: 'Precipitation & Wind Exposure',
-          recommendedAction:
-              'Residents advised to secure loose structures and review local emergency bulletins.',
-        ),
-        GeminiRiskZone(
-          name: '$areaName - Sector 3',
-          riskScorePercentage: 35.0,
-          hazardType: 'Low-Lying Catchment Elevation',
-          recommendedAction:
-              'Local command automated telemetry sensors operating normally.',
-        ),
-      ],
+      highRiskZones: dynamicZones,
       forecastTrend: [
         GeminiForecastDay(day: 'Today', projectedIncidents: incidents.length, mainThreat: 'Monitored Baseline'),
         GeminiForecastDay(day: 'Tomorrow', projectedIncidents: 1, mainThreat: 'Scattered Showers'),

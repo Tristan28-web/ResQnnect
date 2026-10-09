@@ -165,14 +165,53 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
             _buildHeroGeminiBanner(isDark),
             const SizedBox(height: 20),
 
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFEF4444), width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: Color(0xFFEF4444), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Color(0xFF991B1B),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Re-analyze Action Button
             _buildReanalyzeButton(isDark),
             const SizedBox(height: 24),
 
-            // Section 1: High Risk Area Predictions
+            // Section 1: Barangay Risk Comparative Graph & Ranking
             _buildSectionHeader(
-              title: 'HIGH-RISK AREA PREDICTIONS',
-              subtitle: 'AI-evaluated vulnerability by municipal sector',
+              title: 'BARANGAY RISK COMPARATIVE GRAPH',
+              subtitle: 'Comparative vulnerability ranking & highest-risk sector identification',
+              icon: Icons.bar_chart_rounded,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildBarangayRiskGraph(isDark),
+            const SizedBox(height: 24),
+
+            // Section 2: Detailed Barangay Action Directives
+            _buildSectionHeader(
+              title: 'HIGH-RISK AREA ACTION DIRECTIVES',
+              subtitle: 'AI-evaluated countermeasures by prioritized barangay',
               icon: Icons.radar_rounded,
               isDark: isDark,
             ),
@@ -494,6 +533,367 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- BARANGAY RISK COMPARATIVE GRAPH & HIGHEST-RISK HIGHLIGHT ---
+  Widget _buildBarangayRiskGraph(bool isDark) {
+    final zones = _analysis?.highRiskZones ?? [];
+    if (zones.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.retroDarkCard : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
+        ),
+        child: const Center(
+          child: Text(
+            'Ingesting telemetry to generate barangay vulnerability graph...',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    }
+
+    final topZone = zones.first;
+    final topPct = topZone.riskScorePercentage.clamp(0.0, 100.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 1. Standout Banner: #1 Highest Risk Barangay (Pinaka High-Risk Barangay)
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2E1C20) : const Color(0xFFFEF2F2),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFEF4444), width: 2.0),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFEF4444).withOpacity(0.2),
+                offset: const Offset(3, 4),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.retroDarkBorder, width: 1.2),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 14, color: Colors.white),
+                        SizedBox(width: 5),
+                        Text(
+                          'HIGHEST RISK BARANGAY (#1)',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF451A1A) : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFEF4444), width: 1.4),
+                    ),
+                    child: Text(
+                      '${topPct.toStringAsFixed(1)}% RISK',
+                      style: const TextStyle(
+                        color: Color(0xFFEF4444),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                topZone.name,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.shield_outlined, size: 13, color: Color(0xFFEF4444)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Primary Threat: ${topZone.hazardType}',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : const Color(0xFF991B1B),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                topZone.recommendedAction,
+                style: TextStyle(
+                  color: isDark ? Colors.white60 : const Color(0xFF7F1D1D),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // 2. The Visual Comparative Bar Graph
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.retroDarkCard : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+              width: 1.8,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.12),
+                offset: const Offset(3, 4),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Graph Header & Legend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'BARANGAY VULNERABILITY RANKING',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _buildGraphLegendDot(const Color(0xFFEF4444), 'High', isDark),
+                      const SizedBox(width: 8),
+                      _buildGraphLegendDot(const Color(0xFFF59E0B), 'Mod', isDark),
+                      const SizedBox(width: 8),
+                      _buildGraphLegendDot(const Color(0xFF10B981), 'Low', isDark),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Baseline Axis Percentage Guides (0%, 25%, 50%, 75%, 100%)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (final tick in ['0%', '25%', '50%', '75%', '100%'])
+                    Text(
+                      tick,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white30 : const Color(0xFF9CA3AF),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Guide line
+              Container(
+                height: 1,
+                color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
+              ),
+              const SizedBox(height: 14),
+
+              // Comparative Graph Bars for each Barangay
+              ...List.generate(zones.length, (index) {
+                final zone = zones[index];
+                final score = zone.riskScorePercentage.clamp(0.0, 100.0);
+                final rank = index + 1;
+
+                Color barColor = const Color(0xFF10B981); // Mint Low
+                Color rankBg = const Color(0xFFF3F4F6);
+                Color rankText = const Color(0xFF4B5563);
+
+                if (score >= 70) {
+                  barColor = const Color(0xFFEF4444); // Red High
+                  rankBg = const Color(0xFFFEE2E2);
+                  rankText = const Color(0xFFDC2626);
+                } else if (score >= 40) {
+                  barColor = const Color(0xFFF59E0B); // Amber Mod
+                  rankBg = const Color(0xFFFEF3C7);
+                  rankText = const Color(0xFFD97706);
+                }
+
+                if (rank == 1) {
+                  rankBg = const Color(0xFFEF4444);
+                  rankText = Colors.white;
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Barangay Name + Rank + Score Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: rankBg,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.retroDarkBorder,
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '#$rank',
+                                    style: TextStyle(
+                                      color: rankText,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                zone.name,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF262C38) : AppColors.retroPeach,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  zone.hazardType.split('&')[0].trim().toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark ? Colors.white70 : AppColors.retroDarkBorder,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${score.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              color: barColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+
+                      // Horizontal Bar
+                      Container(
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E222D) : const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(7),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                            width: 1.2,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: score / 100.0,
+                            child: Container(
+                              color: barColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGraphLegendDot(Color color, String label, bool isDark) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white60 : const Color(0xFF6B7280),
           ),
         ),
       ],
