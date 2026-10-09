@@ -1065,25 +1065,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildIncidentActivityTile(BuildContext context, IncidentModel incident) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = incident.status == 'active' || incident.status == 'dispatched' || incident.status == 'verified';
-    final isResolved = incident.status == 'resolved';
+    final isClosed = incident.isAutoClosed;
 
-    Color statusBg = AppColors.retroPeach;
-    Color statusColor = const Color(0xFFD97706);
-    IconData statusIcon = Icons.report_problem_rounded;
-    String statusLabel = 'PENDING';
-
-    if (isResolved) {
-      statusBg = const Color(0xFFDCFCE7);
-      statusColor = const Color(0xFF16A34A);
-      statusIcon = Icons.check_circle_rounded;
-      statusLabel = 'RESOLVED';
-    } else if (isActive) {
-      statusBg = AppColors.retroLilac;
-      statusColor = const Color(0xFF2563EB);
-      statusIcon = Icons.radar_rounded;
-      statusLabel = 'ACTIVE';
-    }
+    Color statusBg = isClosed
+        ? (isDark ? const Color(0xFF262C38) : const Color(0xFFF1F5F9))
+        : const Color(0xFFDCFCE7);
+    Color statusColor = isClosed ? const Color(0xFF64748B) : const Color(0xFF16A34A);
+    IconData statusIcon = isClosed ? Icons.lock_clock_rounded : Icons.radar_rounded;
+    String statusLabel = isClosed ? 'CLOSED' : 'ACTIVE (${incident.daysUntilAutoClose}D)';
 
     return GestureDetector(
       onTap: () => IncidentDetailSheet.show(context, incident: incident, isAdmin: true),

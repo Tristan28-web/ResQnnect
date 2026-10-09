@@ -129,7 +129,7 @@ class SeedService {
         description: 'Minor flooding observed near the Virac municipal hall.',
         imageUrl: 'https://via.placeholder.com/300',
         location: 'Virac (Capital)',
-        status: 'pending',
+        status: 'active',
         timestamp: DateTime.now(),
       ),
       IncidentModel(

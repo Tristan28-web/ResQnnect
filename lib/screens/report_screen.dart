@@ -235,7 +235,7 @@ class _ReportScreenState extends State<ReportScreen> {
         severity: _selectedIncidentType == AppConstants.incidentTypeFire || _selectedIncidentType == AppConstants.incidentTypeFlood
             ? 'high'
             : 'medium',
-        status: 'pending',
+        status: 'active',
         timestamp: _incidentDateTime,
       );
 

@@ -43,7 +43,7 @@ class HazardModel {
       longitude: (data['longitude'] as num).toDouble(),
       timestamp: (data['timestamp'] as Timestamp).toDate(),
       reportedBy: data['reported_by'] ?? '',
-      status: data['status'] ?? 'pending',
+      status: data['status'] ?? 'active',
     );
   }
 

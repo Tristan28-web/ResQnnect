@@ -106,11 +106,11 @@ class IncidentModel {
     }
 
     final id = data['incident_id'] ?? '';
-    final rawStatus = data['status']?.toString() ?? 'pending';
+    final rawStatus = data['status']?.toString().toLowerCase() ?? 'active';
     final ageInDays = DateTime.now().difference(parsedTime).inDays;
 
-    // Automatic 15-day lifecycle closure rule
-    final effectiveStatus = ageInDays >= 15 ? 'closed' : rawStatus;
+    // Automatic 15-day lifecycle closure rule (strictly Active and Closed, removing pending/confirm/responders)
+    final effectiveStatus = (ageInDays >= 15 || rawStatus == 'closed') ? 'closed' : 'active';
     final effectiveNotes = ageInDays >= 15 && (data['resolution_notes'] == null || data['resolution_notes'].toString().isEmpty)
         ? 'Automatically closed after 15-day system lifecycle limit.'
         : data['resolution_notes'];

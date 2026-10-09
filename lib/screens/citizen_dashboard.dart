@@ -23,7 +23,6 @@ class CitizenDashboard extends StatefulWidget {
 
 class _CitizenDashboardState extends State<CitizenDashboard> {
   int _lastAlertCount = 0;
-  final Set<String> _notifiedIncidentIds = {};
   String _searchQuery = '';
   String _selectedCategory = 'All';
   String _selectedLgu = 'All';
@@ -71,9 +70,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           _lastAlertCount = alertCount;
           WidgetsBinding.instance.addPostFrameCallback((_) => _triggerEmergencyFlash());
         }
-
-        // Check for report status updates (e.g. verified or active)
-        _checkForAcceptedReports(context, firestoreService, userId);
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -845,22 +841,14 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
 
   Widget _buildMyReportItem(BuildContext context, IncidentModel incident) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = incident.status == 'dispatched' || incident.status == 'active' || incident.status == 'verified';
-    final isResolved = incident.status == 'resolved';
+    final isClosed = incident.isAutoClosed;
 
-    Color statusBg = AppColors.retroPeach;
-    Color statusText = const Color(0xFFD97706);
-    String statusLabel = 'PENDING';
-
-    if (isActive) {
-      statusBg = AppColors.retroLilac;
-      statusText = const Color(0xFF2563EB);
-      statusLabel = 'ACTIVE';
-    } else if (isResolved) {
-      statusBg = const Color(0xFFDCFCE7);
-      statusText = const Color(0xFF16A34A);
-      statusLabel = 'RESOLVED';
-    }
+    Color statusBg = isClosed
+        ? (isDark ? const Color(0xFF262C38) : const Color(0xFFF1F5F9))
+        : const Color(0xFFDCFCE7);
+    Color statusText = isClosed ? const Color(0xFF64748B) : const Color(0xFF16A34A);
+    String statusLabel = isClosed ? 'CLOSED' : 'ACTIVE (${incident.daysUntilAutoClose}D)';
+    IconData statusIcon = isClosed ? Icons.lock_clock_rounded : Icons.check_circle_rounded;
 
     return GestureDetector(
       onTap: () => IncidentDetailSheet.show(context, incident: incident, isAdmin: false),
@@ -895,9 +883,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
                 ),
               ),
               child: Icon(
-                isActive
-                    ? Icons.radar_rounded
-                    : (isResolved ? Icons.check_circle_rounded : Icons.pending_actions_rounded),
+                statusIcon,
                 color: statusText,
                 size: 20,
               ),
@@ -1106,105 +1092,6 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _checkForAcceptedReports(BuildContext context, FirestoreService firestore, String userId) {
-    firestore.getIncidents().listen((incidents) {
-      if (!mounted) return;
-      for (var inc in incidents) {
-        if (inc.userId == userId &&
-            (inc.status == 'dispatched' || inc.status == 'active' || inc.status == 'verified') &&
-            !_notifiedIncidentIds.contains(inc.incidentId)) {
-          _notifiedIncidentIds.add(inc.incidentId);
-          _showReportAcceptedDialog(context, inc);
-        }
-      }
-    });
-  }
-
-  void _showReportAcceptedDialog(BuildContext context, IncidentModel inc) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Color(0xFFDCFCE7),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle, color: Color(0xFF16A34A), size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Report Accepted',
-              style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your incident report has been verified and logged by LGU Emergency Command.',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.4),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.retroPeach,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.timer_outlined, color: AppColors.retroDarkBorder),
-                  SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'EST. RESPONSE TIME',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
-                      ),
-                      Text(
-                        '5 - 12 Minutes',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.retroDarkBorder),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.retroMint,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.6),
-              ),
-            ),
-            child: const Text('UNDERSTOOD', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
       ),

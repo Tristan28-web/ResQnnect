@@ -826,7 +826,7 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                                   latitude: loc.latitude,
                                   longitude: loc.longitude,
                                   reportedBy: user.uid,
-                                  status: 'pending',
+                                  status: 'active',
                                   timestamp: DateTime.now(),
                                 );
                                 await Provider.of<FirestoreService>(ctx, listen: false).addHazard(hazard);

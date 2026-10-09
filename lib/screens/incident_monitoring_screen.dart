@@ -21,19 +21,11 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-      case 'reported':
-        return const Color(0xFFD97706);
-      case 'active':
-      case 'dispatched':
-      case 'responding':
-        return const Color(0xFF2563EB);
-      case 'resolved':
-        return const Color(0xFF16A34A);
       case 'closed':
         return const Color(0xFF64748B);
+      case 'active':
       default:
-        return const Color(0xFFD97706);
+        return const Color(0xFF10B981);
     }
   }
 
@@ -138,11 +130,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     children: [
                       _buildRetroFilterPill('All', isDark),
                       const SizedBox(width: 8),
-                      _buildRetroFilterPill('Pending', isDark),
-                      const SizedBox(width: 8),
                       _buildRetroFilterPill('Active', isDark),
-                      const SizedBox(width: 8),
-                      _buildRetroFilterPill('Resolved', isDark),
                       const SizedBox(width: 8),
                       _buildRetroFilterPill('Closed', isDark),
                     ],
@@ -163,15 +151,11 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
 
                 final incidents = snapshot.data ?? [];
                 final filtered = incidents.where((inc) {
-                  // Status filter
-                  if (_selectedStatus == 'Pending') {
-                    if (inc.status != 'pending' && inc.status != 'reported') return false;
-                  } else if (_selectedStatus == 'Active') {
-                    if (inc.status != 'active' && inc.status != 'dispatched' && inc.status != 'responding') return false;
-                  } else if (_selectedStatus == 'Resolved') {
-                    if (inc.status != 'resolved') return false;
+                  // Status filter (Active vs 15-day Closed)
+                  if (_selectedStatus == 'Active') {
+                    if (inc.isAutoClosed) return false;
                   } else if (_selectedStatus == 'Closed') {
-                    if (inc.status != 'closed') return false;
+                    if (!inc.isAutoClosed) return false;
                   }
 
                   // Search query
@@ -235,9 +219,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
   Widget _buildRetroFilterPill(String status, bool isDark) {
     final isSelected = _selectedStatus == status;
     Color activeBg = AppColors.retroLilac;
-    if (status == 'Pending') activeBg = AppColors.retroPeach;
-    if (status == 'Active') activeBg = const Color(0xFFFEF08A);
-    if (status == 'Resolved') activeBg = const Color(0xFFDCFCE7);
+    if (status == 'Active') activeBg = const Color(0xFFDCFCE7);
     if (status == 'Closed') activeBg = const Color(0xFFE2E8F0);
 
     return GestureDetector(
@@ -346,7 +328,7 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                     Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
                     const SizedBox(width: 6),
                     Text(
-                      item.status.toUpperCase(),
+                      item.isAutoClosed ? 'CLOSED' : 'ACTIVE (${item.daysUntilAutoClose}D LEFT)',
                       style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900),
                     ),
                   ],

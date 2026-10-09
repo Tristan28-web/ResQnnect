@@ -195,7 +195,7 @@ class IncidentDetailSheet extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            incident.status.toUpperCase(),
+                            incident.isAutoClosed ? 'CLOSED' : 'ACTIVE',
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 10,
@@ -803,37 +803,21 @@ class IncidentDetailSheet extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-      case 'reported':
-        return const Color(0xFFD97706);
-      case 'active':
-      case 'dispatched':
-      case 'responding':
-        return const Color(0xFF2563EB);
-      case 'resolved':
-        return const Color(0xFF16A34A);
       case 'closed':
         return const Color(0xFF64748B);
+      case 'active':
       default:
-        return const Color(0xFFD97706);
+        return const Color(0xFF10B981);
     }
   }
 
   Color _getStatusBg(String status, bool isDark) {
     switch (status.toLowerCase()) {
-      case 'pending':
-      case 'reported':
-        return isDark ? const Color(0xFF2B2215) : const Color(0xFFFEF3C7);
-      case 'active':
-      case 'dispatched':
-      case 'responding':
-        return isDark ? const Color(0xFF19243E) : const Color(0xFFDBEAFE);
-      case 'resolved':
-        return isDark ? const Color(0xFF142E1F) : const Color(0xFFDCFCE7);
       case 'closed':
         return isDark ? const Color(0xFF21252D) : const Color(0xFFF1F5F9);
+      case 'active':
       default:
-        return isDark ? const Color(0xFF2B2215) : const Color(0xFFFEF3C7);
+        return isDark ? const Color(0xFF142E1F) : const Color(0xFFDCFCE7);
     }
   }
 }

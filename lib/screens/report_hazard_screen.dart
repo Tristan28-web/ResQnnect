@@ -93,7 +93,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       latitude: _currentPosition!.latitude,
       longitude: _currentPosition!.longitude,
       reportedBy: userId,
-      status: 'pending',
+      status: 'active',
       timestamp: DateTime.now(),
     );
     
