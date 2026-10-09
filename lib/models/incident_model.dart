@@ -39,6 +39,18 @@ class IncidentModel {
         incidentType = incidentType ?? _inferIncidentType(description),
         barangay = barangay ?? _inferBarangay(location);
 
+  /// Age of the incident in days since report timestamp
+  int get ageInDays => DateTime.now().difference(timestamp).inDays;
+
+  /// Remaining days before automatic system closure (15-day limit)
+  int get daysUntilAutoClose {
+    final remaining = 15 - ageInDays;
+    return remaining < 0 ? 0 : remaining;
+  }
+
+  /// Whether the incident is closed or has exceeded the 15-day lifecycle limit
+  bool get isAutoClosed => ageInDays >= 15 || status.toLowerCase() == 'closed';
+
   static String _generateRefId(String id) {
     if (id.length > 4) {
       final suffix = id.substring(id.length - 4);
@@ -94,6 +106,14 @@ class IncidentModel {
     }
 
     final id = data['incident_id'] ?? '';
+    final rawStatus = data['status']?.toString() ?? 'pending';
+    final ageInDays = DateTime.now().difference(parsedTime).inDays;
+
+    // Automatic 15-day lifecycle closure rule
+    final effectiveStatus = ageInDays >= 15 ? 'closed' : rawStatus;
+    final effectiveNotes = ageInDays >= 15 && (data['resolution_notes'] == null || data['resolution_notes'].toString().isEmpty)
+        ? 'Automatically closed after 15-day system lifecycle limit.'
+        : data['resolution_notes'];
 
     return IncidentModel(
       incidentId: id,
@@ -108,10 +128,10 @@ class IncidentModel {
       latitude: lat,
       longitude: lng,
       severity: data['severity'] ?? 'medium',
-      status: data['status'] ?? 'pending',
+      status: effectiveStatus,
       timestamp: parsedTime,
       assignedTo: data['assigned_to'],
-      resolutionNotes: data['resolution_notes'],
+      resolutionNotes: effectiveNotes,
     );
   }
 

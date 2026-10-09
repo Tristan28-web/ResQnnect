@@ -1037,7 +1037,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               );
             }
             final incidents = snapshot.data!
-                .where((i) => i.status != 'resolved')
+                .where((i) => i.status != 'resolved' && i.status != 'closed')
                 .where((i) => _selectedCategory == 'All' || i.incidentType.toLowerCase() == _selectedCategory.toLowerCase())
                 .take(5)
                 .toList();

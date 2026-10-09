@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/incident_model.dart';
-import '../services/firestore_service.dart';
 import '../core/constants.dart';
 import '../screens/global_map_screen.dart';
 
@@ -338,44 +336,95 @@ class IncidentDetailSheet extends StatelessWidget {
                   const SizedBox(height: 12),
                 ],
 
-                // Admin Update Status Button
-                if (isAdmin) ...[
-                  GestureDetector(
-                    onTap: () => _showStatusUpdateDialog(context),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      decoration: BoxDecoration(
-                        color: AppColors.retroPeach,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.retroDarkBorder, width: 1.8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.15),
-                            offset: const Offset(3, 3),
-                            blurRadius: 0,
-                          ),
-                        ],
+                // 15-Day Automatic Closure Policy Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: incident.isAutoClosed
+                        ? (isDark ? const Color(0xFF262C38) : const Color(0xFFF1F5F9))
+                        : (isDark ? const Color(0xFF1E2B24) : const Color(0xFFECFDF5)),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: incident.isAutoClosed
+                          ? (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8))
+                          : const Color(0xFF10B981),
+                      width: 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black45 : AppColors.retroDarkBorder.withOpacity(0.1),
+                        offset: const Offset(3, 3),
+                        blurRadius: 0,
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(Icons.edit_note_rounded, size: 18, color: AppColors.retroDarkBorder),
-                          SizedBox(width: 8),
-                          Text(
-                            'UPDATE INCIDENT STATUS',
-                            style: TextStyle(
-                              color: AppColors.retroDarkBorder,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: incident.isAutoClosed
+                                  ? (isDark ? Colors.white12 : const Color(0xFFCBD5E1))
+                                  : const Color(0xFF10B981).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              incident.isAutoClosed ? Icons.lock_clock_rounded : Icons.auto_mode_rounded,
+                              size: 16,
+                              color: incident.isAutoClosed
+                                  ? (isDark ? Colors.white70 : const Color(0xFF475569))
+                                  : const Color(0xFF059669),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              incident.isAutoClosed
+                                  ? 'AUTOMATICALLY CLOSED (15-DAY LIMIT)'
+                                  : '15-DAY AUTOMATIC CLOSURE POLICY',
+                              style: TextStyle(
+                                color: incident.isAutoClosed
+                                    ? (isDark ? Colors.white70 : const Color(0xFF334155))
+                                    : const Color(0xFF047857),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      Text(
+                        incident.isAutoClosed
+                            ? 'This report reached the 15-day system lifecycle limit and was automatically closed and archived.'
+                            : 'This report will automatically close in ${incident.daysUntilAutoClose} day(s) (Day ${incident.ageInDays} of 15). Manual status updates have been disabled per system policy.',
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                          fontSize: 11,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (!incident.isAutoClosed) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (incident.ageInDays / 15.0).clamp(0.0, 1.0),
+                            backgroundColor: isDark ? Colors.white12 : const Color(0xFFD1FAE5),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -717,144 +766,6 @@ class IncidentDetailSheet extends StatelessWidget {
           fontSize: 9,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  // Admin Status Update Modal Dialog
-  void _showStatusUpdateDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    String newStatus = incident.status;
-    final notesController = TextEditingController(text: incident.resolutionNotes ?? '');
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(
-              color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-              width: 2.0,
-            ),
-          ),
-          elevation: 0,
-          title: Text(
-            'UPDATE STATUS (${incident.referenceId})',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.8,
-              color: isDark ? Colors.white : AppColors.retroDarkBorder,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select new operational status:',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white60 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: ['pending', 'active', 'resolved', 'closed'].map((st) {
-                  final isSelected = newStatus.toLowerCase() == st;
-                  return ChoiceChip(
-                    label: Text(
-                      st.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : AppColors.retroDarkBorder),
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedColor: _getStatusColor(st),
-                    backgroundColor: isDark ? const Color(0xFF262C38) : const Color(0xFFF3F4F6),
-                    onSelected: (val) {
-                      if (val) setDialogState(() => newStatus = st);
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: notesController,
-                maxLines: 2,
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                  fontSize: 12,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Add operational/dispatch notes...',
-                  hintStyle: TextStyle(
-                    color: isDark ? Colors.white30 : const Color(0xFF9CA3AF),
-                    fontSize: 11,
-                  ),
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF1E222D) : const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                      width: 1.2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'CANCEL',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white54 : const Color(0xFF6B7280),
-                  fontSize: 11,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.retroMint,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () async {
-                final firestore = Provider.of<FirestoreService>(context, listen: false);
-                await firestore.updateIncidentStatusWithNotes(
-                  incident.incidentId,
-                  newStatus,
-                  notes: notesController.text.trim(),
-                );
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (context.mounted) {
-                  Navigator.pop(context); // Close sheet
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Incident ${incident.referenceId} marked as ${newStatus.toUpperCase()}!'),
-                      backgroundColor: const Color(0xFF16A34A),
-                    ),
-                  );
-                }
-                onStatusChanged?.call();
-              },
-              child: const Text('SAVE', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
-            ),
-          ],
         ),
       ),
     );

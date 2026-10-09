@@ -52,14 +52,39 @@ class FirestoreService {
     await _db.collection(AppConstants.incidentsCollection).doc(incident.incidentId).set(incident.toMap());
   }
 
-  // Get Incidents (Stream)
+  // Get Incidents (Stream with automatic 15-day lifecycle closure)
   Stream<List<IncidentModel>> getIncidents() {
     return _db.collection(AppConstants.incidentsCollection)
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => IncidentModel.fromMap(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final incidents = snapshot.docs
+              .map((doc) => IncidentModel.fromMap(doc.data()))
+              .toList();
+
+          // Sync expired incidents in Firestore in background
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            final currentStatus = data['status']?.toString().toLowerCase();
+            final rawTs = data['timestamp'];
+            if (currentStatus != 'closed' && rawTs != null) {
+              DateTime? time;
+              if (rawTs is Timestamp) {
+                time = rawTs.toDate();
+              } else if (rawTs is String) {
+                time = DateTime.tryParse(rawTs);
+              }
+              if (time != null && DateTime.now().difference(time).inDays >= 15) {
+                doc.reference.update({
+                  'status': 'closed',
+                  'resolution_notes': data['resolution_notes'] ?? 'Automatically closed after 15-day system lifecycle limit.',
+                }).catchError((_) {});
+              }
+            }
+          }
+
+          return incidents;
+        });
   }
 
   Future<void> updateIncidentStatus(String incidentId, String status) async {

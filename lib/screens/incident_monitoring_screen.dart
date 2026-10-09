@@ -403,154 +403,92 @@ class _IncidentMonitoringScreenState extends State<IncidentMonitoringScreen> {
                   ),
                 ],
               ),
-              GestureDetector(
-                onTap: () => _showStatusUpdateDialog(context, item, firestore),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.retroPeach,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
-                        offset: const Offset(2, 2),
-                        blurRadius: 0,
+              Row(
+                children: [
+                  // 15-Day Auto-Close Lifecycle Indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: item.isAutoClosed
+                          ? (isDark ? const Color(0xFF262C38) : const Color(0xFFF1F5F9))
+                          : (isDark ? const Color(0xFF1E2B24) : const Color(0xFFDCFCE7)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: item.isAutoClosed
+                            ? (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8))
+                            : const Color(0xFF16A34A),
+                        width: 1.2,
                       ),
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.edit_note_rounded, size: 14, color: AppColors.retroDarkBorder),
-                      SizedBox(width: 4),
-                      Text(
-                        'STATUS',
-                        style: TextStyle(
-                          color: AppColors.retroDarkBorder,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.6,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.isAutoClosed ? Icons.lock_clock_rounded : Icons.timer_outlined,
+                          size: 11,
+                          color: item.isAutoClosed
+                              ? (isDark ? Colors.white60 : const Color(0xFF64748B))
+                              : const Color(0xFF16A34A),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          item.isAutoClosed
+                              ? '15D CLOSED'
+                              : 'CLOSES IN ${item.daysUntilAutoClose}D',
+                          style: TextStyle(
+                            color: item.isAutoClosed
+                                ? (isDark ? Colors.white60 : const Color(0xFF64748B))
+                                : const Color(0xFF16A34A),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  // Details Button
+                  GestureDetector(
+                    onTap: () => IncidentDetailSheet.show(context, incident: item, isAdmin: true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.retroPeach,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.retroDarkBorder, width: 1.4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black54 : AppColors.retroDarkBorder,
+                            offset: const Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.visibility_rounded, size: 13, color: AppColors.retroDarkBorder),
+                          SizedBox(width: 4),
+                          Text(
+                            'DETAILS',
+                            style: TextStyle(
+                              color: AppColors.retroDarkBorder,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
     ),
-    );
-  }
-
-  void _showStatusUpdateDialog(BuildContext context, IncidentModel incident, FirestoreService firestore) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    String newStatus = incident.status;
-    final notesController = TextEditingController(text: incident.resolutionNotes ?? '');
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: BorderSide(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 2.0),
-          ),
-          elevation: 0,
-          title: Text(
-            'UPDATE STATUS (${incident.referenceId})',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : AppColors.retroDarkBorder,
-              letterSpacing: 0.8,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.black26 : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.4),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: ['pending', 'active', 'resolved', 'closed'].contains(newStatus.toLowerCase())
-                        ? newStatus.toLowerCase()
-                        : 'pending',
-                    dropdownColor: isDark ? AppColors.retroDarkCard : Colors.white,
-                    items: const [
-                      DropdownMenuItem(value: 'pending', child: Text('Reported / Pending', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                      DropdownMenuItem(value: 'active', child: Text('Active Incident', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                      DropdownMenuItem(value: 'resolved', child: Text('Resolved', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                      DropdownMenuItem(value: 'closed', child: Text('Archived / Closed', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) setDialogState(() => newStatus = val);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.black26 : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.4),
-                ),
-                child: TextField(
-                  controller: notesController,
-                  maxLines: 2,
-                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white : AppColors.retroDarkBorder),
-                  decoration: const InputDecoration(
-                    hintText: 'Notes: flood receded, hazard cleared, etc...',
-                    hintStyle: TextStyle(fontSize: 11),
-                    contentPadding: EdgeInsets.all(12),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('CANCEL', style: TextStyle(color: isDark ? Colors.white60 : const Color(0xFF6B7280), fontWeight: FontWeight.bold)),
-            ),
-            GestureDetector(
-              onTap: () async {
-                await firestore.updateIncidentStatusWithNotes(
-                  incident.incidentId,
-                  newStatus,
-                  notes: notesController.text.trim(),
-                );
-                if (context.mounted) Navigator.pop(ctx);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.retroMint,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.retroDarkBorder, width: 1.6),
-                  boxShadow: const [
-                    BoxShadow(color: AppColors.retroDarkBorder, offset: Offset(2, 2), blurRadius: 0),
-                  ],
-                ),
-                child: const Text(
-                  'SAVE',
-                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
