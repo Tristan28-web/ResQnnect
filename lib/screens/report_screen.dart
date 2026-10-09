@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,7 +36,7 @@ class _ReportScreenState extends State<ReportScreen> {
   String _selectedIncidentType = AppConstants.incidentTypeFire;
   DateTime _incidentDateTime = DateTime.now();
   LatLng? _pinnedLocation;
-  File? _image;
+  Uint8List? _imageBytes;
   bool _isReporting = false;
   bool _isLocationVerified = false;
 
@@ -79,13 +79,18 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 35,
-    );
-    if (pickedFile != null) {
-      setState(() => _image = File(pickedFile.path));
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 35,
+      );
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() => _imageBytes = bytes);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
     }
   }
 
@@ -200,9 +205,8 @@ class _ReportScreenState extends State<ReportScreen> {
       final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
 
       String? imageBase64;
-      if (_image != null) {
-        final bytes = await _image!.readAsBytes();
-        imageBase64 = base64Encode(bytes);
+      if (_imageBytes != null) {
+        imageBase64 = base64Encode(_imageBytes!);
       }
 
       final nowMillis = DateTime.now().millisecondsSinceEpoch.toString();
@@ -797,10 +801,30 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ],
         ),
-        child: _image != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.file(_image!, width: double.infinity, fit: BoxFit.cover),
+        child: _imageBytes != null
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.memory(_imageBytes!, width: double.infinity, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _imageBytes = null),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
+                ],
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,20 +20,25 @@ class ReportHazardScreen extends StatefulWidget {
 class _ReportHazardScreenState extends State<ReportHazardScreen> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  File? _image;
+  Uint8List? _imageBytes;
   bool _isReporting = false;
   bool _isLocationVerified = false;
   HazardType _selectedType = HazardType.other;
   Position? _currentPosition;
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 25, 
-    );
-    if (pickedFile != null) {
-      setState(() => _image = File(pickedFile.path));
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 25, 
+      );
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() => _imageBytes = bytes);
+      }
+    } catch (e) {
+      debugPrint('Error picking hazard image: $e');
     }
   }
 
@@ -60,7 +65,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
   }
 
   void _submitHazard() async {
-    if (_descriptionController.text.isEmpty || _currentPosition == null || _image == null) {
+    if (_descriptionController.text.isEmpty || _currentPosition == null || _imageBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields (including photo and location)'),
@@ -76,8 +81,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
     
     String? imageBase64;
-    final bytes = await _image!.readAsBytes();
-    imageBase64 = base64Encode(bytes);
+    imageBase64 = base64Encode(_imageBytes!);
     
     final hazard = HazardModel(
       hazardId: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -332,7 +336,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
         ),
-        child: _image == null
+        child: _imageBytes == null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -353,13 +357,13 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: Image.file(_image!, fit: BoxFit.cover),
+                    child: Image.memory(_imageBytes!, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 10, right: 10,
                     child: IconButton(
                       icon: const Icon(Icons.cancel, color: Colors.white70),
-                      onPressed: () => setState(() => _image = null),
+                      onPressed: () => setState(() => _imageBytes = null),
                     ),
                   ),
                 ],
