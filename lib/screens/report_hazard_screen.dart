@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +8,7 @@ import '../services/firestore_service.dart';
 import '../models/hazard_model.dart';
 import '../core/constants.dart';
 import '../core/navigation_utils.dart';
+import '../core/image_utils.dart';
 
 class ReportHazardScreen extends StatefulWidget {
   const ReportHazardScreen({super.key});
@@ -31,7 +31,9 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 25, 
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 40, 
       );
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
@@ -81,7 +83,7 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
     
     String? imageBase64;
-    imageBase64 = base64Encode(_imageBytes!);
+    imageBase64 = await ImageUtils.processImageForFirestore(_imageBytes!);
     
     final hazard = HazardModel(
       hazardId: DateTime.now().millisecondsSinceEpoch.toString(),

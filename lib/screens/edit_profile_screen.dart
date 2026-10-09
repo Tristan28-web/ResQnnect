@@ -7,6 +7,7 @@ import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../core/constants.dart';
 import '../core/navigation_utils.dart';
+import '../core/image_utils.dart';
 import '../widgets/profile_image.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -50,8 +51,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       
       if (image != null) {
         final bytes = await image.readAsBytes();
+        final safeBase64 = await ImageUtils.processImageForFirestore(bytes);
         setState(() {
-          _imageBase64 = base64Encode(bytes);
+          _imageBase64 = safeBase64;
         });
       }
     } catch (e) {

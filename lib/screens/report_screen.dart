@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +11,7 @@ import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
 import '../core/navigation_utils.dart';
+import '../core/image_utils.dart';
 import '../widgets/incident_pin_picker_dialog.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -83,7 +83,9 @@ class _ReportScreenState extends State<ReportScreen> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 35,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 45,
       );
       if (pickedFile != null) {
         final bytes = await pickedFile.readAsBytes();
@@ -206,7 +208,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
       String? imageBase64;
       if (_imageBytes != null) {
-        imageBase64 = base64Encode(_imageBytes!);
+        imageBase64 = await ImageUtils.processImageForFirestore(_imageBytes!);
       }
 
       final nowMillis = DateTime.now().millisecondsSinceEpoch.toString();

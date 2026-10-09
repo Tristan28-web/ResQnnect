@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/profile_image.dart';
 import 'package:http/http.dart' as http;
+import '../core/image_utils.dart';
 
 class GlobalMapScreen extends StatefulWidget {
   final LatLng? initialLocation;
@@ -753,12 +754,15 @@ class _GlobalMapScreenState extends State<GlobalMapScreen> {
                           onTap: () async {
                             final image = await picker.pickImage(
                               source: ImageSource.camera,
-                              imageQuality: 50,
+                              maxWidth: 800,
+                              maxHeight: 800,
+                              imageQuality: 40,
                             );
                             if (image != null) {
                               final bytes = await image.readAsBytes();
+                              final safeBase64 = await ImageUtils.processImageForFirestore(bytes);
                               setLocal(() {
-                                base64Image = base64Encode(bytes);
+                                base64Image = safeBase64;
                               });
                             }
                           },
