@@ -5,6 +5,7 @@ import '../services/firestore_service.dart';
 import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class HotspotCluster {
   final String barangay;
@@ -148,7 +149,7 @@ class _HotspotIdentificationScreenState extends State<HotspotIdentificationScree
             ),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           'HOTSPOT IDENTIFICATION',

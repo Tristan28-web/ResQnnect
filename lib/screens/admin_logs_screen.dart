@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 import 'package:intl/intl.dart';
 
 class AdminLogsScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _AdminLogsScreenState extends State<AdminLogsScreen> {
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
                 color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           'ADMINISTRATIVE LOGS',

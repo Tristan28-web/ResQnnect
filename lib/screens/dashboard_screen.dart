@@ -14,14 +14,21 @@ import '../widgets/profile_image.dart';
 import '../services/location_service.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int initialIndex;
+  const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +43,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       role = AppConstants.roleAdmin;
     }
 
-    return Scaffold(
-      backgroundColor: isDark ? AppConstants.backgroundBlack : AppConstants.retroCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildRetroHeader(context, role, user, authService, isDark),
-            Expanded(
-              child: _buildBody(role),
-            ),
-          ],
+    return PopScope(
+      canPop: _selectedIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppConstants.backgroundBlack : AppConstants.retroCream,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildRetroHeader(context, role, user, authService, isDark),
+              Expanded(
+                child: _buildBody(role),
+              ),
+            ],
+          ),
         ),
+        bottomNavigationBar: _buildRetroBottomNav(context, role, isDark),
       ),
-      bottomNavigationBar: _buildRetroBottomNav(context, role, isDark),
     );
   }
 
@@ -193,16 +209,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (_selectedIndex) {
       case 1:
         // Module 02 & 03: GIS Incident Mapping & Pinning
-        return const IncidentMappingScreen();
+        return IncidentMappingScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
       case 2:
         // Module 06 & 09: Predictive Analysis & Forecasting
-        return const PredictiveAnalysisScreen();
+        return PredictiveAnalysisScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
       case 3:
         // Module 08: Notifications and Alerts
-        return const AlertsScreen();
+        return AlertsScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
       case 4:
         // Profile Screen for all roles (Admin, Citizen)
-        return const ProfileScreen();
+        return ProfileScreen(
+          onBack: () => setState(() => _selectedIndex = 0),
+        );
       case 0:
       default:
         // Module 07: Dashboard (Central LGU Command Overview)

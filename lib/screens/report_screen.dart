@@ -11,6 +11,7 @@ import '../services/firestore_service.dart';
 import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 import '../widgets/incident_pin_picker_dialog.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -367,7 +368,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           'INCIDENT GEO-REPORTING',

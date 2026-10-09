@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import '../services/firestore_service.dart';
 import '../models/hazard_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class ReportHazardScreen extends StatefulWidget {
   const ReportHazardScreen({super.key});
@@ -161,6 +162,18 @@ class _ReportHazardScreenState extends State<ReportHazardScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => AppNavigation.popOrHome(context),
+        ),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),

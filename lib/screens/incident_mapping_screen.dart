@@ -7,11 +7,13 @@ import '../services/firestore_service.dart';
 import '../services/location_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class IncidentMappingScreen extends StatefulWidget {
   final String? initialCategory;
   final String? initialLgu;
-  const IncidentMappingScreen({super.key, this.initialCategory, this.initialLgu});
+  final VoidCallback? onBack;
+  const IncidentMappingScreen({super.key, this.initialCategory, this.initialLgu, this.onBack});
 
   @override
   State<IncidentMappingScreen> createState() => _IncidentMappingScreenState();
@@ -83,29 +85,35 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
         ? LatLng(userPos.latitude, userPos.longitude)
         : const LatLng(14.5995, 120.9842);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.retroDarkCard : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                width: 1.5,
+    return PopScope(
+      canPop: widget.onBack == null && Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        AppNavigation.popOrHome(context, onBack: widget.onBack);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                  width: 1.5,
+                ),
               ),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder),
             ),
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
-                color: isDark ? Colors.white : AppColors.retroDarkBorder),
+            onPressed: () => AppNavigation.popOrHome(context, onBack: widget.onBack),
           ),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: Text(
           'GIS INCIDENT MAPPING',
           style: TextStyle(
@@ -370,6 +378,7 @@ class _IncidentMappingScreenState extends State<IncidentMappingScreen> {
           );
         },
       ),
+    ),
     );
   }
 

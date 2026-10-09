@@ -6,9 +6,11 @@ import '../core/constants.dart';
 import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import '../widgets/profile_image.dart';
+import '../core/navigation_utils.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onBack;
+  const ProfileScreen({super.key, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -32,33 +34,56 @@ class ProfileScreen extends StatelessWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isDark ? Colors.white : AppColors.retroDarkBorder,
-            fontWeight: FontWeight.w900,
-            fontSize: 15,
-            letterSpacing: 1.2,
+    return PopScope(
+      canPop: onBack == null && Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        AppNavigation.popOrHome(context, onBack: onBack);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder),
+            ),
+            onPressed: () => AppNavigation.popOrHome(context, onBack: onBack),
           ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+              letterSpacing: 1.2,
+            ),
+          ),
+          centerTitle: true,
+          iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
         ),
-        centerTitle: true,
-        iconTheme: IconThemeData(color: isDark ? Colors.white : AppColors.retroDarkBorder),
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          children: [
-            _buildProfileHeader(context, user, role),
-            const SizedBox(height: 24),
-            _buildSignOutButton(context, authService),
-            const SizedBox(height: 100),
-          ],
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            children: [
+              _buildProfileHeader(context, user, role),
+              const SizedBox(height: 24),
+              _buildSignOutButton(context, authService),
+              const SizedBox(height: 100),
+            ],
+          ),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
 import '../models/incident_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class ReportGenerationScreen extends StatefulWidget {
   const ReportGenerationScreen({super.key});
@@ -60,7 +61,7 @@ class _ReportGenerationScreenState extends State<ReportGenerationScreen> {
             ),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           'REPORT GENERATION',

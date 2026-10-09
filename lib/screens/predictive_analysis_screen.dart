@@ -9,9 +9,11 @@ import '../models/incident_model.dart';
 import '../models/alert_model.dart';
 import '../models/weather_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class PredictiveAnalysisScreen extends StatefulWidget {
-  const PredictiveAnalysisScreen({super.key});
+  final VoidCallback? onBack;
+  const PredictiveAnalysisScreen({super.key, this.onBack});
 
   @override
   State<PredictiveAnalysisScreen> createState() => _PredictiveAnalysisScreenState();
@@ -93,38 +95,44 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundBlack : AppColors.retroCream,
-      appBar: AppBar(
-        title: Text(
-          'PREDICTIVE ANALYSIS (AI)',
-          style: TextStyle(
-            color: isDark ? Colors.white : AppColors.retroDarkBorder,
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.retroDarkCard : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                width: 1.5,
-              ),
+    return PopScope(
+      canPop: widget.onBack == null && Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        AppNavigation.popOrHome(context, onBack: widget.onBack);
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.backgroundBlack : AppColors.retroCream,
+        appBar: AppBar(
+          title: Text(
+            'PREDICTIVE ANALYSIS (AI)',
+            style: TextStyle(
+              color: isDark ? Colors.white : AppColors.retroDarkBorder,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
             ),
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
-                color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
-        ),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.retroDarkCard : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 14,
+                  color: isDark ? Colors.white : AppColors.retroDarkBorder),
+            ),
+            onPressed: () => AppNavigation.popOrHome(context, onBack: widget.onBack),
+          ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -196,6 +204,7 @@ class _PredictiveAnalysisScreenState extends State<PredictiveAnalysisScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 

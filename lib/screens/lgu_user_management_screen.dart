@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../services/firestore_service.dart';
 import '../models/user_model.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 import '../widgets/profile_image.dart';
 
 class LGUUserManagementScreen extends StatefulWidget {
@@ -45,7 +46,7 @@ class _LGUUserManagementScreenState extends State<LGUUserManagementScreen> {
             ),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           'USER MANAGEMENT',

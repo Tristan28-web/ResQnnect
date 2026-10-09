@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../core/constants.dart';
+import 'login_screen.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -106,7 +107,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
               color: isDark ? Colors.white : AppColors.retroDarkBorder,
             ),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            }
+          },
         ),
         title: Text(
           'JOIN GEOSAFE',

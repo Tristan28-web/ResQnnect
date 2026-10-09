@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 import '../widgets/profile_image.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -157,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => AppNavigation.popOrHome(context),
             child: Container(
               decoration: BoxDecoration(
                 color: isDark ? AppColors.retroDarkCard : Colors.white,

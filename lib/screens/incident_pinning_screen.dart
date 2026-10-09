@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 import 'report_screen.dart';
 
 class IncidentPinningScreen extends StatefulWidget {
@@ -108,7 +109,7 @@ class _IncidentPinningScreenState extends State<IncidentPinningScreen> {
             ),
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => AppNavigation.popOrHome(context),
         ),
         title: Text(
           '03. INCIDENT PINNING',

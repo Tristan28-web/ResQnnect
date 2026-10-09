@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../core/constants.dart';
+import '../core/navigation_utils.dart';
 
 class MedicalProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -65,7 +66,7 @@ class _MedicalProfileScreenState extends State<MedicalProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Medical profile updated!'), backgroundColor: Colors.green),
         );
-        Navigator.pop(context);
+        AppNavigation.popOrHome(context);
       }
     } catch (e) {
       if (mounted) {
@@ -87,6 +88,18 @@ class _MedicalProfileScreenState extends State<MedicalProfileScreen> {
         title: Text('MEDICAL PROFILE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Colors.black87)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.retroDarkCard : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder, width: 1.5),
+            ),
+            child: Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: isDark ? Colors.white : AppColors.retroDarkBorder),
+          ),
+          onPressed: () => AppNavigation.popOrHome(context),
+        ),
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
         actions: [
           if (_isSaving)
