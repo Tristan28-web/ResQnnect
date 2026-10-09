@@ -1,5 +1,6 @@
 {
   "projects": {
+    "default": "resqnnect-3b59e",
     "resqnnect": "resqnnect-3b59e"
   },
   "targets": {},
