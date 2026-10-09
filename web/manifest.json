@@ -1,11 +1,11 @@
 {
-    "name": "GIS",
-    "short_name": "GIS",
+    "name": "GeoSafe",
+    "short_name": "GeoSafe",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "GIS-Powered Incident Mapping and Predictive Logic System.",
+    "background_color": "#FFFDF7",
+    "theme_color": "#23272F",
+    "description": "GeoSafe - Smart GIS Disaster Preparedness and Response System.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
