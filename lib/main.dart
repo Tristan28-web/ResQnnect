@@ -10,6 +10,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/pending_verification_screen.dart';
+import 'screens/identity_verification_screen.dart';
 import 'firebase_options.dart';
 import 'core/localization.dart';
 import 'models/user_model.dart';
@@ -128,20 +129,9 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
           UserModel? initialModel;
           if (firebaseUser != null) {
             final userEmail = firebaseUser.email?.toLowerCase();
-            if (firebaseUser.isAnonymous) {
-              initialModel = UserModel(
-                userId: firebaseUser.uid,
-                name: 'Guest Account',
-                email: 'guest@gis.local',
-                phone: '',
-                profileImage: '',
-                role: AppConstants.roleCitizen,
-                isVerified: true,
-                createdAt: DateTime.now(),
-              );
-            } else if (userEmail == 'admin@catanduanes.gov.ph' || 
-                       userEmail == 'admin@cadiz.gov.ph' || 
-                       userEmail?.contains('admin') == true) {
+            if (userEmail == 'admin@catanduanes.gov.ph' ||
+                userEmail == 'admin@cadiz.gov.ph' ||
+                userEmail?.contains('admin') == true) {
               initialModel = UserModel(
                 userId: firebaseUser.uid,
                 name: firebaseUser.displayName ?? 'GeoSafe Admin',
@@ -160,7 +150,7 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                 phone: '',
                 profileImage: firebaseUser.photoURL ?? '',
                 role: AppConstants.roleCitizen,
-                isVerified: true,
+                isVerified: false, // citizens must pass ID + face verification
                 createdAt: DateTime.now(),
               );
             }
@@ -192,7 +182,9 @@ class _GISAppState extends State<GISApp> with WidgetsBindingObserver {
                     return initialModel; 
                   });
                 },
-                initialData: initialModel,
+                // Only admins get an instant fallback. A citizen waits for the real
+                // Firestore document so verification status is never guessed.
+                initialData: initialModel?.role == AppConstants.roleAdmin ? initialModel : null,
                 catchError: (_, __) => null,
               ),
             ],
@@ -243,32 +235,32 @@ class AuthWrapper extends StatelessWidget {
       );
     }
 
-    // While waiting for Firestore stream to arrive, we use a high-priority local fallback 🛡️🌩️✅
-    // to ensure instantaneous redirection to the correct dashboard.
+    // Anonymous (guest) sessions are no longer allowed: every citizen must be
+    // ID-verified. Drop leftover guest sessions from older app versions.
+    if (firebaseUser.isAnonymous) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<AuthService>(context, listen: false).logout();
+      });
+      return const SplashScreen();
+    }
+
     final userEmail = firebaseUser.email?.toLowerCase();
-    
-    UserModel effectiveUser = userModel ?? UserModel(
-      userId: firebaseUser.uid,
-      name: firebaseUser.displayName ?? (userEmail?.contains('admin') == true ? 'GeoSafe Admin' : 'GeoSafe User'),
-      email: userEmail ?? 'guest@geosafe.local',
-      role: userEmail == 'admin@catanduanes.gov.ph' || userEmail == 'admin@cadiz.gov.ph' || userEmail?.contains('admin') == true 
-          ? AppConstants.roleAdmin 
-          : AppConstants.roleCitizen,
-      phone: '',
-      profileImage: firebaseUser.photoURL ?? '',
-      isVerified: true, // Allow instant access while Firestore syncs in background
-      createdAt: DateTime.now(),
-    );
- 
-    // Determine authorization using the effective user
-    bool isAuthorized = effectiveUser.isVerified ||
-        effectiveUser.role == AppConstants.roleAdmin ||
+    final isAdminAccount = userModel?.role == AppConstants.roleAdmin ||
         userEmail == 'admin@catanduanes.gov.ph' ||
         userEmail == 'admin@cadiz.gov.ph' ||
         (userEmail?.contains('admin') == true);
- 
-    return isAuthorized
-        ? const DashboardScreen()
-        : const PendingVerificationScreen();
+
+    if (isAdminAccount) return const DashboardScreen();
+
+    // Citizen: wait for the real Firestore profile before deciding anything.
+    if (userModel == null) return const SplashScreen();
+
+    if (userModel.isVerified) return const DashboardScreen();
+
+    // Not verified yet: submitted → wait for LGU review, otherwise (never
+    // submitted, or rejected) → ID + face verification.
+    return userModel.verificationStatus == 'pending'
+        ? const PendingVerificationScreen()
+        : const IdentityVerificationScreen();
   }
 }

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../core/constants.dart';
-import 'dashboard_screen.dart';
+import '../main.dart' show AuthWrapper;
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
           (route) => false,
         );
       }
@@ -82,96 +82,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
           (route) => false,
         );
       }
     }
-  }
-
-  void _guestLogin() async {
-    setState(() => _isLoading = true);
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      await authService.signInAnonymously();
-
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        final errorStr = e.toString();
-        if (errorStr.contains('admin-restricted-operation') || 
-            errorStr.contains('operation-not-allowed')) {
-          _showGuestLoginDisabledDialog();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Guest Login Failed: $errorStr'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  void _showGuestLoginDisabledDialog() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.retroDarkCard : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.retroDarkBorder, width: 2),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.lock_outline, color: Color(0xFFEF4444)),
-            const SizedBox(width: 10),
-            Text('Guest Login Unavailable',
-              style: TextStyle(
-                color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Anonymous sign-in is not yet enabled for this app.\n\n'
-          'To fix this:\n'
-          '1. Go to Firebase Console\n'
-          '2. Navigate to Authentication → Sign-in method\n'
-          '3. Enable "Anonymous" provider\n\n'
-          'Alternatively, you can register as a Citizen or use Google Sign-In.',
-          style: TextStyle(
-            color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-            fontSize: 13,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.retroMint,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: const BorderSide(color: AppColors.retroDarkBorder, width: 1.4),
-              ),
-            ),
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CLOSE', style: TextStyle(fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -340,40 +255,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
 
               // Retro Social / Secondary Buttons
-              GestureDetector(
-                onTap: _isLoading ? null : _guestLogin,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.retroDarkCard : AppColors.retroPeach,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF3E4556) : AppColors.retroDarkBorder,
-                      width: 1.6,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark ? Colors.black38 : AppColors.retroDarkBorder.withOpacity(0.08),
-                        offset: const Offset(2, 2),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'CONTINUE AS GUEST',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.retroDarkBorder,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
               GestureDetector(
                 onTap: _isLoading ? null : _googleLogin,
                 child: Container(

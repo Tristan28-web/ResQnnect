@@ -39,7 +39,8 @@ class AuthService {
           profileImage: '',
           role: 'citizen',
           isActive: true,
-          isVerified: false, // All new users need verification
+          isVerified: false, // All new users must pass ID + face verification
+          verificationStatus: 'unsubmitted',
           createdAt: DateTime.now(),
         );
 
@@ -111,23 +112,6 @@ class AuthService {
     }
   }
 
-  // Guest/Anonymous Login
-  Future<UserCredential?> signInAnonymously() async {
-    try {
-      final UserCredential userCredential = await _auth.signInAnonymously();
-      
-      // Fire-and-forget profile sync so it doesn't block login completion
-      _syncUserProfile(userCredential.user).catchError((e) {
-        print('Background Profile Sync Error (Guest): $e');
-      });
-      
-      return userCredential;
-    } catch (e) {
-      print('Anonymous Sign-In error: $e');
-      rethrow; // Rethrow so UI can show message
-    }
-  }
-
   // Helper to sync user profile to Firestore
   Future<void> _syncUserProfile(User? user) async {
     if (user != null) {
@@ -137,10 +121,7 @@ class AuthService {
       bool targetVerified = false;
 
       // Determine what the role SHOULD be based on email
-      if (user.isAnonymous) {
-        targetRole = AppConstants.roleCitizen;
-        targetVerified = true; // Guests can use basic features immediately
-      } else if (user.email == 'admin@catanduanes.gov.ph' || user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
+      if (user.email == 'admin@catanduanes.gov.ph' || user.email == 'admin@cadiz.gov.ph' || user.email?.contains('admin') == true) {
         targetRole = AppConstants.roleAdmin;
         targetVerified = true;
       }
@@ -148,15 +129,14 @@ class AuthService {
       if (!userDoc.exists) {
         UserModel userModel = UserModel(
           userId: user.uid,
-          name: user.isAnonymous 
-              ? 'Guest Account' 
-              : (user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GeoSafe Admin' : 'GeoSafe User')),
-          email: user.email ?? 'guest@geosafe.local',
+          name: user.displayName ?? (targetRole == AppConstants.roleAdmin ? 'GeoSafe Admin' : 'GeoSafe User'),
+          email: user.email ?? '',
           phone: '',
           profileImage: targetRole == AppConstants.roleAdmin ? '' : (user.photoURL ?? ''),
           role: targetRole,
           isActive: true,
-          isVerified: targetVerified, 
+          isVerified: targetVerified,
+          verificationStatus: targetVerified ? 'approved' : 'unsubmitted',
           createdAt: DateTime.now(),
         );
         await _db.collection(AppConstants.usersCollection).doc(user.uid).set(userModel.toMap());

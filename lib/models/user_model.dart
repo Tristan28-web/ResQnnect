@@ -14,6 +14,9 @@ class UserModel {
   final String medications;
   final List<Map<String, String>> emergencyContacts;
   final bool isVerified;
+  // 'unsubmitted' | 'pending' | 'approved' | 'rejected'
+  final String verificationStatus;
+  final String rejectionReason;
   final DateTime createdAt;
   final DateTime? lastClockIn;
 
@@ -26,6 +29,8 @@ class UserModel {
     this.role = 'citizen',
     this.isActive = true,
     this.isVerified = false,
+    this.verificationStatus = 'unsubmitted',
+    this.rejectionReason = '',
     this.bloodType = 'Not set',
     this.weight = 'Not set',
     this.allergies = 'None',
@@ -45,6 +50,10 @@ class UserModel {
       role: data['role'] ?? 'citizen',
       isActive: data['is_active'] ?? true,
       isVerified: data['is_verified'] ?? false,
+      // Accounts verified before the ID/face flow existed have no status field.
+      verificationStatus: data['verification_status'] ??
+          ((data['is_verified'] ?? false) ? 'approved' : 'unsubmitted'),
+      rejectionReason: data['rejection_reason'] ?? '',
       bloodType: data['blood_type'] ?? 'Not set',
       weight: data['weight'] ?? 'Not set',
       allergies: data['allergies'] ?? 'None',
@@ -68,6 +77,8 @@ class UserModel {
     String? role,
     bool? isActive,
     bool? isVerified,
+    String? verificationStatus,
+    String? rejectionReason,
     String? bloodType,
     String? weight,
     String? allergies,
@@ -84,6 +95,8 @@ class UserModel {
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
       isVerified: isVerified ?? this.isVerified,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
       bloodType: bloodType ?? this.bloodType,
       weight: weight ?? this.weight,
       allergies: allergies ?? this.allergies,
@@ -104,6 +117,8 @@ class UserModel {
       'role': role,
       'is_active': isActive,
       'is_verified': isVerified,
+      'verification_status': verificationStatus,
+      'rejection_reason': rejectionReason,
       'blood_type': bloodType,
       'weight': weight,
       'allergies': allergies,

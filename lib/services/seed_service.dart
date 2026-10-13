@@ -88,6 +88,7 @@ class SeedService {
       role: u['role']!,
       isActive: true,
       isVerified: true,
+      verificationStatus: 'approved',
       createdAt: DateTime.now(),
     );
     await _db.collection(AppConstants.usersCollection).doc(uid).set(

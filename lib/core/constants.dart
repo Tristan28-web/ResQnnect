@@ -37,6 +37,7 @@ class AppConstants {
   static const String alertsCollection = 'alerts';
   static const String incidentsCollection = 'incidents';
   static const String sosCollection = 'sos_requests';
+  static const String identityVerificationsCollection = 'identity_verifications';
 
   // Roles
   static const String roleAdmin = 'admin';

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../core/constants.dart';
 import 'login_screen.dart';
+import '../main.dart' show AuthWrapper;
 
 
 class RegisterScreen extends StatefulWidget {
@@ -46,9 +47,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       
       if (mounted) {
-        Navigator.pop(context);
+        // Hand over to AuthWrapper: it sends new citizens to ID + face verification.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
+          (route) => false,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration Successful!')),
+          const SnackBar(content: Text('Account created! Next, verify your identity.')),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -171,7 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Create an official verified account for GIS reporting',
+                'Create an account, then verify with a valid ID and face scan',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDark ? Colors.white60 : const Color(0xFF6B7280),

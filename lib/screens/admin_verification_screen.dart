@@ -6,6 +6,9 @@ import '../core/constants.dart';
 import '../core/navigation_utils.dart';
 import 'package:intl/intl.dart';
 import '../widgets/profile_image.dart';
+import 'dart:convert';
+import '../models/identity_verification_model.dart';
+import '../services/face/face_engine.dart';
 
 class AdminVerificationScreen extends StatelessWidget {
   const AdminVerificationScreen({super.key});
@@ -293,17 +296,21 @@ class AdminVerificationScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          _IdentityEvidence(userId: user.userId, isDark: isDark),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: GestureDetector(
                   onTap: () async {
-                    await firestoreService.updateUserVerification(user.userId, false);
+                    final reason = await _askRejectReason(context);
+                    if (reason == null) return;
+                    await firestoreService.updateUserVerification(user.userId, false, reason: reason);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Citizen registration rejected.'),
+                          content: Text('Submission rejected. The citizen must resubmit.'),
                           backgroundColor: Color(0xFFDC2626),
                         ),
                       );
@@ -393,6 +400,189 @@ class AdminVerificationScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+Future<String?> _askRejectReason(BuildContext context) {
+  final controller = TextEditingController();
+  const quick = [
+    'ID is blurry / unreadable',
+    'Face does not match the ID',
+    'ID is expired or invalid',
+    'Selfie is unclear',
+  ];
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Reject submission', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            children: quick
+                .map((q) => ActionChip(
+                      label: Text(q, style: const TextStyle(fontSize: 10)),
+                      onPressed: () => controller.text = q,
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: controller,
+            maxLines: 2,
+            decoration: const InputDecoration(hintText: 'Reason shown to the citizen'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+        TextButton(
+          onPressed: () => Navigator.pop(
+            ctx,
+            controller.text.trim().isEmpty ? 'Please resubmit clearer photos.' : controller.text.trim(),
+          ),
+          child: const Text('REJECT', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w900)),
+        ),
+      ],
+    ),
+  );
+}
+
+/// ID photo + live selfie + automatic match result for one pending citizen.
+class _IdentityEvidence extends StatelessWidget {
+  final String userId;
+  final bool isDark;
+  const _IdentityEvidence({required this.userId, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final firestore = Provider.of<FirestoreService>(context, listen: false);
+    return FutureBuilder<IdentityVerificationModel?>(
+      future: firestore.getIdentityVerification(userId),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(12),
+            child: Center(
+              child: SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.retroMint),
+              ),
+            ),
+          );
+        }
+        final v = snap.data;
+        if (v == null) {
+          return const Text(
+            'No ID submission found.',
+            style: TextStyle(color: Color(0xFFDC2626), fontSize: 11, fontWeight: FontWeight.w700),
+          );
+        }
+
+        final level = FaceMatchThresholds.levelOf(v.faceMatchScore);
+        final (String label, Color color) = switch (level) {
+          FaceMatchLevel.strong => ('STRONG MATCH', const Color(0xFF16A34A)),
+          FaceMatchLevel.review => ('REVIEW CAREFULLY', const Color(0xFFD97706)),
+          FaceMatchLevel.mismatch => ('LIKELY MISMATCH', const Color(0xFFDC2626)),
+          FaceMatchLevel.unavailable => ('COMPARE MANUALLY', const Color(0xFF6B7280)),
+        };
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: _photo(context, 'ID: ${v.idType}', v.idImageBase64)),
+                const SizedBox(width: 10),
+                Expanded(child: _photo(context, 'LIVE SELFIE', v.selfieBase64)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _chip(
+                  v.faceMatchScore != null
+                      ? '$label · ${(v.faceMatchScore! * 100).toStringAsFixed(0)}%'
+                      : label,
+                  color,
+                ),
+                _chip(
+                  v.livenessPassed ? 'LIVENESS PASSED' : 'LIVENESS NOT VERIFIED',
+                  v.livenessPassed ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                ),
+                if (!v.faceFoundOnId) _chip('NO PORTRAIT DETECTED ON ID', const Color(0xFFD97706)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "The score is computed on the citizen's device and is advisory. Always confirm the faces and ID details yourself.",
+              style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF9CA3AF), fontSize: 9),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _chip(String text, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color, width: 1.1),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.4),
+        ),
+      );
+
+  Widget _photo(BuildContext context, String caption, String base64Str) {
+    final bytes = base64Str.isEmpty ? null : base64Decode(base64Str);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: bytes == null
+              ? null
+              : () => showDialog(
+                    context: context,
+                    builder: (_) => Dialog(
+                      backgroundColor: Colors.black,
+                      insetPadding: const EdgeInsets.all(12),
+                      child: InteractiveViewer(child: Image.memory(bytes)),
+                    ),
+                  ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: bytes == null
+                ? Container(
+                    height: 110,
+                    color: Colors.black12,
+                    child: const Center(child: Icon(Icons.image_not_supported_rounded)),
+                  )
+                : Image.memory(bytes, height: 110, width: double.infinity, fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          caption,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }

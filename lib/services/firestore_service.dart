@@ -8,6 +8,7 @@ import '../models/sos_model.dart';
 import '../models/map_location_model.dart';
 import '../models/safety_check_model.dart';
 import '../models/hazard_model.dart';
+import '../models/identity_verification_model.dart';
 import 'offline_vault_service.dart';
 
 class FirestoreService {
@@ -144,11 +145,12 @@ class FirestoreService {
     return getUnverifiedCitizens().map((list) => list.length);
   }
 
+  /// Citizens who finished the ID + face step and wait for LGU review.
   Stream<List<UserModel>> getUnverifiedCitizens() {
     return _db
         .collection(AppConstants.usersCollection)
         .where('role', isEqualTo: AppConstants.roleCitizen)
-        .where('is_verified', isEqualTo: false)
+        .where('verification_status', isEqualTo: 'pending')
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => UserModel.fromMap(doc.data()))
@@ -156,30 +158,51 @@ class FirestoreService {
             .toList());
   }
 
+  // --- Identity verification (ID + face) ---
+
+  Future<void> submitIdentityVerification(IdentityVerificationModel v) async {
+    final batch = _db.batch();
+    batch.set(
+      _db.collection(AppConstants.identityVerificationsCollection).doc(v.userId),
+      v.toMap(),
+    );
+    batch.set(
+      _db.collection(AppConstants.usersCollection).doc(v.userId),
+      {'verification_status': 'pending', 'rejection_reason': ''},
+      SetOptions(merge: true),
+    );
+    await batch.commit();
+  }
+
+  Future<IdentityVerificationModel?> getIdentityVerification(String userId) async {
+    final doc = await _db.collection(AppConstants.identityVerificationsCollection).doc(userId).get();
+    if (!doc.exists) return null;
+    return IdentityVerificationModel.fromMap(doc.data()!);
+  }
+
   Future<void> verifyUser(String userId) async {
     await _db.collection(AppConstants.usersCollection).doc(userId).update({
       'is_verified': true,
       'is_active': true,
+      'verification_status': 'approved',
+      'rejection_reason': '',
     });
   }
 
-  Future<void> rejectCitizen(String userId) async {
-    try {
-      await _db.collection(AppConstants.usersCollection).doc(userId).delete();
-    } catch (_) {
-      await _db.collection(AppConstants.usersCollection).doc(userId).update({
-        'is_active': false,
-        'is_verified': false,
-        'verification_status': 'rejected',
-      });
-    }
+  /// Sends the citizen back to the ID step with the reason shown on screen.
+  Future<void> rejectCitizen(String userId, {String reason = ''}) async {
+    await _db.collection(AppConstants.usersCollection).doc(userId).update({
+      'is_verified': false,
+      'verification_status': 'rejected',
+      'rejection_reason': reason,
+    });
   }
 
-  Future<void> updateUserVerification(String userId, bool isVerified) async {
+  Future<void> updateUserVerification(String userId, bool isVerified, {String reason = ''}) async {
     if (isVerified) {
       await verifyUser(userId);
     } else {
-      await rejectCitizen(userId);
+      await rejectCitizen(userId, reason: reason);
     }
   }
 

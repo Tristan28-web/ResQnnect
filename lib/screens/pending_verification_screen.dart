@@ -40,7 +40,7 @@ class PendingVerificationScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             Text(
-              'ACCOUNT PENDING',
+              'VERIFICATION PENDING',
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
                 fontSize: 24,
@@ -50,7 +50,7 @@ class PendingVerificationScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Your account is currently being reviewed by our administrators. This is to ensure the safety and authenticity of our community.',
+              'Your ID and face scan were submitted. An LGU administrator is reviewing them to make sure every reporter is a real resident.',
               textAlign: TextAlign.center,
               style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 16, height: 1.5),
             ),
@@ -68,7 +68,7 @@ class PendingVerificationScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      'Verification usually takes 1-2 hours. You will gain full access once approved.',
+                      'You will gain full access as soon as your identity is approved. If it is rejected, you will be asked to resubmit.',
                       style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 14),
                     ),
                   ),

@@ -2,8 +2,30 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
+
+Uint8List _resizeToJpeg(List<Object> args) {
+  final decoded = img.decodeImage(args[0] as Uint8List);
+  if (decoded == null) return args[0] as Uint8List;
+  var image = img.bakeOrientation(decoded);
+  final maxDim = args[1] as int;
+  if (image.width > maxDim || image.height > maxDim) {
+    image = image.width >= image.height
+        ? img.copyResize(image, width: maxDim)
+        : img.copyResize(image, height: maxDim);
+  }
+  return Uint8List.fromList(img.encodeJpg(image, quality: args[2] as int));
+}
 
 class ImageUtils {
+  /// Downscales a camera photo to a legible-but-small JPEG (ID cards need more
+  /// pixels than a profile picture to stay readable), then runs it through the
+  /// standard Firestore guard. Works on web and mobile (pure Dart).
+  static Future<String> processIdentityPhoto(Uint8List bytes, {int maxDim = 1000, int quality = 80}) async {
+    final jpeg = await compute(_resizeToJpeg, <Object>[bytes, maxDim, quality]);
+    return processImageForFirestore(jpeg);
+  }
+
   /// Compresses and safely encodes image bytes to Base64 so it never exceeds
   /// Cloud Firestore's 1,048,487 byte document property limit.
   static Future<String> processImageForFirestore(Uint8List bytes) async {
