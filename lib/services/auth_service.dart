@@ -81,6 +81,8 @@ class AuthService {
   }
 
   // Google Sign-In
+  // Returns null only when the user backs out. Real failures are thrown so the
+  // UI can show the actual cause instead of a generic "cancelled or failed".
   Future<UserCredential?> signInWithGoogle() async {
     try {
       if (kIsWeb) {
@@ -93,23 +95,56 @@ class AuthService {
         // Using dynamic here to bypass compilation errors that occur on some web environments
         // when the compiler sees mobile-specific calls that the plugin might have hidden for web.
         final dynamic gUser = await (_googleSignIn as dynamic).signIn();
-        if (gUser == null) return null;
+        if (gUser == null) return null; // user closed the account picker
 
         final dynamic gAuth = await gUser.authentication;
-        
+        if (gAuth.idToken == null) {
+          throw FirebaseAuthException(
+            code: 'google-no-id-token',
+            message: 'Google did not return an ID token. The app signing key (SHA-1) is probably not registered in Firebase.',
+          );
+        }
+
         final AuthCredential credential = GoogleAuthProvider.credential(
           idToken: gAuth.idToken,
         );
 
         final UserCredential userCredential = await _auth.signInWithCredential(credential);
         await _syncUserProfile(userCredential.user);
-        
+
         return userCredential;
       }
+    } on FirebaseAuthException catch (e) {
+      // Closing the web popup is a cancel, not an error.
+      if (e.code == 'popup-closed-by-user' || e.code == 'cancelled-popup-request') return null;
+      print('Google Sign-In Firebase error: ${e.code} - ${e.message}');
+      rethrow;
     } catch (e) {
       print('Google Sign-In error: $e');
-      return null;
+      rethrow;
     }
+  }
+
+  /// Turns a Google sign-in exception into something a person (and we) can act on.
+  static String describeGoogleError(Object e) {
+    final text = e.toString();
+    // Android: ApiException 10 = DEVELOPER_ERROR (package/SHA-1 not registered in Firebase)
+    if (text.contains('ApiException: 10') || text.contains('sign_in_failed') && text.contains(': 10')) {
+      return 'Google Sign-In is not set up for this app build (signing key SHA-1 missing in Firebase). Code 10.';
+    }
+    if (text.contains('ApiException: 12500')) {
+      return 'Google Sign-In failed (12500). Check the Google account on this phone and the Firebase support email.';
+    }
+    if (text.contains('ApiException: 7') || text.contains('network_error')) {
+      return 'No internet connection. Please try again.';
+    }
+    if (e is FirebaseAuthException) {
+      if (e.code == 'account-exists-with-different-credential') {
+        return 'This email is already registered with a password. Log in with email and password instead.';
+      }
+      return 'Google Sign-In failed: ${e.message ?? e.code}';
+    }
+    return 'Google Sign-In failed: $text';
   }
 
   // Helper to sync user profile to Firestore

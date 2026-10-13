@@ -2,14 +2,18 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:resqnnect/core/image_utils.dart';
 import 'package:resqnnect/models/identity_verification_model.dart';
 import 'package:resqnnect/models/user_model.dart';
+import 'package:resqnnect/services/auth_service.dart';
 import 'package:resqnnect/services/face/face_engine.dart';
 
 void main() {
+  googleErrorTests();
+
   group('Accepted Philippine IDs', () {
     test('has no duplicates and primary IDs come first', () {
       expect(kAcceptedIdTypes.toSet().length, kAcceptedIdTypes.length);
@@ -126,6 +130,29 @@ void main() {
       final decoded = img.decodeImage(base64Decode(b64))!;
       expect(decoded.width <= 1000 && decoded.height <= 1000, isTrue);
       expect(decoded.width, greaterThan(500)); // still legible for an ID card
+    });
+  });
+}
+
+// Google sign-in error messages (shown instead of a generic "cancelled or failed").
+void googleErrorTests() {
+  group('AuthService.describeGoogleError', () {
+    test('Android code 10 points to the missing SHA-1', () {
+      final msg = AuthService.describeGoogleError(
+        PlatformException(code: 'sign_in_failed', message: 'com.google.android.gms.common.api.ApiException: 10: '),
+      );
+      expect(msg, contains('SHA-1'));
+    });
+
+    test('network error is reported as no internet', () {
+      final msg = AuthService.describeGoogleError(
+        PlatformException(code: 'network_error', message: 'ApiException: 7'),
+      );
+      expect(msg.toLowerCase(), contains('internet'));
+    });
+
+    test('unknown errors still show the cause', () {
+      expect(AuthService.describeGoogleError(Exception('boom')), contains('boom'));
     });
   });
 }

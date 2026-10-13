@@ -72,20 +72,24 @@ class _LoginScreenState extends State<LoginScreen> {
   void _googleLogin() async {
     setState(() => _isLoading = true);
     final authService = Provider.of<AuthService>(context, listen: false);
-    final result = await authService.signInWithGoogle();
-    
-    if (mounted) {
+    try {
+      final result = await authService.signInWithGoogle();
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (result == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google Sign-In Cancelled or Failed.')),
-        );
-      } else {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AuthWrapper()),
-          (route) => false,
-        );
+        // The user closed the Google account picker.
+        return;
       }
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.describeGoogleError(e)), duration: const Duration(seconds: 6)),
+      );
     }
   }
 

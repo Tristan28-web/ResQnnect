@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1018814514644-h2n6m90rm76mfdfj03a34lpektc8mll1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yummyjoy.resqnnect",
+            "certificate_hash": "90a222fcf961c6000f5100da38bdac9ee6f29371"
+          }
+        },
+        {
           "client_id": "1018814514644-madsabhu95m07rpcqrgttnle90t0qr7i.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -37,6 +45,13 @@
             {
               "client_id": "1018814514644-325uuvmqveq2f5o646h4d8in9kbqa2lh.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1018814514644-7haul536cgvar1n9lmplm44i0ipng0su.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.yummyjoy.resqnnect"
+              }
             }
           ]
         }
